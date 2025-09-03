@@ -6,6 +6,8 @@
     <title>Document</title>
 </head>
 <body>
-    <a href="/nba-status">asdasd<a>
+    <a href="/nba-status">status<a>
+        <br><br>
+    <a href="/">upcomming games<a>
 </body>
 </html>

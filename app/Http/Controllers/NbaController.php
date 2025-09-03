@@ -5,16 +5,58 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
-class NbaController extends Controller
+class NbaController extends Controller  
 {
-    public function status()
+
+
+    public function upcomingGames()
     {
-        // Simple call to NBA API status endpoint
-        $response = Http::withHeaders(config('nba.headers.api-sports'))
-            ->get(config('nba.url') . '/status');
+        $games = [];
+        $startDate = \Carbon\Carbon::parse('2025-10-21'); // NBA season start
+        $daysToFetch = 1; // how many days ahead to check
+    
 
-        $data = $response->json();
-
-        return view('nba.status', compact('data'));
+            dd($response = Http::withHeaders([
+                'x-rapidapi-host' => 'nba-api-free-data.p.rapidapi.com',
+                'x-rapidapi-key'  => env('NBA_API_KEY')
+            ])->get('https://nba-api-free-data.p.rapidapi.com/nba-schedule-by-date', [
+                'date' => $startDate
+            ]));
+    
+            $dayGames = $response->json()['response']['Games'] ?? []; // check API response structure
+            $games = array_merge($games, $dayGames);
+        
+    
+        // Optional: sort by game date & time
+        usort($games, fn($a, $b) => strcmp($a['date'], $b['date']));
+    
+        return view('nba.upcoming', compact('games'));
     }
+    
+    public function allPlayers()
+    {
+        $players = [];
+    
+        // Loop through all NBA team IDs (1-30)
+        for ($teamId = 1; $teamId <= 30; $teamId++) {
+            $response = Http::withHeaders([
+                'x-rapidapi-host' => 'nba-api-free-data.p.rapidapi.com',
+                'x-rapidapi-key'  => env('NBA_API_KEY')
+            ])->get('https://nba-api-free-data.p.rapidapi.com/nba-player-list', [
+                'teamid' => $teamId
+            ]);
+    
+            $teamPlayers = $response->json()['response']['PlayerList'] ?? [];
+            $players = array_merge($players, $teamPlayers);
+        }
+    
+        // Optional: sort players alphabetically by fullName
+        usort($players, fn($a, $b) => strcmp($a['fullName'], $b['fullName']));
+    
+        return view('nba.players', compact('players'));
+    }
+    
+    
+    
+    
 }

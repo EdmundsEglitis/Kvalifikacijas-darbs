@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NbaController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,8 +14,5 @@ use App\Http\Controllers\NbaController;
 |
 */
 
-Route::get('/', function () {
-    return view('home');
-});
-
-Route::get('/nba-status', [NbaController::class, 'status']);
+Route::get('/', [NbaController::class, 'upcomingGames']);
+Route::get('/players', [NbaController::class, 'allPlayers'])->name('players.index');
