@@ -55,7 +55,10 @@ class NbaController extends Controller
     
         return view('nba.players', compact('players'));
     }
-    
+    public function home()
+    {
+        return view('home');
+    }
     
     
     
