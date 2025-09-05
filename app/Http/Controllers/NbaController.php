@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Game;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -58,6 +59,30 @@ class NbaController extends Controller
     public function home()
     {
         return view('home');
+    }
+
+public function allGames()
+{
+    // Eager load team1, team2, and winner
+    $games = Game::with(['team1', 'team2', 'winner'])
+                 ->orderBy('date', 'asc')
+                 ->get();
+
+    return view('nba.games', compact('games'));
+}
+
+    // Show a single game with player stats
+    public function showGame($id)
+    {
+        $game = Game::with([
+            'team1',
+            'team2',
+            'winner',
+            'playerStats.player',
+            'playerStats.team'
+        ])->findOrFail($id);
+
+        return view('nba.game_show', compact('game'));
     }
     
     

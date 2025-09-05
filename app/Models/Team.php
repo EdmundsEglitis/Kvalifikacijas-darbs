@@ -16,5 +16,10 @@ class Team extends Model
     {
         return $this->belongsTo(League::class);
     }
+    public function stats()
+{
+    return $this->hasMany(PlayerGameStat::class);
+}
+
     
 }

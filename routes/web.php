@@ -31,3 +31,7 @@ Route::get('/teams', function () {
 Route::get('/stats', function () {
     return view('stats'); // create a stats.blade.php view later
 })->name('stats');
+
+Route::get('/all-games', [NbaController::class, 'allGames'])->name('games');
+Route::get('/games/{id}', [NbaController::class, 'showGame'])->name('games.show');
+
