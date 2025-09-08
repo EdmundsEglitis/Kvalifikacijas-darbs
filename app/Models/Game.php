@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Carbon;
 class Game extends Model
 {
     use HasFactory;
@@ -45,6 +45,10 @@ class Game extends Model
     public function winner()
     {
         return $this->belongsTo(Team::class, 'winner_id');
+    }
+      public function scopeCompleted($query)
+    {
+        return $query->where('date', '<', Carbon::now());
     }
 
     // NEW: player stats for this game
