@@ -3,60 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBA Dashboard</title>
+    <title>Basketbola Portāls</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center">
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('home') }}" class="text-xl font-bold text-gray-800">NBA Dashboard</a>
-                    <a href="{{ route('players') }}" class="text-gray-600 hover:text-gray-900">All Players</a>
-                    <a href="{{ route('games') }}" class="text-gray-600 hover:text-gray-900">Upcoming Games</a>
-                    <a href="#" class="text-gray-600 hover:text-gray-900">Teams</a>
-                    <a href="#" class="text-gray-600 hover:text-gray-900">Stats</a>
-                </div>
+    <h1 class="text-3xl font-bold mb-10">Izvēlies sadaļu</h1>
 
-            </div>
-        </div>
-    </nav>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-6">
+        <!-- NBA card -->
+        <a href="{{ route('nba.home') }}"
+           class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition p-10 flex flex-col items-center text-center">
+           <img src="{{ asset('nba-logo-png-transparent.png') }}" 
+                 alt="NBA Logo" class="w-28 mb-6">
+            <h2 class="text-2xl font-semibold">NBA</h2>
+            <p class="mt-2 text-gray-600">Amerikas basketbola līga</p>
+        </a>
 
-    <!-- Hero Section -->
-    <header class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-20">
-        <div class="max-w-7xl mx-auto text-center">
-            <h1 class="text-4xl md:text-5xl font-bold mb-4">Welcome to the NBA Dashboard</h1>
-            <p class="text-lg md:text-xl mb-6">Your one-stop hub for NBA players, teams, schedules, and stats.</p>
-            <a href="{{ route('players') }}" class="px-6 py-3 bg-white text-blue-600 font-semibold rounded shadow hover:bg-gray-100">View All Players</a>
-        </div>
-    </header>
-
-    <!-- Features / Sections -->
-    <section class="py-16">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                <h2 class="text-xl font-bold mb-2">Players</h2>
-                <p>Explore all NBA players with detailed stats and profiles.</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                <h2 class="text-xl font-bold mb-2">Games</h2>
-                <p>Check upcoming games, schedules, and matchups easily.</p>
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                <h2 class="text-xl font-bold mb-2">Teams</h2>
-                <p>Get information about every NBA team, rosters, and standings.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-6 mt-12">
-        <div class="max-w-7xl mx-auto text-center">
-            <p>&copy; {{ date('Y') }} NBA Dashboard. All rights reserved.</p>
-        </div>
-    </footer>
+        <!-- LBS card -->
+        <a href="{{ route('lbs.home') }}"
+           class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition p-10 flex flex-col items-center text-center">
+            <img src="415986933_1338154883529529_7481933183149808416_n.jpg" 
+                 alt="LBS Logo" class="w-24 mb-6">
+            <h2 class="text-2xl font-semibold">LBS</h2>
+            <p class="mt-2 text-gray-600">Latvijas Basketbola Savienība</p>
+        </a>
+    </div>
 
 </body>
 </html>

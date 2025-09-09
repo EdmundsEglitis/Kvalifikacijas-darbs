@@ -12,7 +12,14 @@ class LeagueFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word(), // generates a random league name
+            'name' => $this->faker->unique()->word(),
+            'parent_id' => null, // default to main league
         ];
+    }
+
+    /** Set this league as a sub-league of a parent */
+    public function subLeague(League $parent)
+    {
+        return $this->state(fn () => ['parent_id' => $parent->id]);
     }
 }

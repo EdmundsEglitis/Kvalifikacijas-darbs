@@ -1,18 +1,17 @@
 <?php
 
 namespace App\Filament\Resources;
+
 use App\Models\Team;
 use App\Models\League;
-use App\Filament\Resources\PlayerResource\Pages;
-use App\Filament\Resources\PlayerResource\RelationManagers;
 use App\Models\Player;
+use App\Filament\Resources\PlayerResource\Pages;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PlayerResource extends Resource
 {
@@ -30,29 +29,67 @@ class PlayerResource extends Resource
                     ->maxLength(255),
 
                 Forms\Components\DatePicker::make('birthday')
-                    ->required(),
+                    ->label('Birthday')
+                    ->nullable(),
+
                 Forms\Components\TextInput::make('height')
                     ->numeric()
-                    ->required(),
+                    ->label('Height (cm)')
+                    ->nullable(),
+
                 Forms\Components\TextInput::make('nationality')
-                    ->required()
+                    ->nullable()
                     ->maxLength(255),
+
+                // Step 1: Parent League
+                Forms\Components\Select::make('parent_league_id')
+                    ->label('Parent League')
+                    ->options(League::whereNull('parent_id')->pluck('name', 'id'))
+                    ->searchable()
+                    ->reactive()
+                    ->afterStateUpdated(fn (callable $set) => [
+                        $set('league_id', null),
+                        $set('team_id', null),
+                    ])
+                    ->required(),
+
+                // Step 2: Child League (filtered by parent)
                 Forms\Components\Select::make('league_id')
-                    ->label('League')
-                    ->relationship('league', 'name')
-                    ->reactive() // important for dependent selects
-                    ->required()
-                    ->afterStateUpdated(fn (callable $set) => $set('team_id', null)), // reset team when league changes
-                    Forms\Components\Select::make('team_id')
+                    ->label('Sub-League')
+                    ->options(fn (Get $get) => $get('parent_league_id')
+                        ? League::where('parent_id', $get('parent_league_id'))->pluck('name', 'id')
+                        : [])
+                    ->searchable()
+                    ->reactive()
+                    ->afterStateUpdated(fn (callable $set) => $set('team_id', null))
+                    ->required(),
+
+                // Step 3: Team (filtered by child league)
+                Forms\Components\Select::make('team_id')
                     ->label('Team')
-                    ->required()
-                    ->options(function (callable $get) {
-                        $leagueId = $get('league_id');
-                        if (!$leagueId) {
-                            return [];
-                        }
-                        return Team::where('league_id', $leagueId)->pluck('name', 'id');
-                    }),
+                    ->options(fn (Get $get) => $get('league_id')
+                        ? Team::where('league_id', $get('league_id'))->pluck('name', 'id')
+                        : [])
+                    ->searchable()
+                    ->required(),
+
+                Forms\Components\TextInput::make('jersey_number')
+                    ->numeric()
+                    ->label('Jersey Number')
+                    ->nullable(),
+
+                Forms\Components\FileUpload::make('photo')
+                    ->label('Upload Photo')
+                    ->image()
+                    ->directory('players')
+                    ->nullable()
+                    ->columnSpanFull(),
+
+                Forms\Components\TextInput::make('photo_url')
+                    ->label('Photo URL (alternative)')
+                    ->url()
+                    ->nullable()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -61,10 +98,12 @@ class PlayerResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
+                Tables\Columns\TextColumn::make('name'),
                 Tables\Columns\TextColumn::make('birthday')->date(),
                 Tables\Columns\TextColumn::make('height'),
                 Tables\Columns\TextColumn::make('nationality'),
-                Tables\Columns\TextColumn::make('league.name')->label('League'),
+                Tables\Columns\TextColumn::make('league.parent.name')->label('Parent League'),
+                Tables\Columns\TextColumn::make('league.name')->label('Sub-League'),
                 Tables\Columns\TextColumn::make('team.name')->label('Team'),
             ])
             ->actions([
@@ -78,9 +117,7 @@ class PlayerResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array

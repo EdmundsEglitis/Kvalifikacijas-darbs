@@ -20,6 +20,10 @@ class Team extends Model
 {
     return $this->hasMany(PlayerGameStat::class);
 }
+public function players()
+{
+    return $this->hasMany(Player::class);
+}
 
     
 }
