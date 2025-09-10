@@ -56,7 +56,7 @@ class PlayerGameStatResource extends Resource
                 Forms\Components\Select::make('game_id')
                     ->label('Game')
                     ->options(
-                        Game::where('date', '<', now()) // ✅ only past games
+                        Game::where('date', '<', now()) // only past games
                             ->with(['team1', 'team2'])
                             ->get()
                             ->mapWithKeys(fn ($game) => [
@@ -101,68 +101,60 @@ class PlayerGameStatResource extends Resource
                     ->nullable(),
 
                 // === Stats fields ===
-                Forms\Components\TextInput::make('fgm2')
-                    ->numeric()
-                    ->label('2PT Made')
-                    ->default(0)
-                    ->reactive()
-                    ->debounce(500)
-                    ->rule(fn (Get $get) => function (string $attribute, $value, $fail) use ($get) {
-                        if ((int) $value > (int) $get('fga2')) {
-                            $fail("The {$attribute} must be less than or equal to 2PT Attempted.");
-                        }
-                    })
-                    ->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-
-                Forms\Components\TextInput::make('fga2')->numeric()->label('2PT Attempted')->default(0)->reactive()->debounce(500),
-
-                Forms\Components\TextInput::make('fgm3')
-                    ->numeric()
-                    ->label('3PT Made')
-                    ->default(0)
-                    ->reactive()
-                    ->debounce(500)
-                    ->rule(fn (Get $get) => function (string $attribute, $value, $fail) use ($get) {
-                        if ((int) $value > (int) $get('fga3')) {
-                            $fail("The {$attribute} must be less than or equal to 3PT Attempted.");
-                        }
-                    })
-                    ->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-
-                Forms\Components\TextInput::make('fga3')->numeric()->label('3PT Attempted')->default(0)->reactive()->debounce(500),
-
-                Forms\Components\TextInput::make('ftm')
-                    ->numeric()
-                    ->label('FT Made')
-                    ->default(0)
-                    ->reactive()
-                    ->debounce(500)
-                    ->rule(fn (Get $get) => function (string $attribute, $value, $fail) use ($get) {
-                        if ((int) $value > (int) $get('fta')) {
-                            $fail("The {$attribute} must be less than or equal to FT Attempted.");
-                        }
-                    })
-                    ->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-
-                Forms\Components\TextInput::make('fta')->numeric()->label('FT Attempted')->default(0)->reactive()->debounce(500),
-
-                Forms\Components\TextInput::make('oreb')->numeric()->label('Off. Rebounds')->default(0)->reactive()->debounce(500)->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('dreb')->numeric()->label('Def. Rebounds')->default(0)->reactive()->debounce(500)->afterStateUpdated(fn (Set $set, $get) => self::recalc($set, $get)),
-
-                Forms\Components\TextInput::make('ast')->numeric()->label('Assists')->default(0)->reactive()->debounce(500)->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('tov')->numeric()->label('Turnovers')->default(0)->reactive()->debounce(500)->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('stl')->numeric()->label('Steals')->default(0)->reactive()->debounce(500)->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('blk')->numeric()->label('Blocks')->default(0)->reactive()->debounce(500)->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-
+                Forms\Components\TextInput::make('fgm2')->numeric()->label('2PT Made')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('fga2')->numeric()->label('2PT Attempted')->default(0)->reactive(),
+                Forms\Components\TextInput::make('fgm3')->numeric()->label('3PT Made')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('fga3')->numeric()->label('3PT Attempted')->default(0)->reactive(),
+                Forms\Components\TextInput::make('ftm')->numeric()->label('FT Made')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('fta')->numeric()->label('FT Attempted')->default(0)->reactive(),
+                Forms\Components\TextInput::make('oreb')->numeric()->label('Off. Rebounds')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('dreb')->numeric()->label('Def. Rebounds')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('ast')->numeric()->label('Assists')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('tov')->numeric()->label('Turnovers')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('stl')->numeric()->label('Steals')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
+                Forms\Components\TextInput::make('blk')->numeric()->label('Blocks')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
                 Forms\Components\TextInput::make('pf')->numeric()->label('Fouls')->default(0),
                 Forms\Components\TextInput::make('plus_minus')->numeric()->label('Plus/Minus')->default(0),
 
+                // === Points with team limit validation ===
+                Forms\Components\TextInput::make('points')
+                    ->label('Points')
+                    ->numeric()
+                    ->required()
+                    ->dehydrated()
+                    ->afterStateUpdated(fn (Set $set, Get $get, $state) => self::recalc($set, $get))
+                    ->rule(function (Get $get) {
+                        return function (string $attribute, $value, $fail) use ($get) {
+                            $gameId = $get('game_id');
+                            $teamId = $get('team_id');
+                            if (!$gameId || !$teamId) return;
+
+                            $game = \App\Models\Game::find($gameId);
+                            if (!$game || !$game->score) return;
+
+                            [$team1Score, $team2Score] = explode('-', $game->score);
+                            $teamScore = ($game->team1_id == $teamId) ? (int)$team1Score : (int)$team2Score;
+
+                            $currentTotal = \App\Models\PlayerGameStat::where('game_id', $gameId)
+                                ->where('team_id', $teamId)
+                                ->sum('points');
+
+                            if ($get('id')) {
+                                $record = \App\Models\PlayerGameStat::find($get('id'));
+                                $currentTotal -= $record ? $record->points : 0;
+                            }
+
+                            if (($currentTotal + $value) > $teamScore) {
+                                $fail("Total points for this team cannot exceed {$teamScore}. Currently entered: {$currentTotal}");
+                            }
+                        };
+                    }),
+
                 // Auto-calculated fields
-                Forms\Components\TextInput::make('points')->label('Total Points')->disabled()->dehydrated(true),
                 Forms\Components\TextInput::make('reb')->label('Total Rebounds')->disabled()->dehydrated(true),
                 Forms\Components\TextInput::make('eff')->label('Efficiency (EFF)')->disabled()->dehydrated(true),
 
-                // === Status with validation + auto-clear ===
+                // Status
                 Forms\Components\Select::make('status')
                     ->label('Status')
                     ->options([
@@ -173,44 +165,10 @@ class PlayerGameStatResource extends Resource
                     ->reactive()
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         if ($state === 'dnp') {
-                            $hasStats = collect([
-                                'fgm2','fga2','fgm3','fga3','ftm','fta',
-                                'oreb','dreb','ast','tov','stl','blk','pf',
-                                'plus_minus','points','reb','eff'
-                            ])->some(fn($field) => (int)$get($field) > 0);
-
-                            if ($hasStats) {
-                                Notification::make()
-                                    ->title('Confirm Did Not Play')
-                                    ->body('This player already has stats entered. Switching to "Did Not Play" will clear all stats.')
-                                    ->danger()
-                                    ->send();
-                            }
-
-                            foreach ([
-                                'fgm2','fga2','fgm3','fga3','ftm','fta',
-                                'oreb','dreb','reb','ast','tov','stl','blk',
-                                'pf','plus_minus','points','eff'
-                            ] as $field) {
-                                $set($field, 0);
-                            }
+                            $fields = ['fgm2','fga2','fgm3','fga3','ftm','fta','oreb','dreb','ast','tov','stl','blk','pf','plus_minus','points','reb','eff'];
+                            foreach ($fields as $field) $set($field, 0);
                             $set('minutes', null);
                         }
-                    })
-                    ->rule(function (Get $get) {
-                        return function (string $attribute, $value, $fail) use ($get) {
-                            if ($value === 'dnp') {
-                                $hasStats = collect([
-                                    'fgm2','fga2','fgm3','fga3','ftm','fta',
-                                    'oreb','dreb','ast','tov','stl','blk','pf',
-                                    'plus_minus','points','reb','eff'
-                                ])->some(fn($field) => (int)$get($field) > 0);
-
-                                if ($hasStats) {
-                                    $fail("Player cannot be marked as 'Did Not Play' while stats are entered.");
-                                }
-                            }
-                        };
                     }),
             ]);
     }

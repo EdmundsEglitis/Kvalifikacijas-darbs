@@ -24,6 +24,10 @@ public function players()
 {
     return $this->hasMany(Player::class);
 }
+public function playerStats()
+{
+    return $this->players()->with('games');
+}
 
     
 }

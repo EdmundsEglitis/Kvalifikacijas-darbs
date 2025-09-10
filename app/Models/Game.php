@@ -56,4 +56,27 @@ class Game extends Model
     {
         return $this->hasMany(PlayerGameStat::class);
     }
+    public function players()
+    {
+        return $this->belongsToMany(Player::class, 'player_game_stats')
+                    ->withPivot([
+                        'team_id',
+                        'minutes', 'points',
+                        'fgm2', 'fga2',
+                        'fgm3', 'fga3',
+                        'ftm', 'fta',
+                        'oreb', 'dreb', 'reb',
+                        'ast', 'tov', 'stl', 'blk', 'pf',
+                        'eff', 'plus_minus',
+                        'status',
+                    ])
+                    ->withTimestamps();
+    }
+    
+    public function playerGameStats()
+    {
+        return $this->hasMany(PlayerGameStat::class);
+    }
+
+
 }

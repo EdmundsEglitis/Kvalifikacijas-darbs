@@ -23,10 +23,28 @@ Route::prefix('nba')->group(function () {
 // LBS section
 Route::prefix('lbs')->group(function () {
     Route::get('/', [LbsController::class, 'home'])->name('lbs.home');
+
+    // Parent and sub-leagues
     Route::get('/league/{id}', [LbsController::class, 'showParent'])->name('lbs.league.show');
-    Route::get('/lbs/league/{id}', [LbsController::class, 'showParent'])->name('lbs.league.show');
-    Route::get('/lbs/sub-league/{id}', [LbsController::class, 'showSubLeague'])->name('lbs.subleague.show');
-    Route::get('/lbs/sub-league/{id}/teams', [LbsController::class, 'showTeams'])->name('lbs.subleague.teams');
+    Route::get('/sub-league/{id}', [LbsController::class, 'showSubLeague'])->name('lbs.subleague.show');
+    
+    // Sub-league tabs
+    Route::get('/sub-league/{id}/news', [LbsController::class, 'subleagueNews'])->name('lbs.subleague.news');
+    Route::get('/sub-league/{id}/calendar', [LbsController::class, 'subleagueCalendar'])->name('lbs.subleague.calendar');
+    Route::get('/sub-league/{id}/teams', [LbsController::class, 'showTeams'])->name('lbs.subleague.teams'); // existing
+    Route::get('/sub-league/{id}/stats', [LbsController::class, 'subleagueStats'])->name('lbs.subleague.stats');
+
+    // Team views
+    Route::get('/team/{id}', [LbsController::class, 'showTeam'])->name('lbs.team.show');
+    Route::get('/team/{team}/games', [LbsController::class, 'teamGames'])->name('lbs.team.games');
+    Route::get('/team/{team}/players', [LbsController::class, 'teamPlayers'])->name('lbs.team.players');
+    Route::get('/team/{team}/stats', [LbsController::class, 'teamStats'])->name('lbs.team.stats');
+    Route::get('/team/{team}/', [LbsController::class, 'teamOverview'])->name('lbs.team.overview');
+
+    // Individual game view
+    Route::get('/game/{id}', [LbsController::class, 'showGame'])->name('lbs.game.detail');
+
+    // Shortcuts for main categories
     Route::get('/lbl-lbsl', [LbsController::class, 'lblLbsl'])->name('lbs.lbl_lbsl');
     Route::get('/ljbl', [LbsController::class, 'ljbl'])->name('lbs.ljbl');
     Route::get('/izlases', [LbsController::class, 'izlases'])->name('lbs.izlases');
