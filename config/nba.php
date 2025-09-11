@@ -1,12 +1,7 @@
 <?php
 
 return [
-    'url' => env('NBA_API_URL'),
-    'key' => env('NBA_API_KEY'),
-    'headers' => [
-        'rapidapi' => [
-            'x-rapidapi-host' => 'nba-api-free-data.p.rapidapi.com',
-            'x-rapidapi-key'  => env('NBA_API_KEY'),
-        ],
-    ],
+    'key' => env('API_BASKETBALL_KEY'),
+    'base_uri' => env('API_BASKETBALL_HOST', 'https://api-basketball.p.rapidapi.com'),
+    'timeout' => env('API_BASKETBALL_TIMEOUT', 10),
 ];

@@ -1,18 +1,34 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\DB;
+use App\Models\Player;
+use App\Models\PlayerGameStat;
 use App\Models\League;
 use App\Models\Team;
 use App\Models\Game;
+use App\Models\News;
 use Illuminate\Http\Request;
 
 class LbsController extends Controller
 {
+
     public function home()
     {
-        return view('lbs.home'); // $parentLeagues automatically injected
+        $parentLeagues = League::whereNull('parent_id')->get();
+        $news = News::latest()->take(6)->get(); // show latest 6 news items
+    
+        return view('lbs.home', compact('parentLeagues', 'news'));
     }
+    
+    public function showNews($id)
+{
+    $news = \App\Models\News::with('league')->findOrFail($id);
+    $parentLeagues = \App\Models\League::whereNull('parent_id')->get();
+
+    return view('lbs.news_detail', compact('news', 'parentLeagues'));
+}
+
 
     public function lblLbsl()
     {
@@ -129,27 +145,43 @@ class LbsController extends Controller
         return view('lbs.team_detail', compact('team', 'averageStats', 'bestPlayers', 'wins', 'losses'));
     }
     
-
     public function teamGames($id)
     {
         $team = Team::findOrFail($id);
-
+    
+        $parentLeagues = League::whereNull('parent_id')->get(); // Pass for navbar
+    
         $games = Game::where('team1_id', $team->id)
             ->orWhere('team2_id', $team->id)
             ->with(['team1', 'team2'])
             ->get()
             ->map(function ($game) {
+                // Default scores
+                $game->score1 = $game->score2 = 0;
+    
                 if ($game->score) {
-                    [$game->score1, $game->score2] = explode('-', $game->score);
+                    if (str_contains($game->score, '-')) {
+                        $parts = explode('-', $game->score);
+                    } elseif (str_contains($game->score, ':')) {
+                        $parts = explode(':', $game->score);
+                    } else {
+                        $parts = [];
+                    }
+    
+                    $game->score1 = isset($parts[0]) ? (int)$parts[0] : 0;
+                    $game->score2 = isset($parts[1]) ? (int)$parts[1] : 0;
                 } else {
+                    // Fallback: sum quarters
                     $game->score1 = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
                     $game->score2 = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
                 }
+    
                 return $game;
             });
-
-        return view('lbs.team_games', compact('team', 'games'));
+    
+        return view('lbs.team_games', compact('team', 'games', 'parentLeagues'));
     }
+    
 
     public function teamPlayers($id)
     {
@@ -173,20 +205,36 @@ class LbsController extends Controller
     public function showGame($id)
     {
         $game = Game::with([
-            'team1', 
+            'team1',
             'team2',
             'playerGameStats.player'
         ])->findOrFail($id);
-
-        $team1Score = $team2Score = null;
+    
+        $team1Score = $team2Score = 0; // default
+    
         if ($game->score) {
-            [$team1Score, $team2Score] = explode('-', $game->score);
+            // support both "X-Y" or "X:Y" formats
+            if (str_contains($game->score, '-')) {
+                $parts = explode('-', $game->score);
+            } elseif (str_contains($game->score, ':')) {
+                $parts = explode(':', $game->score);
+            } else {
+                $parts = [];
+            }
+    
+            $team1Score = isset($parts[0]) ? (int)$parts[0] : 0;
+            $team2Score = isset($parts[1]) ? (int)$parts[1] : 0;
+        } else {
+            // fallback: sum quarter scores if available
+            $team1Score = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
+            $team2Score = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
         }
-
+    
         $playerStats = $game->playerGameStats->groupBy('team_id');
-
+    
         return view('lbs.game_detail', compact('game', 'team1Score', 'team2Score', 'playerStats'));
     }
+    
 
     public function subLeagueNews($id)
     {
@@ -231,11 +279,17 @@ class LbsController extends Controller
     
     public function subleagueStats($id)
     {
-        $subLeague = League::with('teams.players.playerGameStats')->findOrFail($id);
+        // Load subleague and parent leagues for navbars
+        $subLeague = League::with('teams')->findOrFail($id);
         $parentLeagues = League::whereNull('parent_id')->get();
     
-        // Aggregate stats by team
-        $teamsStats = $subLeague->teams->map(function($team){
+        // team ids in this sub-league
+        $teamIds = $subLeague->teams->pluck('id')->toArray();
+    
+        // ---------------------
+        // 1) Teams stats (wins / losses / games)
+        // ---------------------
+        $teamsStats = $subLeague->teams->map(function (Team $team) {
             $games = Game::where('team1_id', $team->id)
                          ->orWhere('team2_id', $team->id)
                          ->get();
@@ -247,10 +301,102 @@ class LbsController extends Controller
                 'team' => $team,
                 'wins' => $wins,
                 'losses' => $losses,
+                'games_played' => $games->count(),
             ];
         });
     
-        return view('lbs.subleague_stats', compact('subLeague', 'parentLeagues', 'teamsStats'));
+        // ---------------------
+        // 2) Players aggregated stats (AVG per game) for players that played for teams in this sub-league
+        // We aggregate directly from player_game_stats to avoid depending on Player->games relation.
+        // ---------------------
+        if (empty($teamIds)) {
+            $playersAgg = collect();
+        } else {
+            $playersAgg = DB::table('player_game_stats')
+                ->select(
+                    'player_id',
+                    DB::raw('COUNT(*) as games_played'),
+                    DB::raw('AVG(points) as avg_points'),
+                    DB::raw('AVG(reb) as avg_reb'),
+                    DB::raw('AVG(ast) as avg_ast'),
+                    DB::raw('AVG(stl) as avg_stl'),
+                    DB::raw('AVG(blk) as avg_blk'),
+                    DB::raw('AVG(eff) as avg_eff')
+                )
+                ->whereIn('team_id', $teamIds)
+                ->groupBy('player_id')
+                ->get();
+        }
+    
+        // preload Player models to avoid N+1
+        $playerIds = $playersAgg->pluck('player_id')->unique()->filter()->values()->all();
+        $playersById = Player::whereIn('id', $playerIds)
+            ->with('team') // optional: will eager load team if relation exists
+            ->get()
+            ->keyBy('id');
+    
+        // Build playersStats collection used by the "All players" table
+        $playersStats = $playersAgg->map(function ($row) use ($playersById) {
+            $player = $playersById->get($row->player_id);
+    
+            return (object) [
+                'id' => $row->player_id,
+                'name' => $player ? $player->name : ('Player #' . $row->player_id),
+                'team' => $player && $player->team ? $player->team : null,
+                'games' => (int) $row->games_played,
+                'avg_points' => $row->avg_points !== null ? round($row->avg_points, 1) : 0,
+                'avg_rebounds' => $row->avg_reb !== null ? round($row->avg_reb, 1) : 0,
+                'avg_assists' => $row->avg_ast !== null ? round($row->avg_ast, 1) : 0,
+                'avg_steals' => $row->avg_stl !== null ? round($row->avg_stl, 1) : 0,
+                'avg_blocks' => $row->avg_blk !== null ? round($row->avg_blk, 1) : 0,
+                'avg_eff' => $row->avg_eff !== null ? round($row->avg_eff, 1) : 0,
+            ];
+        });
+    
+        // ---------------------
+        // 3) Top players per stat (highest AVG)
+        // ---------------------
+        $topPlayers = collect();
+    
+        if ($playersAgg->isNotEmpty()) {
+            // convert to collection keyed by player_id for easy lookup
+            $aggCollection = $playersAgg->mapWithKeys(fn($r) => [$r->player_id => $r]);
+    
+            // helper to pick best by column name
+            $pickBest = function ($col) use ($aggCollection, $playersById) {
+                $best = $aggCollection->sortByDesc($col)->first();
+                if (!$best) {
+                    return null;
+                }
+                $player = $playersById->get($best->player_id);
+                return (object) [
+                    'id' => $best->player_id,
+                    'name' => $player ? $player->name : ('Player #' . $best->player_id),
+                    'team' => $player && $player->team ? $player->team : null,
+                    'avg_value' => $best->$col !== null ? round($best->$col, 1) : 0,
+                ];
+            };
+    
+            $topPlayers['points']   = $pickBest('avg_points');
+            $topPlayers['rebounds'] = $pickBest('avg_reb');
+            $topPlayers['assists']  = $pickBest('avg_ast');
+            $topPlayers['steals']   = $pickBest('avg_stl');
+            $topPlayers['blocks']   = $pickBest('avg_blk');
+            $topPlayers['eff']      = $pickBest('avg_eff');
+        }
+    
+        // sort teamsStats by wins descending so the best is first (view can also do this)
+        $teamsStats = $teamsStats->sortByDesc(fn($t) => $t['wins'])->values();
+    
+        // Pass everything to the view
+        return view('lbs.subleague_stats', [
+            'subLeague' => $subLeague,
+            'parentLeagues' => $parentLeagues,
+            'teamsStats' => $teamsStats,
+            'topPlayers' => $topPlayers,
+            'playersStats' => $playersStats,
+        ]);
     }
+    
     
 }

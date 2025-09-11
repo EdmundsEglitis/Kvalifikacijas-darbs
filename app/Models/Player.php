@@ -42,7 +42,10 @@ public function games()
                     'ftm', 'fta', 'oreb', 'dreb', 'tov', 'pf', 'eff'
                 ]);
 }
-
+public function playerGameStats()
+{
+    return $this->hasMany(PlayerGameStat::class, 'player_id');
+}
 
 
 

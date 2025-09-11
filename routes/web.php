@@ -23,7 +23,7 @@ Route::prefix('nba')->group(function () {
 // LBS section
 Route::prefix('lbs')->group(function () {
     Route::get('/', [LbsController::class, 'home'])->name('lbs.home');
-
+    Route::get('/news/{id}', [LbsController::class, 'showNews'])->name('news.show');
     // Parent and sub-leagues
     Route::get('/league/{id}', [LbsController::class, 'showParent'])->name('lbs.league.show');
     Route::get('/sub-league/{id}', [LbsController::class, 'showSubLeague'])->name('lbs.subleague.show');
