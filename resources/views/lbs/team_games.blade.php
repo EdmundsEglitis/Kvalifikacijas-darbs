@@ -67,57 +67,114 @@
         </div>
     </nav>
 
-    <!-- Page Content -->
     <main class="pt-32 max-w-7xl mx-auto px-4 space-y-8">
 
-        <!-- Team Overall Record -->
-        <section>
-            <h2 class="text-2xl font-semibold text-gray-800">Komandas rezultāts</h2>
-            @php
-                $wins = $games->where('winner_id', $team->id)->count();
-                $losses = $games->count() - $wins;
-            @endphp
-            <div class="mt-4 flex space-x-6">
-                <div class="p-4 bg-white shadow rounded-lg text-center w-32">
-                    <p class="text-lg font-bold">{{ $wins }}</p>
-                    <p class="text-sm text-gray-600">Uzvaras</p>
-                </div>
-                <div class="p-4 bg-white shadow rounded-lg text-center w-32">
-                    <p class="text-lg font-bold">{{ $losses }}</p>
-                    <p class="text-sm text-gray-600">Zaudējumi</p>
-                </div>
-            </div>
-        </section>
+<!-- Team Overall Record -->
+<section>
+    <h2 class="text-2xl font-semibold text-gray-800">Komandas rezultāts</h2>
+    @php
+        $wins = $games->where('winner_id', $team->id)->count();
+        $losses = $games->count() - $wins;
+    @endphp
+    <div class="mt-4 flex space-x-6">
+        <div class="p-4 bg-white shadow rounded-lg text-center w-32">
+            <p class="text-lg font-bold">{{ $wins }}</p>
+            <p class="text-sm text-gray-600">Uzvaras</p>
+        </div>
+        <div class="p-4 bg-white shadow rounded-lg text-center w-32">
+            <p class="text-lg font-bold">{{ $losses }}</p>
+            <p class="text-sm text-gray-600">Zaudējumi</p>
+        </div>
+    </div>
+</section>
 
-        <!-- Individual Games -->
-        <section>
-            <h2 class="text-2xl font-semibold text-gray-800">Spēles</h2>
+<!-- Individual Games -->
+@php
+use Carbon\Carbon;
 
-            @if($games->isEmpty())
-                <p class="mt-4 text-gray-500">Šai komandai vēl nav spēļu.</p>
-            @else
-                <div class="mt-4 space-y-4">
-                    @foreach($games as $game)
-                        <div class="p-4 bg-white shadow rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                            <div>
-                                <p class="font-medium text-lg">
-                                    {{ $game->team1->name }} vs {{ $game->team2->name }}
-                                </p>
-                                <p class="text-gray-600 font-bold text-xl">
-                                    {{ $game->score1 }} : {{ $game->score2 }}
-                                </p>
-                                <p class="text-sm text-gray-500">Datums: {{ $game->date }}</p>
-                            </div>
-                            <div class="mt-2 sm:mt-0">
-                                <a href="{{ route('lbs.game.detail', $game->id) }}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                                    Skatīt detalizētu statistiku
-                                </a>
-                            </div>
+// Separate upcoming and past games
+$upcomingGames = $games->filter(fn($g) => Carbon::parse($g->date)->isFuture())->sortBy('date');
+$pastGames = $games->filter(fn($g) => Carbon::parse($g->date)->isPast() || Carbon::parse($g->date)->isToday())->sortByDesc('date');
+@endphp
+
+<section>
+    <h2 class="text-2xl font-semibold text-gray-800">Spēles</h2>
+
+    @if($games->isEmpty())
+        <p class="mt-4 text-gray-500">Šai komandai vēl nav spēļu.</p>
+    @else
+        <div class="mt-4 space-y-6">
+            {{-- Upcoming Games --}}
+            @foreach($upcomingGames as $game)
+                <div class="p-4 shadow rounded-lg flex flex-col items-center text-center bg-yellow-50 border-2 border-yellow-400">
+                    <span class="px-2 py-1 bg-yellow-400 text-white rounded-full text-xs font-bold mb-2">GAIDĀMĀ SPĒLE</span>
+
+                    <div class="flex items-center justify-center space-x-6">
+                        {{-- Team 1 --}}
+                        <div class="flex flex-col items-center space-y-1">
+                            @if($game->team1->logo)
+                                <img src="{{ asset('storage/' . $game->team1->logo) }}" alt="{{ $game->team1->name }}" class="h-16 w-16 object-contain rounded">
+                            @endif
+                            <span class="font-medium text-lg">{{ $game->team1->name }}</span>
                         </div>
-                    @endforeach
+
+                        {{-- Score --}}
+                        <div class="flex flex-col items-center">
+                            <span class="font-bold text-xl text-gray-800">{{ $game->score1 }} : {{ $game->score2 }}</span>
+                            <span class="text-sm text-gray-500 mt-1">Datums: {{ Carbon::parse($game->date)->format('d.m.Y H:i') }}</span>
+                        </div>
+
+                        {{-- Team 2 --}}
+                        <div class="flex flex-col items-center space-y-1">
+                            @if($game->team2->logo)
+                                <img src="{{ asset('storage/' . $game->team2->logo) }}" alt="{{ $game->team2->name }}" class="h-16 w-16 object-contain rounded">
+                            @endif
+                            <span class="font-medium text-lg">{{ $game->team2->name }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('lbs.game.detail', $game->id) }}" class="mt-4 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded">
+                        Skatīt detalizētu statistiku
+                    </a>
                 </div>
-            @endif
-        </section>
-    </main>
+            @endforeach
+
+            {{-- Past Games --}}
+            @foreach($pastGames as $game)
+                <div class="p-4 shadow rounded-lg flex flex-col items-center text-center bg-white">
+                    <div class="flex items-center justify-center space-x-6">
+                        {{-- Team 1 --}}
+                        <div class="flex flex-col items-center space-y-1">
+                            @if($game->team1->logo)
+                                <img src="{{ asset('storage/' . $game->team1->logo) }}" alt="{{ $game->team1->name }}" class="h-16 w-16 object-contain rounded">
+                            @endif
+                            <span class="font-medium text-lg">{{ $game->team1->name }}</span>
+                        </div>
+
+                        {{-- Score --}}
+                        <div class="flex flex-col items-center">
+                            <span class="font-bold text-xl text-gray-800">{{ $game->score1 }} : {{ $game->score2 }}</span>
+                            <span class="text-sm text-gray-500 mt-1">Datums: {{ Carbon::parse($game->date)->format('d.m.Y H:i') }}</span>
+                        </div>
+
+                        {{-- Team 2 --}}
+                        <div class="flex flex-col items-center space-y-1">
+                            @if($game->team2->logo)
+                                <img src="{{ asset('storage/' . $game->team2->logo) }}" alt="{{ $game->team2->name }}" class="h-16 w-16 object-contain rounded">
+                            @endif
+                            <span class="font-medium text-lg">{{ $game->team2->name }}</span>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('lbs.game.detail', $game->id) }}" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                        Skatīt detalizētu statistiku
+                    </a>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</section>
+
+</main>
 </body>
 </html>

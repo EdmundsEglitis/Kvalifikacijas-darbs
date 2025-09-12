@@ -83,7 +83,14 @@
     <!-- Page Content -->
     <main class="pt-32 max-w-6xl mx-auto px-4 space-y-10">
 
-
+    <section class="flex items-center space-x-4 mt-4">
+        @if($team->logo)
+            <img src="{{ asset('storage/' . $team->logo) }}" 
+                 alt="{{ $team->name }}" 
+                 class="h-24 w-24 object-contain rounded shadow">
+        @endif
+        <h1 class="text-3xl font-bold text-gray-800">{{ $team->name }}</h1>
+    </section>
     <!-- Team Record -->
 <section>
     <h2 class="text-2xl font-semibold text-gray-800">Komandas rezultāts</h2>

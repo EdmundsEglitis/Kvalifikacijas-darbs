@@ -13,6 +13,8 @@ class Player extends Model
         'birthday',
         'height',
         'nationality',
+        'photo',
+        'jersey_number',
         'league_id',
         'team_id',
     ];

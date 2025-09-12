@@ -9,7 +9,8 @@ class Team extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'league_id'];
+    protected $fillable = ['name', 'league_id', 'logo'];
+
 
     // Define relationship to League
     public function league()
@@ -27,6 +28,12 @@ public function players()
 public function playerStats()
 {
     return $this->players()->with('games');
+}
+public function getLogoUrlAttribute(): ?string
+{
+    return $this->logo 
+        ? asset('storage/' . $this->logo) 
+        : null;
 }
 
     

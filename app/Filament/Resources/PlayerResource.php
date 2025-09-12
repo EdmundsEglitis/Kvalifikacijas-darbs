@@ -41,6 +41,19 @@ class PlayerResource extends Resource
                     ->nullable()
                     ->maxLength(255),
 
+                    Forms\Components\FileUpload::make('photo')
+                    ->label('Upload Photo')
+                    ->image()
+                    ->directory('players')
+                    ->disk('public')             // 👈 ensures Filament saves in public disk
+                    ->visibility('public')       // 👈 makes it accessible
+                    ->nullable()
+                    ->imagePreviewHeight('150')  // 👈 shows preview in edit form
+                    ->openable()
+                    ->downloadable()
+                    ->columnSpanFull(),
+                
+
                 // Step 1: Parent League
                 Forms\Components\Select::make('parent_league_id')
                     ->label('Parent League')
@@ -78,18 +91,8 @@ class PlayerResource extends Resource
                     ->label('Jersey Number')
                     ->nullable(),
 
-                Forms\Components\FileUpload::make('photo')
-                    ->label('Upload Photo')
-                    ->image()
-                    ->directory('players')
-                    ->nullable()
-                    ->columnSpanFull(),
 
-                Forms\Components\TextInput::make('photo_url')
-                    ->label('Photo URL (alternative)')
-                    ->url()
-                    ->nullable()
-                    ->columnSpanFull(),
+
             ]);
     }
 
@@ -102,6 +105,13 @@ class PlayerResource extends Resource
                 Tables\Columns\TextColumn::make('birthday')->date(),
                 Tables\Columns\TextColumn::make('height'),
                 Tables\Columns\TextColumn::make('nationality'),
+                Tables\Columns\ImageColumn::make('photo')
+                ->label('Photo')
+                ->disk('public')
+                ->height(50)
+                ->width(50)
+                ->rounded(), // circular thumbnail
+
                 Tables\Columns\TextColumn::make('league.parent.name')->label('Parent League'),
                 Tables\Columns\TextColumn::make('league.name')->label('Sub-League'),
                 Tables\Columns\TextColumn::make('team.name')->label('Team'),
