@@ -2,32 +2,75 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Game;
 use App\Models\Player;
 use App\Models\Team;
-use App\Models\Game;
-use App\Models\PlayerGameStat;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PlayerGameStatFactory extends Factory
 {
-    protected $model = PlayerGameStat::class;
-
     public function definition(): array
     {
-        $player = Player::inRandomOrder()->first();
-        $team = $player?->team;
-        $game = Game::inRandomOrder()->first();
+        // Random attempts
+        $fga2 = $this->faker->numberBetween(0, 10);
+        $fgm2 = $this->faker->numberBetween(0, $fga2);
+
+        $fga3 = $this->faker->numberBetween(0, 8);
+        $fgm3 = $this->faker->numberBetween(0, $fga3);
+
+        $fta  = $this->faker->numberBetween(0, 6);
+        $ftm  = $this->faker->numberBetween(0, $fta);
+
+        // Points = 2s + 3s + FTs
+        $points = $fgm2 * 2 + $fgm3 * 3 + $ftm;
+
+        // Rebounds
+        $oreb = $this->faker->numberBetween(0, 5);
+        $dreb = $this->faker->numberBetween(0, 8);
+        $reb = $oreb + $dreb;
+
+        // Other stats
+        $ast = $this->faker->numberBetween(0, 10);
+        $tov = $this->faker->numberBetween(0, 6);
+        $stl = $this->faker->numberBetween(0, 4);
+        $blk = $this->faker->numberBetween(0, 3);
+        $pf  = $this->faker->numberBetween(0, 5);
+
+        // Efficiency (simplified)
+        $eff = $points + $reb + $ast + $stl + $blk - ($fga2 - $fgm2) - ($fga3 - $fgm3) - ($fta - $ftm) - $tov;
 
         return [
-            'player_id' => $player?->id,
-            'team_id' => $team?->id,
-            'game_id' => $game?->id,
-            'points' => $this->faker->numberBetween(0, 30),
-            'reb' => $this->faker->numberBetween(0, 15),
-            'ast' => $this->faker->numberBetween(0, 12),
-            'stl' => $this->faker->numberBetween(0, 5),
-            'blk' => $this->faker->numberBetween(0, 5),
-            'eff' => $this->faker->numberBetween(-5, 35),
+            'game_id' => Game::factory(),
+            'player_id' => Player::factory(),
+            'team_id' => Team::factory(),
+
+            'minutes' => $this->faker->numberBetween(5, 40) . ':' . str_pad($this->faker->numberBetween(0, 59), 2, '0', STR_PAD_LEFT),
+
+            'points' => $points,
+
+            'fgm2' => $fgm2,
+            'fga2' => $fga2,
+
+            'fgm3' => $fgm3,
+            'fga3' => $fga3,
+
+            'ftm' => $ftm,
+            'fta' => $fta,
+
+            'oreb' => $oreb,
+            'dreb' => $dreb,
+            'reb' => $reb,
+
+            'ast' => $ast,
+            'tov' => $tov,
+            'stl' => $stl,
+            'blk' => $blk,
+            'pf'  => $pf,
+
+            'eff' => $eff,
+            'plus_minus' => $this->faker->numberBetween(-15, 15),
+
+            'status' => $this->faker->randomElement(['played', 'dnp']),
         ];
     }
 }

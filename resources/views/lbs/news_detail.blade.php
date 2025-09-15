@@ -61,8 +61,9 @@
         <p class="text-gray-500 text-sm">Publicēts: {{ $news->created_at->format('Y-m-d H:i') }}</p>
 
         <div class="prose max-w-none mt-6">
-            {!! $news->content !!}
+            {!! $news->clean_content !!}
         </div>
+
 
         <a href="{{ route('lbs.home') }}" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
             Atpakaļ uz mājaslapu

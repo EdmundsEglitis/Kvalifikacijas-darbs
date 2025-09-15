@@ -75,7 +75,7 @@
         <ul class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4">
     @foreach($subLeagues as $sub)
         <li>
-            <a href="{{ route('lbs.subleague.show', $sub->id) }}"
+            <a href="{{ route('lbs.subleague.news', $sub->id) }}"
                class="block p-4 rounded-lg shadow hover:bg-gray-100 transition text-center font-medium">
                 {{ $sub->name }}
             </a>

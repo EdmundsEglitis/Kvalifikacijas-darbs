@@ -70,18 +70,27 @@
         <section class="mt-8">
             <h2 class="text-2xl font-bold text-gray-800 mb-4">Jaunākās ziņas</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($news as $item)
-                    <div class="bg-white shadow rounded-lg p-4 flex flex-col">
-                        <h3 class="font-bold text-xl">{{ $item->title }}</h3>
-                        <div class="mt-2 prose max-w-full">
-                            {!! Str::limit(strip_tags($item->content), 150, '...') !!}
-                        </div>
-                        <a href="{{ route('news.show', $item->id) }}" class="mt-auto text-blue-600 hover:underline">
-                            Lasīt vairāk
-                        </a>
-                        <p class="text-gray-400 text-sm mt-2">Publicēts: {{ $item->created_at->format('Y-m-d H:i') }}</p>
-                    </div>
-                @endforeach
+            @foreach($news as $item)
+    <div class="bg-white shadow rounded-lg p-4 flex flex-col">
+        <h3 class="font-bold text-xl">{{ $item->title }}</h3>
+
+        <div class="mt-2 prose max-w-full">
+            @if($item->preview_image)
+                <img src="{{ $item->preview_image }}" class="w-32 h-auto rounded-md mb-2" />
+            @endif
+
+            {!! $item->excerpt !!}
+        </div>
+
+        <a href="{{ route('news.show', $item->id) }}" class="mt-auto text-blue-600 hover:underline">
+            Lasīt vairāk
+        </a>
+        <p class="text-gray-400 text-sm mt-2">
+            Publicēts: {{ $item->created_at->format('Y-m-d H:i') }}
+        </p>
+    </div>
+@endforeach
+
             </div>
         </section>
     </main>

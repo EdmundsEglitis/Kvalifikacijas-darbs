@@ -73,7 +73,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex space-x-6 py-3">
             <a href="{{ route('lbs.subleague.news', $subLeague->id) }}" 
-               class="text-gray-700 hover:text-blue-600 font-medium {{ request()->routeIs('lbs.subleague.news') ? 'text-blue-600 font-bold' : '' }}">
+               class="text-gray-700 hover:text-blue-600 font-medium {{ request()->routeIs('lbs.subleague') ? 'text-blue-600 font-bold' : '' }}">
                 JAUNUMI
             </a>
 

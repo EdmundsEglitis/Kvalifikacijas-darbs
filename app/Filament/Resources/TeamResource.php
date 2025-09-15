@@ -30,19 +30,21 @@ class TeamResource extends Resource
     
                 Forms\Components\Select::make('league_id')
                     ->label('League')
-                    ->relationship('league', 'name')
+                    ->options(
+                        League::whereNotNull('parent_id')->pluck('name', 'id') // ✅ only sub-leagues
+                    )
+                    ->searchable()
                     ->required(),
     
-                    Forms\Components\FileUpload::make('logo')
+                Forms\Components\FileUpload::make('logo')
                     ->label('Team Logo')
                     ->image()
-                    ->disk('public') // 👈 ensures it uses /storage
+                    ->disk('public')
                     ->directory('team-logos')
-                    ->imagePreviewHeight('150') // 👈 prevents "waiting for size"
-                    ->openable() // optional: click to view full size
-                    ->downloadable() // optional: download from Filament
+                    ->imagePreviewHeight('150')
+                    ->openable()
+                    ->downloadable()
                     ->nullable(),
-                
             ]);
     }
     

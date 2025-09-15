@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateGame extends CreateRecord
 {
     protected static string $resource = GameResource::class;
+    
 }

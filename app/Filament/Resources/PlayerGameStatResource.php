@@ -8,12 +8,12 @@ use App\Models\Game;
 use App\Models\Player;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
 
 class PlayerGameStatResource extends Resource
 {
@@ -44,9 +44,9 @@ class PlayerGameStatResource extends Resource
 
         $eff = ($points + $reb + $ast + $stl + $blk) - ($missedFg + $missedFt + $tov);
 
-        if ($get('points') !== $points) $set('points', $points);
-        if ($get('reb') !== $reb) $set('reb', $reb);
-        if ($get('eff') !== $eff) $set('eff', $eff);
+        $set('points', $points);
+        $set('reb', $reb);
+        $set('eff', $eff);
     }
 
     public static function form(Form $form): Form
@@ -56,7 +56,7 @@ class PlayerGameStatResource extends Resource
                 Forms\Components\Select::make('game_id')
                     ->label('Game')
                     ->options(
-                        Game::where('date', '<', now()) // only past games
+                        Game::where('date', '<', now())
                             ->with(['team1', 'team2'])
                             ->get()
                             ->mapWithKeys(fn ($game) => [
@@ -86,73 +86,74 @@ class PlayerGameStatResource extends Resource
                     ->reactive()
                     ->afterStateUpdated(fn (Set $set) => $set('player_id', null)),
 
-                Forms\Components\Select::make('player_id')
+                    Forms\Components\Select::make('player_id')
                     ->label('Player')
-                    ->options(fn (Get $get) =>
-                        $get('team_id')
-                            ? Player::where('team_id', $get('team_id'))->pluck('name', 'id')
-                            : []
-                    )
+                    ->options(function (Get $get) {
+                        $teamId = $get('team_id');
+                        $gameId = $get('game_id');
+                
+                        // Debug dump — will stop execution here
+                
+                        if (! $teamId || ! $gameId) {
+                            return [];
+                        }
+
+                        return Player::query()
+                            ->where('team_id', $teamId)
+                            ->whereDoesntHave('playerGameStats', function ($q) use ($gameId) {
+                                $q->where('game_id', $gameId);
+                            })
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->toArray();
+                    })
                     ->searchable()
-                    ->required(),
-
-                Forms\Components\TextInput::make('minutes')
-                    ->label('Minutes')
-                    ->nullable(),
-
-                // === Stats fields ===
-                Forms\Components\TextInput::make('fgm2')->numeric()->label('2PT Made')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('fga2')->numeric()->label('2PT Attempted')->default(0)->reactive(),
-                Forms\Components\TextInput::make('fgm3')->numeric()->label('3PT Made')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('fga3')->numeric()->label('3PT Attempted')->default(0)->reactive(),
-                Forms\Components\TextInput::make('ftm')->numeric()->label('FT Made')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('fta')->numeric()->label('FT Attempted')->default(0)->reactive(),
-                Forms\Components\TextInput::make('oreb')->numeric()->label('Off. Rebounds')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('dreb')->numeric()->label('Def. Rebounds')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('ast')->numeric()->label('Assists')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('tov')->numeric()->label('Turnovers')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('stl')->numeric()->label('Steals')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('blk')->numeric()->label('Blocks')->default(0)->reactive()->afterStateUpdated(fn (Set $set, Get $get) => self::recalc($set, $get)),
-                Forms\Components\TextInput::make('pf')->numeric()->label('Fouls')->default(0),
-                Forms\Components\TextInput::make('plus_minus')->numeric()->label('Plus/Minus')->default(0),
-
-                // === Points with team limit validation ===
-                Forms\Components\TextInput::make('points')
-                    ->label('Points')
-                    ->numeric()
                     ->required()
-                    ->dehydrated()
-                    ->afterStateUpdated(fn (Set $set, Get $get, $state) => self::recalc($set, $get))
-                    ->rule(function (Get $get) {
-                        return function (string $attribute, $value, $fail) use ($get) {
-                            $gameId = $get('game_id');
-                            $teamId = $get('team_id');
-                            if (!$gameId || !$teamId) return;
+                    ->reactive(),
+                
+                
+                
+                
+                
+                
+                
+                
+                Forms\Components\TextInput::make('minutes')->numeric()->label('Minutes')->nullable()->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('fgm2')->numeric()->label('2PT Made')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('fga2')->numeric()->label('2PT Attempted')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('fgm3')->numeric()->label('3PT Made')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('fga3')->numeric()->label('3PT Attempted')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('ftm')->numeric()->label('FT Made')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('fta')->numeric()->label('FT Attempted')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('oreb')->numeric()->label('Off. Rebounds')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('dreb')->numeric()->label('Def. Rebounds')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('ast')->numeric()->label('Assists')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('tov')->numeric()->label('Turnovers')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('stl')->numeric()->label('Steals')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('blk')->numeric()->label('Blocks')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('pf')->numeric()->label('Fouls')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('points')->numeric()->label('Points')->default(0)->rules(['integer', 'min:0']),
+                Forms\Components\TextInput::make('reb')->numeric()->label('Total Rebounds')->default(0)->rules(['integer', 'min:0']),
 
-                            $game = \App\Models\Game::find($gameId);
-                            if (!$game || !$game->score) return;
+                
+                // These two are allowed to be negative
+                Forms\Components\TextInput::make('plus_minus')->numeric()->label('Plus/Minus')->default(0),
+                Forms\Components\TextInput::make('eff')->numeric()->label('Efficiency (EFF)')->disabled()->dehydrated(true),
+                
 
-                            [$team1Score, $team2Score] = explode('-', $game->score);
-                            $teamScore = ($game->team1_id == $teamId) ? (int)$team1Score : (int)$team2Score;
-
-                            $currentTotal = \App\Models\PlayerGameStat::where('game_id', $gameId)
-                                ->where('team_id', $teamId)
-                                ->sum('points');
-
-                            if ($get('id')) {
-                                $record = \App\Models\PlayerGameStat::find($get('id'));
-                                $currentTotal -= $record ? $record->points : 0;
-                            }
-
-                            if (($currentTotal + $value) > $teamScore) {
-                                $fail("Total points for this team cannot exceed {$teamScore}. Currently entered: {$currentTotal}");
-                            }
-                        };
-                    }),
-
-                // Auto-calculated fields
-                Forms\Components\TextInput::make('reb')->label('Total Rebounds')->disabled()->dehydrated(true),
-                Forms\Components\TextInput::make('eff')->label('Efficiency (EFF)')->disabled()->dehydrated(true),
+                // === Manual calculation button ===
+                Forms\Components\Actions::make([
+                    Forms\Components\Actions\Action::make('recalc')
+                        ->label('Recalculate Stats')
+                        ->color('primary')
+                        ->action(function (Set $set, Get $get) {
+                            self::recalc($set, $get);
+                            Notification::make()
+                                ->title('Stats recalculated successfully!')
+                                ->success()
+                                ->send();
+                        }),
+                ]),
 
                 // Status
                 Forms\Components\Select::make('status')

@@ -70,10 +70,10 @@
     <nav class="bg-gray-50 shadow-inner fixed top-16 w-full z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex space-x-6 py-3">
-                <a href="{{ route('lbs.subleague.show', $subLeague->id) }}" 
-                   class="text-gray-700 hover:text-blue-600 font-medium">
-                   JAUNUMI
-                </a>
+            <a href="{{ route('lbs.subleague.news', $subLeague->id) }}" 
+               class="text-gray-700 hover:text-blue-600 font-medium {{ request()->routeIs('lbs.subleague') ? 'text-blue-600 font-bold' : '' }}">
+                JAUNUMI
+            </a>
                 <a href="{{ route('lbs.subleague.calendar', $subLeague->id) }}" 
                    class="text-blue-600 font-bold">
                    KALENDĀRS
@@ -97,23 +97,27 @@
         @if($games->isEmpty())
             <p class="mt-4 text-gray-500">Nav pieejamu spēļu.</p>
         @else
-            <div class="mt-6 space-y-6">
-                @foreach($games as $game)
-                    <div class="bg-white shadow-md rounded-lg p-6 border border-gray-200 flex flex-col items-center">
-                        <div class="text-xl font-semibold text-gray-800">
-                            {{ $game->team1->name }} 
-                            <span class="text-gray-500">vs</span> 
-                            {{ $game->team2->name }}
-                        </div>
-                        <div class="text-3xl font-bold text-blue-600 mt-3">
-                            {{ $game->score ?? '—' }}
-                        </div>
-                        <div class="text-sm text-gray-500 mt-2">
-                            {{ $game->date }}
-                        </div>
-                    </div>
-                @endforeach
+        <div class="mt-6 space-y-6">
+    @foreach($games as $game)
+        <a href="{{ route('lbs.game.detail', $game->id) }}" 
+           class="block bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg hover:border-blue-400 transition duration-200">
+            <div class="flex flex-col items-center">
+                <div class="text-xl font-semibold text-gray-800">
+                    {{ $game->team1->name }} 
+                    <span class="text-gray-500">vs</span> 
+                    {{ $game->team2->name }}
+                </div>
+                <div class="text-3xl font-bold text-blue-600 mt-3">
+                    {{ $game->score ?? '—' }}
+                </div>
+                <div class="text-sm text-gray-500 mt-2">
+                    {{ \Carbon\Carbon::parse($game->date)->format('d.m.Y H:i') }}
+                </div>
             </div>
+        </a>
+    @endforeach
+</div>
+
         @endif
     </main>
 </body>

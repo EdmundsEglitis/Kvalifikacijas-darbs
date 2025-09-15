@@ -9,6 +9,7 @@ use App\Models\Team;
 use App\Models\Game;
 use App\Models\News;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class LbsController extends Controller
 {
@@ -16,18 +17,41 @@ class LbsController extends Controller
     public function home()
     {
         $parentLeagues = League::whereNull('parent_id')->get();
-        $news = News::latest()->take(6)->get(); // show latest 6 news items
-    
+
+        $news = News::latest()->take(6)->get()->map(function ($item) {
+            // Remove <figure> blocks (filename + size text)
+            $cleanContent = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
+
+            // Excerpt without ugly text
+            $item->excerpt = Str::limit(strip_tags($cleanContent), 150, '...');
+
+            // First image for preview (optional)
+            $doc = new \DOMDocument();
+            @$doc->loadHTML($item->content);
+            $img = $doc->getElementsByTagName('img')->item(0);
+            $item->preview_image = $img ? $img->getAttribute('src') : null;
+
+            return $item;
+        });
+
         return view('lbs.home', compact('parentLeagues', 'news'));
     }
     
-    public function showNews($id)
-{
-    $news = \App\Models\News::with('league')->findOrFail($id);
-    $parentLeagues = \App\Models\League::whereNull('parent_id')->get();
 
-    return view('lbs.news_detail', compact('news', 'parentLeagues'));
-}
+    
+    public function showNews($id)
+    {
+        $news = \App\Models\News::with('league')->findOrFail($id);
+        $parentLeagues = \App\Models\League::whereNull('parent_id')->get();
+    
+        // Remove only <figcaption> (keeps the image intact)
+        $cleanContent = preg_replace('/<figcaption.*?<\/figcaption>/is', '', $news->content);
+        $news->clean_content = $cleanContent;
+    
+        return view('lbs.news_detail', compact('news', 'parentLeagues'));
+    }
+    
+    
 
 
     public function lblLbsl()

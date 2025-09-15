@@ -29,7 +29,7 @@ Route::prefix('lbs')->group(function () {
     Route::get('/sub-league/{id}', [LbsController::class, 'showSubLeague'])->name('lbs.subleague.show');
     
     // Sub-league tabs
-    Route::get('/sub-league/{id}/news', [LbsController::class, 'subleagueNews'])->name('lbs.subleague.news');
+    Route::get('/sub-league/{id}', [LbsController::class, 'subleagueNews'])->name('lbs.subleague.news');
     Route::get('/sub-league/{id}/calendar', [LbsController::class, 'subleagueCalendar'])->name('lbs.subleague.calendar');
     Route::get('/sub-league/{id}/teams', [LbsController::class, 'showTeams'])->name('lbs.subleague.teams'); // existing
     Route::get('/sub-league/{id}/stats', [LbsController::class, 'subleagueStats'])->name('lbs.subleague.stats');
