@@ -32,10 +32,13 @@ class PlayerResource extends Resource
                     ->label('Birthday')
                     ->nullable(),
 
-                Forms\Components\TextInput::make('height')
-                    ->numeric()
-                    ->label('Height (cm)')
-                    ->nullable(),
+
+                    Forms\Components\TextInput::make('height')
+                        ->numeric()
+                        ->label('Height (cm)')
+                        ->nullable()
+                        ->rules(['nullable', 'numeric', 'min:0']),
+
 
                 Forms\Components\TextInput::make('nationality')
                     ->nullable()
@@ -86,10 +89,13 @@ class PlayerResource extends Resource
                     ->searchable()
                     ->required(),
 
+
                 Forms\Components\TextInput::make('jersey_number')
                     ->numeric()
                     ->label('Jersey Number')
-                    ->nullable(),
+                    ->nullable()
+                    ->rules(['nullable', 'integer', 'min:0']),
+                
 
 
 

@@ -13,6 +13,8 @@ class News extends Model
         'title',
         'content',
         'league_id',
+        'position',
+        'hero_image',
     ];
 
     public function league()

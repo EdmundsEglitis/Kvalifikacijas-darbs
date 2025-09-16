@@ -67,18 +67,21 @@ class GameResource extends Resource
                 ->options(fn(Get $get) => Team::where('id', '!=', $get('team1_id'))->pluck('name', 'id'))
                 ->searchable()
                 ->required(),
+                Forms\Components\TextInput::make('team1_q1')
+                ->label('Team 1 - Q1')
+                ->default(0)
+                ->numeric()
+                ->rules(['required', 'integer', 'min:0']),
 
-            Forms\Components\TextInput::make('team1_q1')->numeric()->label('Team 1 - Q1')->default(0),
-            Forms\Components\TextInput::make('team2_q1')->numeric()->label('Team 2 - Q1')->default(0),
-
-            Forms\Components\TextInput::make('team1_q2')->numeric()->label('Team 1 - Q2')->default(0),
-            Forms\Components\TextInput::make('team2_q2')->numeric()->label('Team 2 - Q2')->default(0),
-
-            Forms\Components\TextInput::make('team1_q3')->numeric()->label('Team 1 - Q3')->default(0),
-            Forms\Components\TextInput::make('team2_q3')->numeric()->label('Team 2 - Q3')->default(0),
-
-            Forms\Components\TextInput::make('team1_q4')->numeric()->label('Team 1 - Q4')->default(0),
-            Forms\Components\TextInput::make('team2_q4')->numeric()->label('Team 2 - Q4')->default(0),
+                Forms\Components\TextInput::make('team2_q1')->label('Team 2 - Q1')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                Forms\Components\TextInput::make('team1_q2')->label('Team 1 - Q2')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                Forms\Components\TextInput::make('team2_q2')->label('Team 2 - Q2')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                Forms\Components\TextInput::make('team1_q3')->label('Team 1 - Q3')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                Forms\Components\TextInput::make('team2_q3')->label('Team 2 - Q3')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                Forms\Components\TextInput::make('team1_q4')->label('Team 1 - Q4')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                Forms\Components\TextInput::make('team2_q4')->label('Team 2 - Q4')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
+                
+                
 
             Forms\Components\TextInput::make('score')
                 ->label('Final Score')

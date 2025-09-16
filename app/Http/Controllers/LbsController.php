@@ -10,33 +10,67 @@ use App\Models\Game;
 use App\Models\News;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class LbsController extends Controller
 {
 
     public function home()
     {
+        // 1) Parent leagues for navbar
         $parentLeagues = League::whereNull('parent_id')->get();
 
-        $news = News::latest()->take(6)->get()->map(function ($item) {
-            // Remove <figure> blocks (filename + size text)
-            $cleanContent = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
+        // 2) Define your six layout slots
+        $slots = [
+            'hero',
+            'secondary-1',
+            'secondary-2',
+            'slot-1',
+            'slot-2',
+            'slot-3',
+        ];
 
-            // Excerpt without ugly text
-            $item->excerpt = Str::limit(strip_tags($cleanContent), 150, '...');
+        // 3) Fetch the newest record for each slot
+        $bySlot = collect($slots)
+            ->mapWithKeys(function (string $slot) {
+                $item = News::where('position', $slot)
+                    ->latest('created_at')
+                    ->first();
 
-            // First image for preview (optional)
-            $doc = new \DOMDocument();
-            @$doc->loadHTML($item->content);
-            $img = $doc->getElementsByTagName('img')->item(0);
-            $item->preview_image = $img ? $img->getAttribute('src') : null;
+                if (! $item) {
+                    return []; // no record for this slot
+                }
 
-            return $item;
-        });
+                // build excerpt
+                $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
+                $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
 
-        return view('lbs.home', compact('parentLeagues', 'news'));
+                // hero uses hero_image; others extract first <img>
+                if ($slot === 'hero') {
+                    $item->preview_image = $item->hero_image
+                        ? Storage::url($item->hero_image)
+                        : null;
+                } else {
+                    $item->preview_image = null;
+                    if (! empty(trim($item->content))) {
+                        libxml_use_internal_errors(true);
+                        $doc = new \DOMDocument();
+                        $doc->loadHTML('<?xml encoding="utf-8" ?>' . $item->content);
+                        libxml_clear_errors();
+
+                        $imgNode = $doc->getElementsByTagName('img')->item(0);
+                        if ($imgNode) {
+                            $item->preview_image = $imgNode->getAttribute('src');
+                        }
+                    }
+                }
+
+                return [$slot => $item];
+            });
+
+        // 4) Pass to Blade
+        return view('lbs.home', compact('parentLeagues', 'bySlot'));
     }
-    
 
     
     public function showNews($id)

@@ -1,98 +1,234 @@
 <!DOCTYPE html>
-<html lang="lv">
+<html lang="lv" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LBS - Home</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {},
-            },
-            plugins: [tailwindTypography],
-        }
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const menuBtn = document.getElementById('menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
-            menuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        });
-    </script>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LBS – Home</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ensure transform & opacity transitions work */
+    .fade-in-section {
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+  </style>
 </head>
-<body class="bg-gray-100">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md fixed w-full top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('home') }}">
-                        <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}" class="h-8 w-8 hover:opacity-80">
-                    </a>
-                    <a href="{{ route('lbs.home') }}">
-                        <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}" class="h-10 w-auto">
-                    </a>
-                </div>
-                <div class="hidden md:flex space-x-6">
-                    @foreach($parentLeagues as $league)
-                        <a href="{{ route('lbs.league.show', $league->id) }}" class="text-gray-700 hover:text-blue-600 font-medium">
-                            {{ $league->name }}
-                        </a>
-                    @endforeach
-                </div>
-                <div class="md:hidden flex items-center">
-                    <button id="menu-btn" class="focus:outline-none">
-                        <img src="{{ asset('burger-menu-svgrepo-com.svg') }}" alt="Menu" class="h-8 w-8">
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg">
-            <div class="space-y-2 px-4 py-3">
-                @foreach($parentLeagues as $league)
-                    <a href="{{ route('lbs.league.show', $league->id) }}" class="block text-gray-700 hover:text-blue-600">
-                        {{ $league->name }}
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    </nav>
+<body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
-    <!-- Page content -->
-    <main class="pt-20 max-w-7xl mx-auto px-4">
-        <h1 class="text-3xl font-bold text-gray-800">Laipni lūdzam LBS mājaslapā!</h1>
-        <p class="mt-4 text-gray-600">Izvēlieties turnīru vai līgu no navigācijas augšā.</p>
-
-        <!-- News Grid -->
-        <section class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Jaunākās ziņas</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach($news as $item)
-    <div class="bg-white shadow rounded-lg p-4 flex flex-col">
-        <h3 class="font-bold text-xl">{{ $item->title }}</h3>
-
-        <div class="mt-2 prose max-w-full">
-            @if($item->preview_image)
-                <img src="{{ $item->preview_image }}" class="w-32 h-auto rounded-md mb-2" />
-            @endif
-
-            {!! $item->excerpt !!}
-        </div>
-
-        <a href="{{ route('news.show', $item->id) }}" class="mt-auto text-blue-600 hover:underline">
-            Lasīt vairāk
-        </a>
-        <p class="text-gray-400 text-sm mt-2">
-            Publicēts: {{ $item->created_at->format('Y-m-d H:i') }}
-        </p>
+  <!-- NAVBAR -->
+  <nav class="fixed inset-x-0 top-0 z-50 bg-[#111827]/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+      <a href="{{ route('home') }}" class="flex items-center space-x-3">
+        <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
+             alt="Home"
+             class="h-8 w-8 filter invert transition"/>
+        <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
+             alt="LBS Logo"
+             class="h-10"/>
+      </a>
+      <div class="hidden md:flex space-x-8">
+        @foreach($parentLeagues as $league)
+          <a href="{{ route('lbs.league.show', $league->id) }}"
+             class="font-medium hover:text-[#84CC16] transition">
+            {{ $league->name }}
+          </a>
+        @endforeach
+      </div>
+      <button id="menu-btn" class="md:hidden focus:outline-none">
+        <img src="{{ asset('burger-menu-svgrepo-com.svg') }}"
+             alt="Menu"
+             class="h-8 w-8 filter invert transition"/>
+      </button>
     </div>
-@endforeach
+    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
+      <div class="px-4 py-4 space-y-2">
+        @foreach($parentLeagues as $league)
+          <a href="{{ route('lbs.league.show', $league->id) }}"
+             class="block font-medium hover:text-[#84CC16] transition">
+            {{ $league->name }}
+          </a>
+        @endforeach
+      </div>
+    </div>
+  </nav>
 
+  <main class="pt-24">
+
+    <!-- HERO -->
+    @if($bySlot['hero'] ?? false)
+      <section
+        id="hero"
+        class="relative w-full h-[75vh] sm:h-[80vh] lg:h-screen bg-fixed bg-cover bg-center"
+        style="background-image: url('{{ $bySlot['hero']->preview_image }}');"
+      >
+        <div class="absolute inset-0 bg-black/60"></div>
+        <div class="relative z-10 flex h-full items-center justify-center px-6 text-center">
+          <div class="max-w-3xl space-y-6 fade-in-section opacity-0 translate-y-6">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-lg">
+              {{ $bySlot['hero']->title }}
+            </h1>
+            <p class="text-base sm:text-lg md:text-xl text-white/90">
+              {{ $bySlot['hero']->excerpt }}
+            </p>
+            <a href="#news"
+               class="inline-block mt-4 px-8 py-3 rounded-full bg-[#84CC16] text-[#111827] font-semibold uppercase tracking-wide hover:bg-[#a6e23a] transition">
+              Skatīt jaunākās ziņas
+            </a>
+          </div>
+        </div>
+      </section>
+    @endif
+
+    <!-- FEATURES -->
+    <section class="py-12 bg-[#111827]">
+      <div class="max-w-7xl mx-auto px-4 text-center space-y-8">
+        <h2 class="text-3xl font-bold text-white fade-in-section opacity-0 translate-y-6">
+          Kāpēc izvēlēties LBS?
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          @foreach([
+            ['icon'=>'M12 2L2 22h20L12 2z','title'=>'Live Rezultāti','text'=>'Ik sekundi atjaunināti rezultāti un statistika.'],
+            ['icon'=>'M12 2A10 10 0 1 1 2 12 10 10 0 0 1 12 2','title'=>'Ekspertu Analīze','text'=>'Padziļinātas spēļu analīzes un komandu pārskati.'],
+            ['icon'=>'M4 4h16v16H4z','title'=>'Mobilā Lietotne','text'=>'Sekojiet līdzi tiešraidēm jebkurā ierīcē.'],
+            ['icon'=>'M12 2L22 22H2L12 2z','title'=>'Kopiena','text'=>'Pievienojies fanu forumiem un dalies viedokļos.'],
+          ] as $feature)
+            <div class="space-y-4 fade-in-section opacity-0 translate-y-6">
+              <svg class="mx-auto h-12 w-12 text-[#84CC16]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="{{ $feature['icon'] }}"/>
+              </svg>
+              <h3 class="text-xl font-semibold text-white">{{ $feature['title'] }}</h3>
+              <p class="text-[#F3F4F6]/80">{{ $feature['text'] }}</p>
             </div>
-        </section>
-    </main>
+          @endforeach
+        </div>
+      </div>
+    </section>
+
+    <!-- NEWS GRID -->
+    <section id="news" class="py-16 bg-[#111827]">
+      <div class="max-w-7xl mx-auto px-4 space-y-12">
+        <h2 class="text-3xl font-bold text-white text-center fade-in-section opacity-0 translate-y-6">
+          Jaunākās Ziņas
+        </h2>
+
+        <!-- Secondary Panels -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          @foreach(['secondary-1','secondary-2'] as $slot)
+            @if($bySlot[$slot] ?? false)
+              <article
+                class="group bg-[#F3F4F6] rounded-xl overflow-hidden shadow-lg border-t-4 border-[#F97316]
+                       flex flex-col transform transition-shadow transition-transform duration-300 ease-in-out
+                       hover:scale-105 hover:shadow-2xl fade-in-section opacity-0 translate-y-6"
+              >
+                <img loading="lazy"
+                     src="{{ $bySlot[$slot]->preview_image }}"
+                     alt="{{ $bySlot[$slot]->title }}"
+                     class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110"/>
+                <div class="p-6 flex flex-col flex-1">
+                  <h3 class="text-2xl font-semibold text-[#111827] mb-2">
+                    {{ $bySlot[$slot]->title }}
+                  </h3>
+                  <p class="flex-1 text-[#111827]/90">{{ $bySlot[$slot]->excerpt }}</p>
+                  <div class="mt-4 flex items-center justify-between">
+                    <time class="text-sm text-[#111827]/70">
+                      {{ $bySlot[$slot]->created_at->format('Y-m-d') }}
+                    </time>
+                    <a href="{{ route('news.show', $bySlot[$slot]->id) }}"
+                       class="text-[#84CC16] font-medium hover:underline">
+                      Lasīt vairāk →
+                    </a>
+                  </div>
+                </div>
+              </article>
+            @endif
+          @endforeach
+        </div>
+
+        <!-- Three Small Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          @foreach(['slot-1','slot-2','slot-3'] as $slot)
+            @if($bySlot[$slot] ?? false)
+              <article
+                class="group bg-[#F3F4F6] rounded-xl overflow-hidden shadow-lg border-t-4 border-[#F97316]
+                       flex flex-col transform transition-shadow transition-transform duration-300 ease-in-out
+                       hover:scale-105 hover:shadow-2xl fade-in-section opacity-0 translate-y-6"
+              >
+                <img loading="lazy"
+                     src="{{ $bySlot[$slot]->preview_image }}"
+                     alt="{{ $bySlot[$slot]->title }}"
+                     class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"/>
+                <div class="p-4 flex flex-col flex-1">
+                  <h4 class="text-lg font-semibold text-[#111827] mb-1">
+                    {{ $bySlot[$slot]->title }}
+                  </h4>
+                  <p class="flex-1 text-[#111827]/90">{{ $bySlot[$slot]->excerpt }}</p>
+                  <div class="mt-3 flex items-center justify-between">
+                    <time class="text-xs text-[#111827]/70">
+                      {{ $bySlot[$slot]->created_at->format('Y-m-d') }}
+                    </time>
+                    <a href="{{ route('news.show', $bySlot[$slot]->id) }}"
+                       class="text-[#84CC16] font-medium hover:underline text-sm">
+                      Lasīt →
+                    </a>
+                  </div>
+                </div>
+              </article>
+            @endif
+          @endforeach
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA BANNER -->
+    <section class="py-16 bg-[#F97316] fade-in-section opacity-0 translate-y-6">
+      <div class="max-w-7xl mx-auto text-center px-4">
+        <h2 class="text-3xl md:text-4xl font-bold text-white">
+          Pievienojies LBS kopienai!
+        </h2>
+        <p class="mt-4 text-white/90">
+          Abonē mūsu jaunumu vēstuli, lai nekad nepalaistu garām svarīgāko.
+        </p>
+        <form class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
+          <input type="email"
+                 placeholder="Tavs e-pasts"
+                 class="w-full sm:w-auto px-4 py-2 rounded-full border-0 focus:ring-2 focus:ring-[#84CC16]"
+                 required/>
+          <button type="submit"
+                  class="px-6 py-2 rounded-full bg-[#111827] text-[#F3F4F6] font-semibold hover:bg-[#1f2937] transition">
+            Abonēt
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-8 bg-[#111827] text-[#F3F4F6]/70 text-center text-sm fade-in-section opacity-0 translate-y-6">
+      &copy; {{ date('Y') }} LBS. Visas tiesības aizsargātas.
+    </footer>
+
+  </main>
+
+  <script>
+    // Mobile menu toggle
+    document.getElementById("menu-btn").addEventListener("click", function () {
+      document.getElementById("mobile-menu").classList.toggle("hidden");
+    });
+
+    // Fade-in on scroll
+    document.addEventListener("DOMContentLoaded", function () {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove('opacity-0', 'translate-y-6');
+            entry.target.classList.add('opacity-100', 'translate-y-0');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1 });
+
+      document.querySelectorAll('.fade-in-section').forEach((el) => {
+        observer.observe(el);
+      });
+    });
+  </script>
 </body>
 </html>
