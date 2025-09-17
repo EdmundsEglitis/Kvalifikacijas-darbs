@@ -16,67 +16,100 @@
 
   <!-- NAVBAR -->
   <nav class="fixed inset-x-0 top-0 z-50 bg-[#111827]/80 backdrop-blur-md">
-    <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-      <a href="{{ route('home') }}" class="flex items-center space-x-3">
-        <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
-             alt="Home"
-             class="h-8 w-8 filter invert transition"/>
-        <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
-             alt="LBS Logo"
-             class="h-10"/>
+  <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+    {{-- LEFT: Home + LBS Logo --}}
+    <div class="flex items-center space-x-3">
+      <a href="{{ route('home') }}" class="block">
+        <img
+          src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
+          alt="Home"
+          class="h-8 w-8 filter invert transition"
+        />
       </a>
+      <a href="{{ route('lbs.home') }}" class="block">
+        <img
+          src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
+          alt="LBS Logo"
+          class="h-10"
+        />
+      </a>
+    </div>
+
+    {{-- RIGHT: Leagues (desktop) + Hamburger (mobile) --}}
+    <div class="flex items-center space-x-4">
+      {{-- desktop league links --}}
       <div class="hidden md:flex space-x-8">
         @foreach($parentLeagues as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}"
-             class="font-medium hover:text-[#84CC16] transition">
+          <a
+            href="{{ route('lbs.league.show', $league->id) }}"
+            class="font-medium hover:text-[#84CC16] transition"
+          >
             {{ $league->name }}
           </a>
         @endforeach
       </div>
+
+      {{-- mobile menu button --}}
       <button id="menu-btn" class="md:hidden focus:outline-none">
-        <img src="{{ asset('burger-menu-svgrepo-com.svg') }}"
-             alt="Menu"
-             class="h-8 w-8 filter invert transition"/>
+        <img
+          src="{{ asset('burger-menu-svgrepo-com.svg') }}"
+          alt="Menu"
+          class="h-8 w-8 filter invert transition"
+        />
       </button>
     </div>
-    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
-      <div class="px-4 py-4 space-y-2">
-        @foreach($parentLeagues as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}"
-             class="block font-medium hover:text-[#84CC16] transition">
-            {{ $league->name }}
-          </a>
-        @endforeach
-      </div>
+  </div>
+
+  {{-- MOBILE MENU --}}
+  <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
+    <div class="px-4 py-4 space-y-2">
+      @foreach($parentLeagues as $league)
+        <a
+          href="{{ route('lbs.league.show', $league->id) }}"
+          class="block font-medium hover:text-[#84CC16] transition"
+        >
+          {{ $league->name }}
+        </a>
+      @endforeach
     </div>
-  </nav>
+  </div>
+</nav>
+
 
   <main class="pt-24">
 
     <!-- HERO -->
-    @if($bySlot['hero'] ?? false)
-      <section
-        id="hero"
-        class="relative w-full h-[75vh] sm:h-[80vh] lg:h-screen bg-fixed bg-cover bg-center"
-        style="background-image: url('{{ $bySlot['hero']->preview_image }}');"
-      >
-        <div class="absolute inset-0 bg-black/60"></div>
-        <div class="relative z-10 flex h-full items-center justify-center px-6 text-center">
-          <div class="max-w-3xl space-y-6 fade-in-section opacity-0 translate-y-6">
-            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-lg">
-              {{ $bySlot['hero']->title }}
-            </h1>
-            <p class="text-base sm:text-lg md:text-xl text-white/90">
-              {{ $bySlot['hero']->excerpt }}
-            </p>
-            <a href="#news"
-               class="inline-block mt-4 px-8 py-3 rounded-full bg-[#84CC16] text-[#111827] font-semibold uppercase tracking-wide hover:bg-[#a6e23a] transition">
-              Skatīt jaunākās ziņas
-            </a>
-          </div>
-        </div>
-      </section>
-    @endif
+    @if($heroImage)
+  <section
+    id="hero"
+    class="relative w-full h-[75vh] sm:h-[80vh] lg:h-screen bg-fixed bg-cover bg-center"
+    style="background-image: url('{{ Storage::url($heroImage->image_path) }}');"
+  >
+    {{-- dark overlay --}}
+    <div class="absolute inset-0 bg-black/60"></div>
+
+    {{-- centered content --}}
+    <div class="relative z-10 flex h-full items-center justify-center px-6 text-center">
+      <div class="max-w-3xl space-y-6 fade-in-section opacity-0 translate-y-6">
+        {{-- overlay title (optional) --}}
+        @if($heroImage->title)
+          <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-lg">
+            {{ $heroImage->title }}
+          </h1>
+        @endif
+
+        {{-- CTA to news --}}
+        <a
+          href="#news"
+          class="inline-block mt-4 px-8 py-3 rounded-full bg-[#84CC16] text-[#111827]
+                 font-semibold uppercase tracking-wide hover:bg-[#a6e23a] transition"
+        >
+          Skatīt jaunākās ziņas
+        </a>
+      </div>
+    </div>
+  </section>
+@endif
 
     <!-- FEATURES -->
     <section class="py-12 bg-[#111827]">

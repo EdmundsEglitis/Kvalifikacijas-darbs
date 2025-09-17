@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+use App\Models\HeroImage;
 use Illuminate\Support\Facades\DB;
 use App\Models\Player;
 use App\Models\PlayerGameStat;
@@ -14,64 +15,42 @@ use Illuminate\Support\Facades\Storage;
 
 class LbsController extends Controller
 {
-
     public function home()
     {
-        // 1) Parent leagues for navbar
+        // 1) Navbar leagues
         $parentLeagues = League::whereNull('parent_id')->get();
-
-        // 2) Define your six layout slots
-        $slots = [
-            'hero',
-            'secondary-1',
-            'secondary-2',
-            'slot-1',
-            'slot-2',
-            'slot-3',
-        ];
-
-        // 3) Fetch the newest record for each slot
+    
+        // 2) Home‐page hero (only images not tied to any league)
+        $heroImage = HeroImage::whereNull('league_id')
+            ->latest('created_at')
+            ->first();
+    
+        // 3) News slots
+        $slots = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
         $bySlot = collect($slots)
-            ->mapWithKeys(function (string $slot) {
+            ->mapWithKeys(function ($slot) {
                 $item = News::where('position', $slot)
                     ->latest('created_at')
                     ->first();
-
                 if (! $item) {
-                    return []; // no record for this slot
+                    return [];
                 }
-
-                // build excerpt
+                // build excerpt & preview_image
                 $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
-                $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
-
-                // hero uses hero_image; others extract first <img>
-                if ($slot === 'hero') {
-                    $item->preview_image = $item->hero_image
-                        ? Storage::url($item->hero_image)
-                        : null;
-                } else {
-                    $item->preview_image = null;
-                    if (! empty(trim($item->content))) {
-                        libxml_use_internal_errors(true);
-                        $doc = new \DOMDocument();
-                        $doc->loadHTML('<?xml encoding="utf-8" ?>' . $item->content);
-                        libxml_clear_errors();
-
-                        $imgNode = $doc->getElementsByTagName('img')->item(0);
-                        if ($imgNode) {
-                            $item->preview_image = $imgNode->getAttribute('src');
-                        }
-                    }
-                }
-
+                $item->excerpt = \Illuminate\Support\Str::limit(strip_tags($clean), 150, '…');
+    
+                libxml_use_internal_errors(true);
+                $doc = new \DOMDocument();
+                $doc->loadHTML('<?xml encoding="utf-8" ?>' . $item->content);
+                libxml_clear_errors();
+                $img = $doc->getElementsByTagName('img')->item(0);
+                $item->preview_image = $img?->getAttribute('src');
+    
                 return [$slot => $item];
             });
-
-        // 4) Pass to Blade
-        return view('lbs.home', compact('parentLeagues', 'bySlot'));
+    
+        return view('lbs.home', compact('parentLeagues', 'heroImage', 'bySlot'));
     }
-
     
     public function showNews($id)
     {
@@ -111,12 +90,41 @@ class LbsController extends Controller
     public function showParent($id)
     {
         $parent = League::with('children')->findOrFail($id);
-
-        return view('lbs.sub_leagues', [
-            'parent' => $parent,
-            'subLeagues' => $parent->children,
-        ]);
+        $subLeagues = $parent->children;
+    
+        // 1) Hero image for this league (newest one)
+        $heroImage = \App\Models\HeroImage::where('league_id', $parent->id)
+            ->latest('created_at')
+            ->first();
+    
+        // 2) News from this league + its sub-leagues
+        $news = \App\Models\News::whereIn('league_id', $subLeagues->pluck('id')->push($parent->id))
+            ->latest()
+            ->take(12)
+            ->get()
+            ->map(function ($item) {
+                $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
+                $item->excerpt = \Illuminate\Support\Str::limit(strip_tags($clean), 150, '…');
+    
+                $item->preview_image = null;
+                if (!empty(trim($item->content))) {
+                    libxml_use_internal_errors(true);
+                    $doc = new \DOMDocument();
+                    $doc->loadHTML('<?xml encoding="utf-8" ?>' . $item->content);
+                    libxml_clear_errors();
+                    $imgNode = $doc->getElementsByTagName('img')->item(0);
+                    if ($imgNode) {
+                        $item->preview_image = $imgNode->getAttribute('src');
+                    }
+                }
+    
+                return $item;
+            });
+    
+        return view('lbs.sub_leagues', compact('parent', 'subLeagues', 'heroImage', 'news'));
     }
+    
+    
 
     public function showSubLeague($id)
     {
@@ -293,30 +301,56 @@ class LbsController extends Controller
         return view('lbs.game_detail', compact('game', 'team1Score', 'team2Score', 'playerStats'));
     }
     
-
-    public function subLeagueNews($id)
-    {
-        $subLeague = League::findOrFail($id);
     
-        // Get parent leagues for navbar
-        $parentLeagues = League::whereNull('parent_id')->get();
+        public function subLeagueNews($id)
+        {
+            // Current sub-league and parent leagues for navbar
+            $subLeague     = League::findOrFail($id);
+            $parentLeagues = League::whereNull('parent_id')->get();
     
-        // Example news data – you can replace with real DB query
-        $news = collect([
-            (object)[
-                'title' => 'Pirmā spēle aizvadīta',
-                'content' => 'Komandas uzsāka sezonu ar aizraujošu spēli.',
-                'created_at' => now()->subDays(2),
-            ],
-            (object)[
-                'title' => 'Jauns līderis punktu guvējos',
-                'content' => 'Spēlētājs X guva 30 punktus spēlē.',
-                'created_at' => now()->subDay(),
-            ],
-        ]);
+            // Hero image: only for this sub-league
+            $heroImage = HeroImage::where('league_id', $subLeague->id)
+                ->latest('created_at')
+                ->first();
     
-        return view('lbs.subleague_news', compact('subLeague', 'parentLeagues', 'news'));
-    }
+            // Define slots
+            $slots  = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
+    
+            // For each slot, get only the newest news for this sub-league
+            $bySlot = collect($slots)->mapWithKeys(function (string $slot) use ($subLeague) {
+                $item = News::where('league_id', $subLeague->id)
+                    ->where('position', $slot)
+                    ->latest('created_at')
+                    ->first();
+    
+                if (! $item) {
+                    return [];  
+                }
+    
+                // Excerpt
+                $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content ?? '');
+                $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
+    
+                // Preview image fallback
+                if (empty($item->preview_image)) {
+                    libxml_use_internal_errors(true);
+                    $doc = new \DOMDocument();
+                    $doc->loadHTML('<?xml encoding="utf-8" ?>' . ($item->content ?? ''));
+                    libxml_clear_errors();
+                    $img = $doc->getElementsByTagName('img')->item(0);
+                    $item->preview_image = $img?->getAttribute('src') ?: null;
+                }
+    
+                return [$slot => $item];
+            });
+    
+            return view('lbs.subleague_news', compact(
+                'subLeague',
+                'parentLeagues',
+                'heroImage',
+                'bySlot',
+            ));
+        }
     
 
     public function subleagueCalendar($id)

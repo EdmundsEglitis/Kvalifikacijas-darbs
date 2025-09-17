@@ -67,12 +67,25 @@
       </div>
 
       <footer>
-        <a href="{{ route('lbs.home') }}"
-           class="inline-block mt-4 px-6 py-3 rounded-full bg-[#84CC16] text-[#111827]
-                  font-semibold hover:bg-[#a6e23a] transition">
-          Atpakaļ uz mājaslapu
-        </a>
-      </footer>
+  <button onclick="handleBack()"
+          class="inline-block mt-4 px-6 py-3 rounded-full bg-[#84CC16] text-[#111827]
+                 font-semibold hover:bg-[#a6e23a] transition">
+    ⬅ Atpakaļ
+  </button>
+</footer>
+
+<script>
+  function handleBack() {
+    if (document.referrer && document.referrer !== window.location.href) {
+      // Go back to the previous page if it exists
+      window.history.back();
+    } else {
+      // Fallback: go home if there's no history
+      window.location.href = "{{ route('lbs.home') }}";
+    }
+  }
+</script>
+
 
     </article>
   </main>
