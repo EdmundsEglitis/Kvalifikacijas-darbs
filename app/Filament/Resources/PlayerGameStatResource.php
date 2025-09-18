@@ -53,6 +53,7 @@ class PlayerGameStatResource extends Resource
     {
         return $form
             ->schema([
+                // Game
                 Forms\Components\Select::make('game_id')
                     ->label('Game')
                     ->options(
@@ -66,17 +67,20 @@ class PlayerGameStatResource extends Resource
                     ->searchable()
                     ->required()
                     ->reactive()
+                    ->default(request()->query('game_id')) // ✅ pre-fill from query
+                    ->disabled(fn () => request()->has('game_id')) // ✅ lock if pre-filled
                     ->afterStateUpdated(fn (Set $set) => $set('team_id', null)),
-
+    
+                // Team
                 Forms\Components\Select::make('team_id')
                     ->label('Team')
                     ->options(function (Get $get) {
                         $gameId = $get('game_id');
                         if (!$gameId) return [];
-
+    
                         $game = Game::with(['team1', 'team2'])->find($gameId);
                         if (!$game) return [];
-
+    
                         return [
                             $game->team1->id => $game->team1->name,
                             $game->team2->id => $game->team2->name,
@@ -85,39 +89,42 @@ class PlayerGameStatResource extends Resource
                     ->required()
                     ->reactive()
                     ->afterStateUpdated(fn (Set $set) => $set('player_id', null)),
-
-                    Forms\Components\Select::make('player_id')
+    
+                // Player
+                Forms\Components\Select::make('player_id')
                     ->label('Player')
                     ->options(function (Get $get) {
                         $teamId = $get('team_id');
                         $gameId = $get('game_id');
-                
-                        // Debug dump — will stop execution here
-                
-                        if (! $teamId || ! $gameId) {
+                        if (!$teamId || !$gameId) {
                             return [];
                         }
-
+    
                         return Player::query()
                             ->where('team_id', $teamId)
                             ->whereDoesntHave('playerGameStats', function ($q) use ($gameId) {
                                 $q->where('game_id', $gameId);
                             })
                             ->orderBy('name')
-                            ->pluck('name', 'id')
+                            ->pluck('name', 'id') // ✅ shows player names
                             ->toArray();
                     })
                     ->searchable()
                     ->required()
-                    ->reactive(),
-                
-                
-                
-                
-                
-                
-                
-                
+                    ->reactive()
+                    ->default(request()->query('player_id')) // ✅ pre-fill from query
+                    ->disabled(fn () => request()->has('player_id')) // ✅ lock if pre-filled
+                    ->afterStateHydrated(function ($component, Get $get, Set $set) {
+                        // Auto-select team if player_id is given but team_id is empty
+                        if ($component->getName() === 'player_id' && $get('player_id') && !$get('team_id')) {
+                            $player = Player::find($get('player_id'));
+                            if ($player) {
+                                $set('team_id', $player->team_id);
+                            }
+                        }
+                    }),
+    
+                // Stats fields
                 Forms\Components\TextInput::make('minutes')->numeric()->label('Minutes')->nullable()->rules(['integer', 'min:0']),
                 Forms\Components\TextInput::make('fgm2')->numeric()->label('2PT Made')->default(0)->rules(['integer', 'min:0']),
                 Forms\Components\TextInput::make('fga2')->numeric()->label('2PT Attempted')->default(0)->rules(['integer', 'min:0']),
@@ -134,14 +141,12 @@ class PlayerGameStatResource extends Resource
                 Forms\Components\TextInput::make('pf')->numeric()->label('Fouls')->default(0)->rules(['integer', 'min:0']),
                 Forms\Components\TextInput::make('points')->numeric()->label('Points')->default(0)->rules(['integer', 'min:0']),
                 Forms\Components\TextInput::make('reb')->numeric()->label('Total Rebounds')->default(0)->rules(['integer', 'min:0']),
-
-                
-                // These two are allowed to be negative
+    
+                // These two can be negative
                 Forms\Components\TextInput::make('plus_minus')->numeric()->label('Plus/Minus')->default(0),
                 Forms\Components\TextInput::make('eff')->numeric()->label('Efficiency (EFF)')->disabled()->dehydrated(true),
-                
-
-                // === Manual calculation button ===
+    
+                // Manual calculation button
                 Forms\Components\Actions::make([
                     Forms\Components\Actions\Action::make('recalc')
                         ->label('Recalculate Stats')
@@ -154,7 +159,7 @@ class PlayerGameStatResource extends Resource
                                 ->send();
                         }),
                 ]),
-
+    
                 // Status
                 Forms\Components\Select::make('status')
                     ->label('Status')
@@ -164,15 +169,18 @@ class PlayerGameStatResource extends Resource
                     ])
                     ->default('played')
                     ->reactive()
-                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                    ->afterStateUpdated(function ($state, Set $set) {
                         if ($state === 'dnp') {
                             $fields = ['fgm2','fga2','fgm3','fga3','ftm','fta','oreb','dreb','ast','tov','stl','blk','pf','plus_minus','points','reb','eff'];
-                            foreach ($fields as $field) $set($field, 0);
+                            foreach ($fields as $field) {
+                                $set($field, 0);
+                            }
                             $set('minutes', null);
                         }
                     }),
             ]);
     }
+    
 
     public static function table(Table $table): Table
     {

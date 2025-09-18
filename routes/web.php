@@ -43,6 +43,7 @@ Route::prefix('lbs')->group(function () {
 
     // Individual game view
     Route::get('/game/{id}', [LbsController::class, 'showGame'])->name('lbs.game.detail');
+    Route::get('/players/{id}', [LbsController::class, 'show'])->name('lbs.player.show');
 
     // Shortcuts for main categories
     Route::get('/lbl-lbsl', [LbsController::class, 'lblLbsl'])->name('lbs.lbl_lbsl');

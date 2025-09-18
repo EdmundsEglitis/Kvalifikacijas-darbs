@@ -193,17 +193,25 @@ class LbsController extends Controller
         foreach (['points', 'reb', 'ast'] as $stat) {
             $bestPlayer = $team->players
                 ->filter(fn($p) => $p->games && $p->games->count() > 0)
-                ->map(fn($p) => [
-                    'name' => $p->name,
-                    'value' => $p->games->sum(fn($g) => $g->pivot->{$stat} ?? 0),
-                ])
+                ->map(function ($p) use ($stat) {
+                    return (object)[
+                        'id'    => $p->id,
+                        'name'  => $p->name,
+                        'value' => $p->games->sum(fn($g) => $g->pivot->{$stat} ?? 0),
+                    ];
+                })
                 ->sortByDesc('value')
                 ->first();
-    
-            if ($stat === 'reb') $bestPlayers['rebounds'] = $bestPlayer;
-            elseif ($stat === 'ast') $bestPlayers['assists'] = $bestPlayer;
-            else $bestPlayers['points'] = $bestPlayer;
+        
+            if ($stat === 'reb') {
+                $bestPlayers['rebounds'] = $bestPlayer;
+            } elseif ($stat === 'ast') {
+                $bestPlayers['assists'] = $bestPlayer;
+            } else {
+                $bestPlayers['points'] = $bestPlayer;
+            }
         }
+        
     
         $wins = $games->where('winner_id', $team->id)->count();
         $losses = $games->count() - $wins;
@@ -353,21 +361,61 @@ class LbsController extends Controller
         }
     
 
-    public function subleagueCalendar($id)
-    {
-        $subLeague = League::with('teams')->findOrFail($id);
-        $parentLeagues = League::whereNull('parent_id')->get();
-    
-        // Get all games for this sub-league
-        $teamIds = $subLeague->teams->pluck('id');
-        $games = Game::whereIn('team1_id', $teamIds)
-                     ->orWhereIn('team2_id', $teamIds)
-                     ->with(['team1', 'team2'])
-                     ->orderBy('date', 'asc')
-                     ->get();
-    
-        return view('lbs.subleague_calendar', compact('subLeague', 'parentLeagues', 'games'));
-    }
+        public function subleagueCalendar($id)
+        {
+            $subLeague = League::with('teams')->findOrFail($id);
+            $parentLeagues = League::whereNull('parent_id')->get();
+        
+            // Get all games for this sub-league
+            $teamIds = $subLeague->teams->pluck('id');
+            $games = Game::whereIn('team1_id', $teamIds)
+                         ->orWhereIn('team2_id', $teamIds)
+                         ->with(['team1', 'team2'])
+                         ->orderBy('date', 'asc')
+                         ->get();
+        
+            // Split into upcoming and past
+            $upcomingGames = $games->filter(fn($g) => $g->date->isFuture());
+            $pastGames     = $games->filter(fn($g) => $g->date->isPast());
+        
+            return view('lbs.subleague_calendar', compact(
+                'subLeague',
+                'parentLeagues',
+                'games',
+                'upcomingGames',
+                'pastGames'
+            ));
+        }
+        public function show($id)
+        {
+            $player = Player::with(['team.league', 'playerGameStats.game.team1', 'playerGameStats.game.team2'])
+                ->findOrFail($id);
+        
+            $parentLeagues = League::whereNull('parent_id')->get();
+        
+            // Compute season totals/averages
+            $stats = $player->playerGameStats;
+            $totals = [
+                'games'   => $stats->count(),
+                'points'  => $stats->sum('points'),
+                'reb'     => $stats->sum('reb'),
+                'ast'     => $stats->sum('ast'),
+                'stl'     => $stats->sum('stl'),
+                'blk'     => $stats->sum('blk'),
+                'eff'     => $stats->sum('eff'),
+            ];
+            $averages = $totals['games'] > 0 ? [
+                'points' => round($totals['points'] / $totals['games'], 1),
+                'reb'    => round($totals['reb'] / $totals['games'], 1),
+                'ast'    => round($totals['ast'] / $totals['games'], 1),
+                'stl'    => round($totals['stl'] / $totals['games'], 1),
+                'blk'    => round($totals['blk'] / $totals['games'], 1),
+                'eff'    => round($totals['eff'] / $totals['games'], 1),
+            ] : [];
+        
+            return view('lbs.player_show', compact('player', 'parentLeagues', 'totals', 'averages'));
+        }
+        
     
     public function subleagueStats($id)
     {

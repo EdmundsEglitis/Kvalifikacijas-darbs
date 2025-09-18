@@ -53,60 +53,7 @@
 <body class="antialiased bg-[#111827] text-[#F3F4F6]">
 
   <!-- Main Navbar -->
-  <nav class="bg-[#111827]/80 backdrop-blur-md fixed w-full top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16 items-center">
-        <div class="flex items-center space-x-4">
-          <a href="{{ route('home') }}">
-            <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}" 
-                 alt="Home" class="h-8 w-8 filter invert hover:opacity-80 transition">
-          </a>
-          <a href="{{ route('lbs.home') }}">
-            <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}" 
-                 alt="LBS Logo" class="h-10">
-          </a>
-        </div>
-
-        <div class="hidden md:flex space-x-6">
-          @foreach($parentLeagues as $league)
-            <a href="{{ route('lbs.league.show', $league->id) }}" 
-               class="font-medium hover:text-[#84CC16] transition">
-              {{ $league->name }}
-            </a>
-          @endforeach
-        </div>
-
-        <div class="md:hidden flex items-center">
-          <button id="menu-btn" class="focus:outline-none">
-            <img src="{{ asset('burger-menu-svgrepo-com.svg') }}" alt="Menu" class="h-8 w-8 filter invert">
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
-      <div class="space-y-2 px-4 py-3">
-        @foreach($parentLeagues as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}" 
-             class="block font-medium hover:text-[#84CC16] transition">
-            {{ $league->name }}
-          </a>
-        @endforeach
-      </div>
-    </div>
-  </nav>
-
-  <!-- Sub-League Tabs Navbar -->
-  <nav class="bg-[#0f172a]/80 backdrop-blur border-b border-white/10 fixed top-16 w-full z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex space-x-6 py-3 text-sm sm:text-base">
-        <a href="{{ route('lbs.subleague.news', $subLeague->id) }}" class="hover:text-[#84CC16] text-[#F3F4F6]/80">JAUNUMI</a>
-        <a href="{{ route('lbs.subleague.calendar', $subLeague->id) }}" class="hover:text-[#84CC16] text-[#F3F4F6]/80">KALENDĀRS</a>
-        <a href="{{ route('lbs.subleague.teams', $subLeague->id) }}" class="hover:text-[#84CC16] text-[#F3F4F6]/80">KOMANDAS</a>
-        <a href="{{ route('lbs.subleague.stats', $subLeague->id) }}" class="text-[#84CC16] font-bold border-b-2 border-[#84CC16]">STATISTIKA</a>
-      </div>
-    </div>
-  </nav>
+  <x-sub-league-tabs :parentLeagues="$parentLeagues" :subLeague="$subLeague" />
 
   <!-- Stats Section Navbar -->
   <nav class="bg-[#1f2937] fixed top-28 w-full z-30 shadow border-b border-[#374151]">
@@ -135,19 +82,23 @@
       @endforeach
     </section>
 
-    <!-- Top Players -->
-    <section id="top-players">
-      <h2 class="text-2xl font-bold text-white mb-6">Top spēlētāji</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach($topPlayers as $stat => $player)
-          <div class="bg-[#1f2937] shadow rounded-lg p-6 text-center border border-[#374151] hover:border-[#84CC16] transition">
-            <h3 class="text-lg font-semibold capitalize text-[#F3F4F6]">{{ $stat }}</h3>
-            <p class="mt-2 text-white font-bold">{{ $player->name }}</p>
-            <p class="text-[#84CC16]">Vidēji: {{ $player->avg_value }}</p>
-          </div>
-        @endforeach
+<!-- Top Players -->
+<section id="top-players">
+  <h2 class="text-2xl font-bold text-white mb-6">Top spēlētāji</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    @foreach($topPlayers as $stat => $player)
+      <div class="bg-[#1f2937] shadow rounded-lg p-6 text-center border border-[#374151] hover:border-[#84CC16] transition">
+        <h3 class="text-lg font-semibold capitalize text-[#F3F4F6]">{{ $stat }}</h3>
+        <a href="{{ route('lbs.player.show', $player->id) }}" 
+           class="mt-2 font-bold text-white hover:text-[#84CC16] block">
+          {{ $player->name }}
+        </a>
+        <p class="text-[#84CC16]">Vidēji: {{ $player->avg_value }}</p>
       </div>
-    </section>
+    @endforeach
+  </div>
+</section>
+
 
 <!-- All Players -->
 <section id="all-players">
@@ -182,26 +133,33 @@
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
-        @foreach($playersStats as $player)
-          <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors">
-            <td class="px-3 sm:px-4 py-2 text-sm text-gray-800">
-              {{ $player->name }}
-            </td>
-            <td class="px-3 sm:px-4 py-2 text-sm text-gray-700">
-              {{ $player->team->name }}
-            </td>
-            <td class="px-3 sm:px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">
-              {{ $player->avg_points }}
-            </td>
-            <td class="px-3 sm:px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">
-              {{ $player->avg_rebounds }}
-            </td>
-            <td class="px-3 sm:px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">
-              {{ $player->avg_assists }}
-            </td>
-          </tr>
-        @endforeach
-      </tbody>
+  @foreach($playersStats as $player)
+    <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition-colors">
+      <td class="px-3 sm:px-4 py-2 text-sm text-gray-800">
+        <a href="{{ route('lbs.player.show', $player->id) }}" 
+           class="hover:text-[#84CC16]">
+          {{ $player->name }}
+        </a>
+      </td>
+      <td class="px-3 sm:px-4 py-2 text-sm text-gray-700">
+        <a href="{{ route('lbs.team.overview', $player->team->id) }}" 
+           class="hover:text-[#84CC16]">
+          {{ $player->team->name }}
+        </a>
+      </td>
+      <td class="px-3 sm:px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">
+        {{ $player->avg_points }}
+      </td>
+      <td class="px-3 sm:px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">
+        {{ $player->avg_rebounds }}
+      </td>
+      <td class="px-3 sm:px-4 py-2 text-sm text-gray-900 text-right whitespace-nowrap">
+        {{ $player->avg_assists }}
+      </td>
+    </tr>
+  @endforeach
+</tbody>
+
     </table>
   </div>
 
