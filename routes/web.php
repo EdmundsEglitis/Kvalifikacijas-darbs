@@ -13,6 +13,15 @@ Route::get('/', function () {
 Route::prefix('nba')->group(function () {
     Route::get('/', [NbaController::class, 'home'])->name('nba.home');
     Route::get('/players', [NbaController::class, 'allPlayers'])->name('nba.players');
+
+    //show routes
+    Route::get('/nba/teams/{id}', [NbaController::class, 'showTeam'])->name('nba.team.show');
+    Route::get('/nba/players/{id}', [NbaController::class, 'showPlayer'])->name('nba.player.show');
+
+
+
+
+
     Route::get('/games', [NbaController::class, 'upcomingGames'])->name('nba.games.upcoming');
     Route::get('/all-games', [NbaController::class, 'allGames'])->name('nba.games.all');
     Route::get('/games/{id}', [NbaController::class, 'showGame'])->name('nba.games.show');

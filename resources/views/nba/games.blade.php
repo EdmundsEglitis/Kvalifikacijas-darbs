@@ -1,51 +1,71 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="lv">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All NBA Games</title>
+    <title>NBA – Upcoming Games</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100">
+    <x-nba-navbar />
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('home') }}" class="text-xl font-bold text-gray-800">NBA Dashboard</a>
-                    <a href="{{ route('games') }}" class="text-gray-600 hover:text-gray-900">All Games</a>
-                    <a href="{{ route('players') }}" class="text-gray-600 hover:text-gray-900">All Players</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <main class="pt-24 px-6 max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">NBA Games – Next 30 Days</h1>
+        @php
+    $grouped = collect($games)->groupBy('scheduleDate');
+@endphp
 
-    <div class="container mx-auto p-6">
-        <h1 class="text-3xl font-bold mb-6">All NBA Games</h1>
-
-        <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
-            <thead>
-                <tr class="bg-gray-100 text-left">
-                    <th class="px-4 py-2 border-b">Date</th>
-                    <th class="px-4 py-2 border-b">Team 1</th>
-                    <th class="px-4 py-2 border-b">Team 2</th>
-                    <th class="px-4 py-2 border-b">Score</th>
-                    <th class="px-4 py-2 border-b">Winner</th>
+@foreach($grouped as $date => $dayGames)
+    <h2 class="text-xl font-semibold mt-6 mb-2">
+        {{ \Carbon\Carbon::createFromFormat('Ymd', $date)->format('M d, Y') }}
+    </h2>
+    <div class="overflow-x-auto bg-white shadow rounded-lg mb-4">
+        <table class="min-w-full text-left text-sm">
+            <thead class="bg-gray-50 border-b">
+                <tr>
+                    <th class="px-4 py-2">Time</th>
+                    <th class="px-4 py-2">Home</th>
+                    <th class="px-4 py-2">Away</th>
+                    <th class="px-4 py-2">Venue</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach($games as $game)
-                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='{{ route('games.show', $game->id) }}'">
-                        <td class="px-4 py-2 border-b">{{ $game->date->format('M d, Y H:i') }}</td>
-                        <td class="px-4 py-2 border-b">{{ $game->team1->name ?? 'TBD' }}</td>
-                        <td class="px-4 py-2 border-b">{{ $game->team2->name ?? 'TBD' }}</td>
-                        <td class="px-4 py-2 border-b">{{ $game->score ?? '-' }}</td>
-                        <td class="px-4 py-2 border-b">{{ $game->winner->name ?? '-' }}</td>
-                    </tr>
-                @endforeach
+            <tbody class="divide-y divide-gray-200">
+            @foreach($dayGames as $game)
+    <tr class="hover:bg-gray-50">
+        {{-- Time --}}
+        <td class="px-4 py-2">
+            {{ $game['tipoff'] ? \Carbon\Carbon::parse($game['tipoff'])->format('H:i') : '' }}
+        </td>
+
+        {{-- Home team --}}
+        <td class="px-4 py-2  items-center space-x-2">
+                <img src="{{ $game['homeTeam']['logo'] }}" class="h-6 w-6">
+                <a href="{{ route('nba.team.show', $game['homeTeam']['id']) }}" class="text-blue-600 hover:underline">
+                {{ $game['homeTeam']['name'] }}
+                </a>
+        </td>
+
+        <td class="px-4 py-2 ">
+        <img src="{{ $game['awayTeam']['logo'] }}" class="h-6 w-6"> 
+        <a href="{{ route('nba.team.show', $game['awayTeam']['id']) }}" class="text-blue-600 hover:underline">
+                    {{ $game['awayTeam']['name'] }}
+                </a>
+
+        </td>
+        
+
+
+        {{-- Venue --}}
+        <td class="px-4 py-2">
+            {{ $game['venue'] }} – {{ $game['city'] }}
+        </td>
+    </tr>
+@endforeach
+
             </tbody>
         </table>
     </div>
+@endforeach
+
+    </main>
 </body>
 </html>

@@ -5,92 +5,126 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NBA - Spēlētāji</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const menuBtn = document.getElementById('menu-btn');
-            const mobileMenu = document.getElementById('mobile-menu');
-            if(menuBtn){
-                menuBtn.addEventListener('click', () => {
-                    mobileMenu.classList.toggle('hidden');
-                });
-            }
-        });
-    </script>
 </head>
 <body class="bg-gray-100">
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md fixed w-full top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('home') }}">
-                        <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}" class="h-8 w-8 hover:opacity-80">
-                    </a>
-                    <a href="{{ route('nba.home') }}" class="text-gray-800 font-bold text-lg hover:text-blue-600">
-                        NBA
-                    </a>
-                </div>
-                <div class="hidden md:flex space-x-6">
-                    <a href="{{ route('nba.players') }}" class="text-gray-700 hover:text-blue-600 font-medium">Spēlētāji</a>
-                    <a href="{{ route('nba.games.upcoming') }}" class="text-gray-700 hover:text-blue-600 font-medium">Spēles</a>
-                    <a href="{{ route('nba.teams') }}" class="text-gray-700 hover:text-blue-600 font-medium">Komandas</a>
-                    <a href="{{ route('nba.stats') }}" class="text-gray-700 hover:text-blue-600 font-medium">Statistika</a>
-                </div>
-                <div class="md:hidden flex items-center">
-                    <button id="menu-btn" class="focus:outline-none">
-                        <img src="{{ asset('burger-menu-svgrepo-com.svg') }}" alt="Menu" class="h-8 w-8">
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg">
-            <div class="space-y-2 px-4 py-3">
-                <a href="{{ route('nba.players') }}" class="block text-gray-700 hover:text-blue-600">Spēlētāji</a>
-                <a href="{{ route('nba.games.upcoming') }}" class="block text-gray-700 hover:text-blue-600">Spēles</a>
-                <a href="{{ route('nba.teams') }}" class="block text-gray-700 hover:text-blue-600">Komandas</a>
-                <a href="{{ route('nba.stats') }}" class="block text-gray-700 hover:text-blue-600">Statistika</a>
-            </div>
-        </div>
-    </nav>
+<x-nba-navbar />
 
-    <!-- Page Content -->
+
     <main class="pt-20 max-w-7xl mx-auto px-4">
         <h1 class="text-3xl font-bold text-gray-800 mb-6">NBA Spēlētāji</h1>
 
-        @if($players && count($players))
+        {{-- Controls: search + per page --}}
+        <form method="GET" class="mb-4 flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0">
+            <div class="flex-1">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ request('q') }}"
+                    placeholder="Meklēt pēc vārda vai komandas..."
+                    class="w-full border rounded-md px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
+                />
+            </div>
+
+            <div>
+                <label class="mr-2 text-sm text-gray-600">Rindu skaits:</label>
+                <select name="perPage" onchange="this.form.submit()" class="border rounded-md px-3 py-2">
+                    @foreach([10,25,50,100,200] as $pp)
+                        <option value="{{ $pp }}" @selected((int)request('perPage', 50) === $pp)>{{ $pp }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Preserve sort/dir on search submit --}}
+            <input type="hidden" name="sort" value="{{ request('sort','name') }}">
+            <input type="hidden" name="dir" value="{{ request('dir','asc') }}">
+
+            <div>
+                <button
+                    class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    type="submit"
+                >Meklēt</button>
+            </div>
+        </form>
+
+        @php
+            $sort = request('sort','name');
+            $dir  = request('dir','asc') === 'desc' ? 'desc' : 'asc';
+            $nextDir = fn($col) => ($sort === $col && $dir === 'asc') ? 'desc' : 'asc';
+            $arrow = fn($col) => $sort === $col ? ($dir === 'asc' ? '▲' : '▼') : '';
+            $sortUrl = function($col) use ($nextDir) {
+                return request()->fullUrlWithQuery([
+                    'sort' => $col,
+                    'dir'  => $nextDir($col),
+                    'page' => 1, // reset to first page when sorting
+                ]);
+            };
+        @endphp
+
+        @if($players->count())
             <div class="overflow-x-auto bg-white shadow rounded-lg">
                 <table class="min-w-full text-left text-sm">
                     <thead class="bg-gray-50 border-b">
                         <tr>
-                            <th class="px-4 py-2 font-semibold text-gray-700">Vārds</th>
-                            <th class="px-4 py-2 font-semibold text-gray-700">Komanda</th>
-                            <th class="px-4 py-2 font-semibold text-gray-700">Pozīcija</th>
-                            <th class="px-4 py-2 font-semibold text-gray-700">Augums</th>
-                            <th class="px-4 py-2 font-semibold text-gray-700">Svars</th>
+                            <th class="px-4 py-2">
+                                <a href="{{ $sortUrl('name') }}" class="flex items-center space-x-2 hover:text-blue-600">
+                                    <span>Vārds</span>
+                                    <span class="text-xs">{{ $arrow('name') }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-2">
+                                <a href="{{ $sortUrl('team') }}" class="flex items-center space-x-2 hover:text-blue-600">
+                                    <span>Komanda</span>
+                                    <span class="text-xs">{{ $arrow('team') }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-2">
+                                <a href="{{ $sortUrl('height') }}" class="flex items-center space-x-2 hover:text-blue-600">
+                                    <span>Augums</span>
+                                    <span class="text-xs">{{ $arrow('height') }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-2">
+                                <a href="{{ $sortUrl('weight') }}" class="flex items-center space-x-2 hover:text-blue-600">
+                                    <span>Svars</span>
+                                    <span class="text-xs">{{ $arrow('weight') }}</span>
+                                </a>
+                            </th>
+                            <th class="px-4 py-2">Foto</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @foreach($players as $player)
                             <tr class="hover:bg-gray-50">
+                                
                                 <td class="px-4 py-2">
-                                    {{ $player['firstname'] }} {{ $player['lastname'] }}
+                                    <a href="{{ route('nba.player.show', $player['id']) }}" class="text-blue-600 hover:underline">
+                                        {{ $player['firstName'] ?? '' }} {{ $player['lastName'] ?? '' }}
+                                    </a>
                                 </td>
+                                
                                 <td class="px-4 py-2">
-                                    {{ $player['team']['name'] ?? 'N/A' }}
+                                    <a href="{{ route('nba.team.show', $player['teamId']) }}" class="text-blue-600 hover:underline">
+                                        {{ $player['teamName'] ?? 'N/A' }}
+                                    </a>
                                 </td>
+
+                                <td class="px-4 py-2">{{ $player['displayHeight'] ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $player['displayWeight'] ?? '-' }}</td>
                                 <td class="px-4 py-2">
-                                    {{ $player['position'] ?? 'N/A' }}
-                                </td>
-                                <td class="px-4 py-2">
-                                    {{ $player['height']['feets'] ?? '-' }}' {{ $player['height']['inches'] ?? '' }}
-                                </td>
-                                <td class="px-4 py-2">
-                                    {{ $player['weight']['pounds'] ?? '-' }} lbs
+                                    @if(!empty($player['image']))
+                                        <img src="{{ $player['image'] }}" alt="Photo" class="h-10 w-10 rounded-full" loading="lazy">
+                                    @else
+                                        <span class="text-gray-400">No photo</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-4">
+                {!! $players->appends(request()->query())->links() !!}
             </div>
         @else
             <p class="text-gray-600 mt-4">Nav atrasti spēlētāji.</p>
