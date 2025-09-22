@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NbaController;
 use App\Http\Controllers\LbsController;
-
+use App\Services\ApiSyncService;
 // Root = choice between NBA or LBS
 Route::get('/', function () {
     return view('home'); // resources/views/home.blade.php
@@ -60,4 +60,20 @@ Route::prefix('lbs')->group(function () {
     Route::get('/ljbl', [LbsController::class, 'ljbl'])->name('lbs.ljbl');
     Route::get('/izlases', [LbsController::class, 'izlases'])->name('lbs.izlases');
     Route::get('/regionalie-turniri', [LbsController::class, 'regionalieTurniri'])->name('lbs.regionalie');
+});
+
+
+
+
+//cronjob route
+
+Route::get('/cron-update/{token}', function ($token) {
+
+    if ($token !== config('app.cron_token')) {
+        abort(403, 'Unauthorized');
+    }
+
+    app(ApiSyncService::class)->sync();
+
+    return response()->json(['status' => 'Database updated successfully']);
 });

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
+use App\Models\NbaPlayer;
 use Carbon\Carbon;
 class NbaService
 {
@@ -60,6 +61,7 @@ class NbaService
                 }
             }
             return $teams;
+            
         });
     }
 
@@ -174,12 +176,80 @@ class NbaService
     }
     public function playerInfo(string|int $playerId): array
     {
+        set_time_limit(0);
         $response = $this->request('/nba-player-info', [
             'playerid' => (string) $playerId,
         ]);
     
         return $response['response']['athlete'] ?? [];
     }
+
+public function allPlayersInfoForCron(): array
+{
+    set_time_limit(0);
+    $playersData = [];
+
+    \App\Models\NbaPlayer::chunk(10, function ($allPlayers) use (&$playersData) {
+        foreach ($allPlayers as $player) {
+            
+            $athlete = $this->playerInfo($player->external_id); // fetch full player info
+            if (!empty($athlete)) {
+                $playersData[] = [
+                    'external_id'      => $athlete['id'] ?? null,
+                    'uid'              => $athlete['uid'] ?? null,
+                    'guid'             => $athlete['guid'] ?? null,
+                    'type'             => $athlete['type'] ?? null,
+                    'first_name'       => $athlete['firstName'] ?? null,
+                    'last_name'        => $athlete['lastName'] ?? null,
+                    'full_name'        => $athlete['fullName'] ?? null,
+                    'display_name'     => $athlete['displayName'] ?? null,
+                    'jersey'           => $athlete['jersey'] ?? null,
+                    'links'            => $athlete['links'] ?? null,
+                    'college'          => $athlete['college'] ?? null,
+                    'college_team'     => $athlete['collegeTeam'] ?? null,
+                    'college_athlete'  => $athlete['collegeAthlete'] ?? null,
+                    'headshot_href'    => $athlete['headshot']['href'] ?? null,
+                    'headshot_alt'     => $athlete['headshot']['alt'] ?? null,
+                    'position'         => $athlete['position'] ?? null,
+                    'team'             => $athlete['team'] ?? null,
+                    'active'           => $athlete['active'] ?? null,
+                    'status'           => $athlete['status'] ?? null,
+                    'birth_place'      => $athlete['displayBirthPlace'] ?? null,
+                    'display_height'   => $athlete['displayHeight'] ?? null,
+                    'display_weight'   => $athlete['displayWeight'] ?? null,
+                    'display_dob'      => $athlete['displayDOB'] ?? null,
+                    'age'              => $athlete['age'] ?? null,
+                    'display_jersey'   => $athlete['displayJersey'] ?? null,
+                    'display_experience'=> $athlete['displayExperience'] ?? null,
+                    'display_draft'    => $athlete['displayDraft'] ?? null,
+                ];
+            }
+        }
+    });
+    return $playersData;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     public function playerGameLog(string|int $playerId, ?string $season = null): array
     {
@@ -203,7 +273,44 @@ class NbaService
         ];
     }
     
-    
+    public function allPlayersGameLogsForCron(): array
+{
+    $allLogs = [];
+
+    \App\Models\NbaPlayer::chunk(10, function ($players) use (&$allLogs) {
+        foreach ($players as $player) {
+            $gamelog = $this->playerGameLog($player->external_id); // fetch full career data
+            dd($gamelog);
+            foreach ($gamelog['seasonTypes'] ?? [] as $season) {
+                $seasonName = $season['displayName'] ?? null;
+
+                foreach ($season['categories'] ?? [] as $category) {
+                    if (!in_array($category['type'], ['event'])) {
+                        continue; // skip totals/averages for now
+                    }
+
+                    foreach ($category['events'] ?? [] as $event) {
+                        $meta = $gamelog['events'][$event['eventId']] ?? null;
+
+                        $allLogs[] = [
+                            'player_id'      => $player->id,
+                            'season_type'    => $seasonName,
+                            'game_date'      => isset($meta['gameDate']) ? \Carbon\Carbon::parse($meta['gameDate'])->toDateString() : null,
+                            'opponent_name'  => $meta['opponent']['displayName'] ?? null,
+                            'opponent_logo'  => $meta['opponent']['logo'] ?? null,
+                            'result'         => $meta['gameResult'] ?? null,
+                            'score'          => $meta['score'] ?? null,
+                            'stats'          => $event['stats'] ?? [],
+                        ];
+                    }
+                }
+            }
+        }
+    });
+
+    return $allLogs;
+}
+
     
 
 

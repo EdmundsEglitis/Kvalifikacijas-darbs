@@ -99,9 +99,7 @@
                                         </td>
                                         <td class="px-4 py-2">{{ $meta['gameResult'] ?? '-' }}</td>
                                         <td class="px-4 py-2">{{ $meta['score'] ?? '-' }}</td>
-                                        @foreach($event['stats'] as $value)
-                                            <td class="px-4 py-2">{{ $value }}</td>
-                                        @endforeach
+
                                     </tr>
                                 @endforeach
                             </tbody>

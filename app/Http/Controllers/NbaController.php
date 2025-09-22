@@ -147,26 +147,16 @@ class NbaController extends Controller
     {
         $player  = $this->nba->playerInfo($id);
         $gamelog = $this->nba->playerGameLog($id); // full career data
-    
         if (empty($player)) {
             abort(404, 'Player not found');
         }
-    
-        $season = $request->query('season'); // e.g. "2018"
-        $filteredSeasonTypes = $gamelog['seasonTypes'] ?? [];
-    
-        if ($season) {
-            // Filter down to just the selected season
-            $filteredSeasonTypes = array_filter($filteredSeasonTypes, function ($s) use ($season) {
-                return str_contains($s['displayName'], $season);
-            });
-        }
-    
+                            echo '<pre>';
+print_r($gamelog);
+echo '</pre>';
+exit;
         return view('nba.player_show', [
             'player'        => $player,
             'gamelog'       => $gamelog,
-            'seasonTypes'   => $filteredSeasonTypes,
-            'selectedSeason'=> $season,
         ]);
     }
     
