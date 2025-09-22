@@ -25,7 +25,8 @@ Route::prefix('nba')->group(function () {
     Route::get('/games', [NbaController::class, 'upcomingGames'])->name('nba.games.upcoming');
     Route::get('/all-games', [NbaController::class, 'allGames'])->name('nba.games.all');
     Route::get('/games/{id}', [NbaController::class, 'showGame'])->name('nba.games.show');
-    Route::get('/teams', fn() => view('nba.teams'))->name('nba.teams');
+    Route::get('/teams', [NbaController::class, 'allteams'])->name('nba.teams');
+
     Route::get('/stats', fn() => view('nba.stats'))->name('nba.stats');
 });
 

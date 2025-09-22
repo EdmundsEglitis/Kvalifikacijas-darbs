@@ -172,7 +172,45 @@ class NbaService
     
         return $allGames;
     }
+    public function playerInfo(string|int $playerId): array
+    {
+        $response = $this->request('/nba-player-info', [
+            'playerid' => (string) $playerId,
+        ]);
     
+        return $response['response']['athlete'] ?? [];
+    }
+    
+    public function playerGameLog(string|int $playerId, ?string $season = null): array
+    {
+        $params = ['playerid' => (string) $playerId];
+    
+        if ($season) {
+            $params['season'] = $season;
+        }
+    
+        $response = $this->request('/nba-player-gamelog', $params);
+    
+        $data = $response['response']['gamelog'] ?? [];
+    
+        return [
+            'labels'      => $data['labels'] ?? [],
+            'names'       => $data['names'] ?? [],
+            'events'      => $data['events'] ?? [],
+            'seasonTypes' => $data['seasonTypes'] ?? [],
+            'filters'     => $data['filters'] ?? [],
+            'glossary'    => $data['glossary'] ?? [],
+        ];
+    }
+    
+    
+    
+
+
+
+
+
+
     
     
 

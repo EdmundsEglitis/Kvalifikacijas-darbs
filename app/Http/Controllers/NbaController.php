@@ -123,20 +123,62 @@ class NbaController extends Controller
             abort(404, 'Team not found');
         }
     
-        return view('nba.team_show', ['team' => $team]);
+        // Players
+        $players = $this->nba->playersByTeam($id);
+    
+        // Upcoming games (filter)
+        $allGames = $this->nba->upcomingGames();
+        $games = array_filter($allGames, function ($game) use ($id) {
+            return $game['homeTeam']['id'] == $id || $game['awayTeam']['id'] == $id;
+        });
+    
+        // Stats (if you have an endpoint, otherwise placeholder)
+        $stats = []; // e.g. $this->nba->teamStats($id);
+    
+        return view('nba.team_show', [
+            'team'    => $team,
+            'players' => $players,
+            'games'   => $games,
+            'stats'   => $stats,
+        ]);
     }
-    
-    public function showPlayer($id)
+
+    public function showPlayer(Request $request, $id)
     {
-        $players = $this->nba->allPlayersFromLoop();
-        $player = collect($players)->firstWhere('id', (string) $id);
+        $player  = $this->nba->playerInfo($id);
+        $gamelog = $this->nba->playerGameLog($id); // full career data
     
-        if (!$player) {
+        if (empty($player)) {
             abort(404, 'Player not found');
         }
     
-        return view('nba.player_show', ['player' => $player]);
+        $season = $request->query('season'); // e.g. "2018"
+        $filteredSeasonTypes = $gamelog['seasonTypes'] ?? [];
+    
+        if ($season) {
+            // Filter down to just the selected season
+            $filteredSeasonTypes = array_filter($filteredSeasonTypes, function ($s) use ($season) {
+                return str_contains($s['displayName'], $season);
+            });
+        }
+    
+        return view('nba.player_show', [
+            'player'        => $player,
+            'gamelog'       => $gamelog,
+            'seasonTypes'   => $filteredSeasonTypes,
+            'selectedSeason'=> $season,
+        ]);
     }
+    
+    
+
+
+    
+    
+    
+    
+    
+    
 
     public function upcomingGames()
     {
@@ -144,6 +186,12 @@ class NbaController extends Controller
 
         return view('nba.games', ['games' => $games]);
     }
+    public function allTeams()
+{
+    $teams = $this->nba->allTeams();
+    return view('nba.teams', compact('teams'));
+}
+
     
     
     
