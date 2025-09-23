@@ -6,7 +6,7 @@ use App\Models\NbaPlayer;
 use App\Models\NbaTeam;
 use App\Models\NbaGame;
 use App\Models\NbaPlayerGamelog;
-use App\Services\NbaService; // your existing service
+use App\Services\NbaService;
 use App\Jobs\SyncPlayerDetailJob;
 use App\Jobs\SyncPlayerGamelogJob;
 class ApiSyncService
@@ -20,11 +20,11 @@ class ApiSyncService
 
     public function sync()
     {
-        //$this->syncPlayers();
-        //$this->syncTeams();
-        //$this->syncUpcomingGames();
-        //$this->syncPlayerDetails();
-        $this->syncPlayerGamelogs();
+        $this->syncPlayers();
+        $this->syncTeams();
+        $this->syncUpcomingGames();
+        $this->syncPlayerDetails();
+        //$this->syncPlayerGamelogs();
 
         // $this->syncGames(); // optional if you want game syncing too
     }
@@ -36,7 +36,7 @@ class ApiSyncService
         foreach ($allPlayers as $player) {
             
             NbaPlayer::updateOrCreate(
-                        ['uid' => $player['uid']], // unique identifier from API
+                        ['uid' => $player['uid']],
                         [
                         'external_id'   => $player['id'],
                         'guid'          => $player['guid'] ?? null,
@@ -77,7 +77,7 @@ class ApiSyncService
             public function syncUpcomingGames(): void
             {
                 set_time_limit(0);
-                $games = $this->nbaService->upcomingGames(); // Your method to fetch upcoming games
+                $games = $this->nbaService->upcomingGames();
 
                 foreach ($games as $game) {
                     $tipoff = isset($game['tipoff']) ? Carbon::parse($game['tipoff'])->toDateTimeString() : null;
@@ -86,7 +86,7 @@ class ApiSyncService
                         ['external_id' => $game['id']],
                         [
                             'schedule_date'   => $game['scheduleDate'] ?? null,
-                            'tipoff'          => $tipoff, // use the parsed tipoff
+                            'tipoff'          => $tipoff,
                             'status'          => $game['status'] ?? null,
                             'venue'           => $game['venue'] ?? null,
                             'city'            => $game['city'] ?? null,
@@ -114,7 +114,7 @@ class ApiSyncService
 
 public function syncPlayerGamelogs(): void
 {
-    // Take only the first 10 players for testing
+
     NbaPlayer::limit(10)->get()->each(function ($player) {
         \App\Jobs\SyncPlayerGamelogJob::dispatch($player->id);
     });

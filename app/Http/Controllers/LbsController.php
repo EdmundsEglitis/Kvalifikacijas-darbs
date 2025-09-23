@@ -17,15 +17,13 @@ class LbsController extends Controller
 {
     public function home()
     {
-        // 1) Navbar leagues
         $parentLeagues = League::whereNull('parent_id')->get();
-    
-        // 2) Home‐page hero (only images not tied to any league)
+
         $heroImage = HeroImage::whereNull('league_id')
             ->latest('created_at')
             ->first();
     
-        // 3) News slots
+
         $slots = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
         $bySlot = collect($slots)
             ->mapWithKeys(function ($slot) {
@@ -35,7 +33,7 @@ class LbsController extends Controller
                 if (! $item) {
                     return [];
                 }
-                // build excerpt & preview_image
+
                 $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
                 $item->excerpt = \Illuminate\Support\Str::limit(strip_tags($clean), 150, '…');
     
@@ -57,47 +55,21 @@ class LbsController extends Controller
         $news = \App\Models\News::with('league')->findOrFail($id);
         $parentLeagues = \App\Models\League::whereNull('parent_id')->get();
     
-        // Remove only <figcaption> (keeps the image intact)
         $cleanContent = preg_replace('/<figcaption.*?<\/figcaption>/is', '', $news->content);
         $news->clean_content = $cleanContent;
     
         return view('lbs.news_detail', compact('news', 'parentLeagues'));
     }
     
-    
-
-
-    public function lblLbsl()
-    {
-        return view('lbs.lbl-lbsl');
-    }
-
-    public function ljbl()
-    {
-        return view('lbs.ljbl');
-    }
-
-    public function izlases()
-    {
-        return view('lbs.izlases');
-    }
-
-    public function regionalieTurniri()
-    {
-        return view('lbs.regionalie-turniri');
-    }
-
     public function showParent($id)
     {
         $parent = League::with('children')->findOrFail($id);
         $subLeagues = $parent->children;
     
-        // 1) Hero image for this league (newest one)
         $heroImage = \App\Models\HeroImage::where('league_id', $parent->id)
             ->latest('created_at')
             ->first();
     
-        // 2) News from this league + its sub-leagues
         $news = \App\Models\News::whereIn('league_id', $subLeagues->pluck('id')->push($parent->id))
             ->latest()
             ->take(12)
@@ -149,9 +121,8 @@ class LbsController extends Controller
                      ->orWhere('team2_id', $team->id)
                      ->get();
     
-        $gamesCount = max($games->count(), 1); // avoid division by zero
-    
-        // Sum stats from all players across all games
+        $gamesCount = max($games->count(), 1); 
+
         $totalStats = [
             'points' => 0,
             'reb'    => 0,
@@ -161,9 +132,9 @@ class LbsController extends Controller
         ];
     
         foreach ($team->players as $player) {
-            if (!$player->games) continue; // safety
+            if (!$player->games) continue; 
             foreach ($player->games as $game) {
-                if (!$game->pivot) continue; // safety
+                if (!$game->pivot) continue; 
                 if ($game->team1_id == $team->id || $game->team2_id == $team->id) {
                     $totalStats['points'] += $game->pivot->points ?? 0;
                     $totalStats['reb']    += $game->pivot->reb ?? 0;
@@ -174,7 +145,7 @@ class LbsController extends Controller
             }
         }
     
-        // Calculate averages
+
         $averageStats = [
             'points' => $totalStats['points'] / $gamesCount,
             'reb'    => $totalStats['reb'] / $gamesCount,
@@ -183,7 +154,7 @@ class LbsController extends Controller
             'blk'    => $totalStats['blk'] / $gamesCount,
         ];
     
-        // Best players
+
         $bestPlayers = [
             'points' => null,
             'rebounds' => null,
@@ -223,14 +194,14 @@ class LbsController extends Controller
     {
         $team = Team::findOrFail($id);
     
-        $parentLeagues = League::whereNull('parent_id')->get(); // Pass for navbar
+        $parentLeagues = League::whereNull('parent_id')->get(); 
     
         $games = Game::where('team1_id', $team->id)
             ->orWhere('team2_id', $team->id)
             ->with(['team1', 'team2'])
             ->get()
             ->map(function ($game) {
-                // Default scores
+
                 $game->score1 = $game->score2 = 0;
     
                 if ($game->score) {
@@ -245,7 +216,6 @@ class LbsController extends Controller
                     $game->score1 = isset($parts[0]) ? (int)$parts[0] : 0;
                     $game->score2 = isset($parts[1]) ? (int)$parts[1] : 0;
                 } else {
-                    // Fallback: sum quarters
                     $game->score1 = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
                     $game->score2 = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
                 }
@@ -284,10 +254,10 @@ class LbsController extends Controller
             'playerGameStats.player'
         ])->findOrFail($id);
     
-        $team1Score = $team2Score = 0; // default
+        $team1Score = $team2Score = 0;
     
         if ($game->score) {
-            // support both "X-Y" or "X:Y" formats
+
             if (str_contains($game->score, '-')) {
                 $parts = explode('-', $game->score);
             } elseif (str_contains($game->score, ':')) {
@@ -299,7 +269,6 @@ class LbsController extends Controller
             $team1Score = isset($parts[0]) ? (int)$parts[0] : 0;
             $team2Score = isset($parts[1]) ? (int)$parts[1] : 0;
         } else {
-            // fallback: sum quarter scores if available
             $team1Score = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
             $team2Score = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
         }
@@ -310,21 +279,19 @@ class LbsController extends Controller
     }
     
     
-        public function subLeagueNews($id)
-        {
-            // Current sub-league and parent leagues for navbar
+    public function subLeagueNews($id)
+    {
             $subLeague     = League::findOrFail($id);
             $parentLeagues = League::whereNull('parent_id')->get();
     
-            // Hero image: only for this sub-league
             $heroImage = HeroImage::where('league_id', $subLeague->id)
                 ->latest('created_at')
                 ->first();
     
-            // Define slots
+
             $slots  = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
     
-            // For each slot, get only the newest news for this sub-league
+
             $bySlot = collect($slots)->mapWithKeys(function (string $slot) use ($subLeague) {
                 $item = News::where('league_id', $subLeague->id)
                     ->where('position', $slot)
@@ -335,11 +302,11 @@ class LbsController extends Controller
                     return [];  
                 }
     
-                // Excerpt
+
                 $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content ?? '');
                 $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
     
-                // Preview image fallback
+
                 if (empty($item->preview_image)) {
                     libxml_use_internal_errors(true);
                     $doc = new \DOMDocument();
@@ -358,15 +325,14 @@ class LbsController extends Controller
                 'heroImage',
                 'bySlot',
             ));
-        }
+    }
     
 
-        public function subleagueCalendar($id)
-        {
+    public function subleagueCalendar($id)
+    {
             $subLeague = League::with('teams')->findOrFail($id);
             $parentLeagues = League::whereNull('parent_id')->get();
         
-            // Get all games for this sub-league
             $teamIds = $subLeague->teams->pluck('id');
             $games = Game::whereIn('team1_id', $teamIds)
                          ->orWhereIn('team2_id', $teamIds)
@@ -374,7 +340,6 @@ class LbsController extends Controller
                          ->orderBy('date', 'asc')
                          ->get();
         
-            // Split into upcoming and past
             $upcomingGames = $games->filter(fn($g) => $g->date->isFuture());
             $pastGames     = $games->filter(fn($g) => $g->date->isPast());
         
@@ -385,15 +350,15 @@ class LbsController extends Controller
                 'upcomingGames',
                 'pastGames'
             ));
-        }
-        public function show($id)
-        {
+    }
+
+    public function show($id)
+    {
             $player = Player::with(['team.league', 'playerGameStats.game.team1', 'playerGameStats.game.team2'])
                 ->findOrFail($id);
         
             $parentLeagues = League::whereNull('parent_id')->get();
         
-            // Compute season totals/averages
             $stats = $player->playerGameStats;
             $totals = [
                 'games'   => $stats->count(),
@@ -414,21 +379,16 @@ class LbsController extends Controller
             ] : [];
         
             return view('lbs.player_show', compact('player', 'parentLeagues', 'totals', 'averages'));
-        }
+    }
         
     
     public function subleagueStats($id)
     {
-        // Load subleague and parent leagues for navbars
         $subLeague = League::with('teams')->findOrFail($id);
         $parentLeagues = League::whereNull('parent_id')->get();
     
-        // team ids in this sub-league
         $teamIds = $subLeague->teams->pluck('id')->toArray();
     
-        // ---------------------
-        // 1) Teams stats (wins / losses / games)
-        // ---------------------
         $teamsStats = $subLeague->teams->map(function (Team $team) {
             $games = Game::where('team1_id', $team->id)
                          ->orWhere('team2_id', $team->id)
@@ -444,11 +404,7 @@ class LbsController extends Controller
                 'games_played' => $games->count(),
             ];
         });
-    
-        // ---------------------
-        // 2) Players aggregated stats (AVG per game) for players that played for teams in this sub-league
-        // We aggregate directly from player_game_stats to avoid depending on Player->games relation.
-        // ---------------------
+
         if (empty($teamIds)) {
             $playersAgg = collect();
         } else {
@@ -467,15 +423,13 @@ class LbsController extends Controller
                 ->groupBy('player_id')
                 ->get();
         }
-    
-        // preload Player models to avoid N+1
+
         $playerIds = $playersAgg->pluck('player_id')->unique()->filter()->values()->all();
         $playersById = Player::whereIn('id', $playerIds)
-            ->with('team') // optional: will eager load team if relation exists
+            ->with('team')
             ->get()
             ->keyBy('id');
-    
-        // Build playersStats collection used by the "All players" table
+
         $playersStats = $playersAgg->map(function ($row) use ($playersById) {
             $player = $playersById->get($row->player_id);
     
@@ -492,17 +446,10 @@ class LbsController extends Controller
                 'avg_eff' => $row->avg_eff !== null ? round($row->avg_eff, 1) : 0,
             ];
         });
-    
-        // ---------------------
-        // 3) Top players per stat (highest AVG)
-        // ---------------------
         $topPlayers = collect();
     
         if ($playersAgg->isNotEmpty()) {
-            // convert to collection keyed by player_id for easy lookup
             $aggCollection = $playersAgg->mapWithKeys(fn($r) => [$r->player_id => $r]);
-    
-            // helper to pick best by column name
             $pickBest = function ($col) use ($aggCollection, $playersById) {
                 $best = $aggCollection->sortByDesc($col)->first();
                 if (!$best) {
@@ -524,11 +471,7 @@ class LbsController extends Controller
             $topPlayers['blocks']   = $pickBest('avg_blk');
             $topPlayers['eff']      = $pickBest('avg_eff');
         }
-    
-        // sort teamsStats by wins descending so the best is first (view can also do this)
         $teamsStats = $teamsStats->sortByDesc(fn($t) => $t['wins'])->values();
-    
-        // Pass everything to the view
         return view('lbs.subleague_stats', [
             'subLeague' => $subLeague,
             'parentLeagues' => $parentLeagues,
@@ -536,7 +479,5 @@ class LbsController extends Controller
             'topPlayers' => $topPlayers,
             'playersStats' => $playersStats,
         ]);
-    }
-    
-    
+    }    
 }

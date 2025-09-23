@@ -19,13 +19,11 @@ class Player extends Model
         'team_id',
     ];
 
-    // Player belongs to a League
     public function league()
     {
         return $this->belongsTo(League::class);
     }
 
-    // Player belongs to a Team
     public function team()
     {
         return $this->belongsTo(Team::class);
@@ -34,7 +32,6 @@ class Player extends Model
 {
     return $this->hasMany(PlayerGameStat::class);
 }
-// Player.php
 public function games()
 {
     return $this->belongsToMany(Game::class, 'player_game_stats')

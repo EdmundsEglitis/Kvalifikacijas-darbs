@@ -26,12 +26,11 @@ class Game extends Model
     ];
 
     protected $casts = [
-        'date' => 'datetime', // 👈 this makes $game->date a Carbon instance
+        'date' => 'datetime', 
     ];
 
-    protected $dates = ['date']; // so $game->date->format() works
+    protected $dates = ['date'];
 
-    // Relationships
     public function team1()
     {
         return $this->belongsTo(Team::class, 'team1_id');
@@ -51,7 +50,6 @@ class Game extends Model
         return $query->where('date', '<', Carbon::now());
     }
 
-    // NEW: player stats for this game
     public function playerStats()
     {
         return $this->hasMany(PlayerGameStat::class);

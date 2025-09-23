@@ -9,7 +9,6 @@
     <x-nba-navbar />
 
     <main class="pt-24 px-6 max-w-6xl mx-auto">
-        {{-- Player Header --}}
         <div class="bg-white shadow rounded p-6 mb-8 flex items-center space-x-6">
             <img src="{{ $player['headshot']['href'] ?? 'https://via.placeholder.com/120' }}"
                  alt="{{ $player['fullName'] }}"
@@ -27,7 +26,6 @@
             </div>
         </div>
 
-        {{-- Bio Info --}}
         <div class="bg-white shadow rounded p-6 mb-8">
             <h2 class="text-2xl font-semibold mb-4">Bio</h2>
             <ul class="grid grid-cols-2 gap-4 text-sm">
@@ -42,7 +40,6 @@
             </ul>
         </div>
 
-        {{-- External Links --}}
         <div class="bg-white shadow rounded p-6 mb-8">
             <h2 class="text-2xl font-semibold mb-4">More</h2>
             <ul class="list-disc pl-5 space-y-2 text-blue-600">
@@ -61,12 +58,10 @@
             $eventsMeta = $gamelog['events'] ?? [];
         @endphp
 
-        {{-- Season Types --}}
         @foreach($gamelog['seasonTypes'] ?? [] as $season)
             <h2 class="text-2xl font-semibold mb-4">{{ $season['displayName'] }}</h2>
 
             @foreach($season['categories'] ?? [] as $category)
-                {{-- Per-game logs --}}
                 @if($category['type'] === 'event' && !empty($category['events']))
                     <h3 class="text-xl font-bold mb-2">{{ $category['displayName'] }}</h3>
                     <div class="overflow-x-auto bg-white shadow rounded-lg mb-8">
@@ -99,7 +94,9 @@
                                         </td>
                                         <td class="px-4 py-2">{{ $meta['gameResult'] ?? '-' }}</td>
                                         <td class="px-4 py-2">{{ $meta['score'] ?? '-' }}</td>
-
+                                        @foreach($event['stats'] as $value)
+                                            <td class="px-4 py-2">{{ $value }}</td>
+                                        @endforeach
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -107,7 +104,6 @@
                     </div>
                 @endif
 
-                {{-- Totals & Averages --}}
                 @if(in_array($category['type'], ['total','avg']))
                     <h3 class="text-xl font-bold mb-2">{{ $category['displayName'] }}</h3>
                     <div class="overflow-x-auto bg-white shadow rounded-lg mb-8">

@@ -24,7 +24,7 @@ class SyncPlayerDetailJob implements ShouldQueue
     public function handle(NbaService $nbaService)
     {
 
-        set_time_limit(0); // prevent PHP timeout for this job
+        set_time_limit(0); 
 
         $athlete = $nbaService->playerInfo($this->playerId);
 

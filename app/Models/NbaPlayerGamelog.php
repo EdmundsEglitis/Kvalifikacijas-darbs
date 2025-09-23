@@ -13,14 +13,12 @@ class NbaPlayerGameLog extends Model
         'player_id',
         'event_id',
 
-        // new metadata fields
         'game_date',
         'opponent_name',
         'opponent_logo',
         'result',
         'score',
 
-        // stats
         'minutes',
         'fg',
         'fg_pct',
@@ -37,9 +35,6 @@ class NbaPlayerGameLog extends Model
         'points',
     ];
 
-    /**
-     * Relationship: this log belongs to a player
-     */
     public function player()
     {
         return $this->belongsTo(NbaPlayer::class, 'player_id');

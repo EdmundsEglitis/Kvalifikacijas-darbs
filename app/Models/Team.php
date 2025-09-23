@@ -11,8 +11,6 @@ class Team extends Model
 
     protected $fillable = ['name', 'league_id', 'logo'];
 
-
-    // Define relationship to League
     public function league()
     {
         return $this->belongsTo(League::class);

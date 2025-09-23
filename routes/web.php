@@ -4,9 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NbaController;
 use App\Http\Controllers\LbsController;
 use App\Services\ApiSyncService;
-// Root = choice between NBA or LBS
+
 Route::get('/', function () {
-    return view('home'); // resources/views/home.blade.php
+    return view('home'); 
 })->name('home');
 
 // NBA section
@@ -34,6 +34,7 @@ Route::prefix('nba')->group(function () {
 Route::prefix('lbs')->group(function () {
     Route::get('/', [LbsController::class, 'home'])->name('lbs.home');
     Route::get('/news/{id}', [LbsController::class, 'showNews'])->name('news.show');
+
     // Parent and sub-leagues
     Route::get('/league/{id}', [LbsController::class, 'showParent'])->name('lbs.league.show');
     Route::get('/sub-league/{id}', [LbsController::class, 'showSubLeague'])->name('lbs.subleague.show');
@@ -66,7 +67,6 @@ Route::prefix('lbs')->group(function () {
 
 
 //cronjob route
-
 Route::get('/cron-update/{token}', function ($token) {
 
     if ($token !== config('app.cron_token')) {

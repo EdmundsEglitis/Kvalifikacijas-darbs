@@ -52,7 +52,7 @@ class SyncPlayerGamelogJob implements ShouldQueue
 
                 foreach (isset($category['events']) ? $category['events'] : [] as $event) {
                     try {
-                        // Try multiple possible keys for eventId
+                        
                         $eventId = null;
                         if (isset($event['eventId'])) {
                             $eventId = $event['eventId'];
@@ -71,7 +71,7 @@ class SyncPlayerGamelogJob implements ShouldQueue
                             continue;
                         }
 
-                        // Normalize stats into key => value
+                        
                         $stats = [];
                         if (isset($event['stats'])) {
                             foreach ($event['stats'] as $stat) {

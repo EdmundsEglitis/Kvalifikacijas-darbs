@@ -11,7 +11,7 @@
     <h1 class="text-3xl font-bold mb-10">Izvēlies sadaļu</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl px-6">
-        <!-- NBA card -->
+
         <a href="{{ route('nba.home') }}"
            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition p-10 flex flex-col items-center text-center">
            <img src="{{ asset('nba-logo-png-transparent.png') }}" 
@@ -20,7 +20,6 @@
             <p class="mt-2 text-gray-600">Amerikas basketbola līga</p>
         </a>
 
-        <!-- LBS card -->
         <a href="{{ route('lbs.home') }}"
            class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition p-10 flex flex-col items-center text-center">
             <img src="415986933_1338154883529529_7481933183149808416_n.jpg" 

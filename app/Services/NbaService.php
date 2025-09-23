@@ -117,7 +117,6 @@ class NbaService
                 continue;
             }
     
-            // Loop each "day block"
             foreach ($dayBlocks as $dayBlock) {
                 if (!is_array($dayBlock)) {
                     continue;
@@ -125,7 +124,6 @@ class NbaService
     
                 $dayLabel = $dayBlock['scheduleDate'] ?? $ymd;
     
-                // Loop each game inside the block
                 foreach ($dayBlock as $key => $game) {
                     if (!is_int($key) || !is_array($game)) {
                         continue;
@@ -192,7 +190,7 @@ public function allPlayersInfoForCron(): array
     \App\Models\NbaPlayer::chunk(10, function ($allPlayers) use (&$playersData) {
         foreach ($allPlayers as $player) {
             
-            $athlete = $this->playerInfo($player->external_id); // fetch full player info
+            $athlete = $this->playerInfo($player->external_id);
             if (!empty($athlete)) {
                 $playersData[] = [
                     'external_id'      => $athlete['id'] ?? null,
@@ -229,28 +227,6 @@ public function allPlayersInfoForCron(): array
     return $playersData;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     public function playerGameLog(string|int $playerId, ?string $season = null): array
     {
         $params = ['playerid' => (string) $playerId];
@@ -279,14 +255,14 @@ public function allPlayersInfoForCron(): array
 
     \App\Models\NbaPlayer::chunk(10, function ($players) use (&$allLogs) {
         foreach ($players as $player) {
-            $gamelog = $this->playerGameLog($player->external_id); // fetch full career data
+            $gamelog = $this->playerGameLog($player->external_id);
             dd($gamelog);
             foreach ($gamelog['seasonTypes'] ?? [] as $season) {
                 $seasonName = $season['displayName'] ?? null;
 
                 foreach ($season['categories'] ?? [] as $category) {
                     if (!in_array($category['type'], ['event'])) {
-                        continue; // skip totals/averages for now
+                        continue;
                     }
 
                     foreach ($category['events'] ?? [] as $event) {
@@ -310,19 +286,5 @@ public function allPlayersInfoForCron(): array
 
     return $allLogs;
 }
-
-    
-
-
-
-
-
-
-    
-    
-
-
-
-    
 
 }

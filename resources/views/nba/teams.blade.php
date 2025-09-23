@@ -23,7 +23,6 @@
                             {{ $team['name'] }}
                         </a>
                     </h2>
-
                     <p class="text-xs text-gray-500">{{ $team['short'] ?? '' }}</p>
                 </div>
             @endforeach

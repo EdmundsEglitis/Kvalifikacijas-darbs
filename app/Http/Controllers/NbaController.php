@@ -8,7 +8,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 class NbaController extends Controller
-{
+{   
     protected NbaService $nba;
 
     public function __construct(NbaService $nba)
@@ -26,12 +26,12 @@ class NbaController extends Controller
         $page    = max((int) $request->query('page', 1), 1);
         $perPage = min(max((int) $request->query('perPage', 50), 10), 200);
         $q       = trim((string) $request->query('q', ''));
-        $sort    = (string) $request->query('sort', 'name'); // name, team, height, weight
+        $sort    = (string) $request->query('sort', 'name');
         $dir     = strtolower((string) $request->query('dir', 'asc')) === 'desc' ? 'desc' : 'asc';
 
         $players = collect($this->nba->allPlayersFromLoop());
 
-        // Search by name or team
+
         if ($q !== '') {
             $qLower = Str::lower($q);
             $players = $players->filter(function ($p) use ($qLower) {
@@ -41,9 +41,8 @@ class NbaController extends Controller
             });
         }
 
-        // Helpers for parsing numeric sorts
+
         $parseWeight = function ($w) {
-            // handles "220 lbs" or "100 kg" or plain number
             if (!is_string($w) && !is_numeric($w)) return null;
             $s = (string) $w;
             if (preg_match('/([\d\.]+)/', $s, $m)) {
@@ -52,7 +51,6 @@ class NbaController extends Controller
             return null;
         };
         $parseHeight = function ($h) {
-            // handles "6' 8\"" or "6-8" or "203 cm"
             if (!is_string($h)) return null;
             $s = trim($h);
             if (preg_match('/(\d+)\s*\'\s*(\d+)\s*"/', $s, $m)) {
@@ -70,7 +68,6 @@ class NbaController extends Controller
             return null;
         };
 
-        // Sorting
         $players = $players->sort(function ($a, $b) use ($sort, $dir, $parseWeight, $parseHeight) {
             $cmp = 0;
             switch ($sort) {
@@ -99,7 +96,6 @@ class NbaController extends Controller
             return $dir === 'desc' ? -$cmp : $cmp;
         })->values();
 
-        // Pagination
         $total = $players->count();
         $items = $players->slice(($page - 1) * $perPage, $perPage)->values();
         $paginator = new LengthAwarePaginator(
@@ -123,17 +119,14 @@ class NbaController extends Controller
             abort(404, 'Team not found');
         }
     
-        // Players
         $players = $this->nba->playersByTeam($id);
     
-        // Upcoming games (filter)
         $allGames = $this->nba->upcomingGames();
         $games = array_filter($allGames, function ($game) use ($id) {
             return $game['homeTeam']['id'] == $id || $game['awayTeam']['id'] == $id;
         });
-    
-        // Stats (if you have an endpoint, otherwise placeholder)
-        $stats = []; // e.g. $this->nba->teamStats($id);
+
+        $stats = [];
     
         return view('nba.team_show', [
             'team'    => $team,
@@ -146,29 +139,16 @@ class NbaController extends Controller
     public function showPlayer(Request $request, $id)
     {
         $player  = $this->nba->playerInfo($id);
-        $gamelog = $this->nba->playerGameLog($id); // full career data
+        $gamelog = $this->nba->playerGameLog($id);
         if (empty($player)) {
             abort(404, 'Player not found');
         }
-                            echo '<pre>';
-print_r($gamelog);
-echo '</pre>';
-exit;
+
         return view('nba.player_show', [
             'player'        => $player,
             'gamelog'       => $gamelog,
         ]);
     }
-    
-    
-
-
-    
-    
-    
-    
-    
-    
 
     public function upcomingGames()
     {
@@ -176,29 +156,13 @@ exit;
 
         return view('nba.games', ['games' => $games]);
     }
+
     public function allTeams()
-{
-    $teams = $this->nba->allTeams();
-    return view('nba.teams', compact('teams'));
-}
+    {
+            $teams = $this->nba->allTeams();
+            return view('nba.teams', compact('teams'));
+    }  
 
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-    
     public function allGames()
     {
         $games = $this->nba->allGames();

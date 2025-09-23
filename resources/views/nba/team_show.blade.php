@@ -9,7 +9,6 @@
     <x-nba-navbar />
 
     <main class="pt-24 px-6 max-w-7xl mx-auto">
-        {{-- Team Header --}}
         <div class="bg-white shadow rounded p-6 mb-8">
             <div class="flex items-center space-x-4">
                 <img src="{{ $team['logo'] }}" alt="{{ $team['name'] }}" class="h-20">
@@ -23,7 +22,6 @@
             </div>
         </div>
 
-        {{-- Players --}}
 <h2 class="text-2xl font-semibold mb-4">Roster</h2>
 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-8">
     @foreach($players as $player)
@@ -48,7 +46,6 @@
     @endforeach
 </div>
 
-{{-- Upcoming Games --}}
 <h2 class="text-2xl font-semibold mb-4">Upcoming Games</h2>
 <div class="overflow-x-auto bg-white shadow rounded-lg mb-8">
     <table class="min-w-full text-left text-sm">
@@ -96,9 +93,7 @@
     </table>
 </div>
 
-
-        {{-- Statistics --}}
-        <h2 class="text-2xl font-semibold mb-4">Team Statistics</h2>
+    <h2 class="text-2xl font-semibold mb-4">Team Statistics</h2>
         <div class="bg-white shadow rounded-lg p-6">
             @if(!empty($stats))
                 <ul class="grid grid-cols-2 gap-4">

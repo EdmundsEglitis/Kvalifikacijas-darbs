@@ -15,7 +15,6 @@ class HeroImage extends Model
         return $this->belongsTo(League::class);
     }
 
-    // Determine type: home | league | subleague
     public function getLocationAttribute(): string
     {
         if (is_null($this->league_id)) {
@@ -25,7 +24,6 @@ class HeroImage extends Model
         return $this->league->parent_id ? 'subleague' : 'league';
     }
 
-    // Friendly label with icon
     public function getDisplayOnAttribute(): string
     {
         if (is_null($this->league_id)) {
