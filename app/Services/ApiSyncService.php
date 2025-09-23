@@ -20,10 +20,10 @@ class ApiSyncService
 
     public function sync()
     {
-        $this->syncPlayers();
+        //$this->syncPlayers();
         $this->syncTeams();
         $this->syncUpcomingGames();
-        $this->syncPlayerDetails();
+        //$this->syncPlayerDetails();
         //$this->syncPlayerGamelogs();
 
         // $this->syncGames(); // optional if you want game syncing too
