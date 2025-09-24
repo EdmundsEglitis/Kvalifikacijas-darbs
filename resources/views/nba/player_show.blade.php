@@ -2,131 +2,113 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ $player['fullName'] }}</title>
+    <title>{{ $player->full_name }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100">
     <x-nba-navbar />
 
     <main class="pt-24 px-6 max-w-6xl mx-auto">
+        <!-- Player header -->
         <div class="bg-white shadow rounded p-6 mb-8 flex items-center space-x-6">
-            <img src="{{ $player['headshot']['href'] ?? 'https://via.placeholder.com/120' }}"
-                 alt="{{ $player['fullName'] }}"
+            <img src="{{ $player->headshot_href ?? 'https://via.placeholder.com/120' }}"
+                 alt="{{ $player->full_name }}"
                  class="h-28 w-28 rounded-full object-cover">
             <div>
-                <h1 class="text-3xl font-bold">{{ $player['fullName'] }}</h1>
+                <h1 class="text-3xl font-bold">{{ $player->full_name }}</h1>
                 <p class="text-gray-600">
-                    {{ $player['position']['displayName'] ?? '' }} |
-                    <a href="{{ route('nba.team.show', $player['team']['id']) }}"
-                       class="text-blue-600 hover:underline">
-                        {{ $player['team']['displayName'] ?? '' }}
-                    </a>
+                    {{ $player->position ?? '' }}
+                    @if($player->team)
+                        | <a href="{{ route('nba.team.show', $player->team_id ?? '#') }}"
+                             class="text-blue-600 hover:underline">
+                            {{ $player->team_name ?? '' }}
+                          </a>
+                    @endif
                 </p>
-                <p class="text-gray-500">Jersey: {{ $player['displayJersey'] ?? '-' }}</p>
+                <p class="text-gray-500">Jersey: {{ $player->display_jersey ?? '-' }}</p>
             </div>
         </div>
 
+        <!-- Bio -->
         <div class="bg-white shadow rounded p-6 mb-8">
             <h2 class="text-2xl font-semibold mb-4">Bio</h2>
             <ul class="grid grid-cols-2 gap-4 text-sm">
-                <li><strong>Height:</strong> {{ $player['displayHeight'] ?? '-' }}</li>
-                <li><strong>Weight:</strong> {{ $player['displayWeight'] ?? '-' }}</li>
-                <li><strong>Age:</strong> {{ $player['age'] ?? '-' }}</li>
-                <li><strong>DOB:</strong> {{ $player['displayDOB'] ?? '-' }}</li>
-                <li><strong>Birthplace:</strong> {{ $player['displayBirthPlace'] ?? '-' }}</li>
-                <li><strong>Experience:</strong> {{ $player['displayExperience'] ?? '-' }}</li>
-                <li><strong>Draft:</strong> {{ $player['displayDraft'] ?? '-' }}</li>
-                <li><strong>Status:</strong> {{ $player['status']['name'] ?? '-' }}</li>
+                <li><strong>Height:</strong> {{ $player->display_height ?? '-' }}</li>
+                <li><strong>Weight:</strong> {{ $player->display_weight ?? '-' }}</li>
+                <li><strong>Age:</strong> {{ $player->age ?? '-' }}</li>
+                <li><strong>DOB:</strong> {{ $player->display_dob ?? '-' }}</li>
+                <li><strong>Birthplace:</strong> {{ $player->birth_place ?? '-' }}</li>
+                <li><strong>Experience:</strong> {{ $player->display_experience ?? '-' }}</li>
+                <li><strong>Draft:</strong> {{ $player->display_draft ?? '-' }}</li>
+                <li><strong>Status:</strong> {{ $player->status ?? '-' }}</li>
             </ul>
         </div>
 
+        <!-- Gamelogs -->
         <div class="bg-white shadow rounded p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4">More</h2>
-            <ul class="list-disc pl-5 space-y-2 text-blue-600">
-                @foreach($player['links'] ?? [] as $link)
-                    <li>
-                        <a href="{{ $link['href'] }}" target="_blank" class="hover:underline">
-                            {{ $link['text'] }}
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
+            <h2 class="text-2xl font-semibold mb-4">Game Logs</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="bg-gray-50 border-b sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2">Date</th>
+                            <th class="px-4 py-2">Opponent</th>
+                            <th class="px-4 py-2">Result</th>
+                            <th class="px-4 py-2">Score</th>
+                            <th class="px-4 py-2">MIN</th>
+                            <th class="px-4 py-2">FG</th>
+                            <th class="px-4 py-2">FG%</th>
+                            <th class="px-4 py-2">3PT</th>
+                            <th class="px-4 py-2">3PT%</th>
+                            <th class="px-4 py-2">FT</th>
+                            <th class="px-4 py-2">FT%</th>
+                            <th class="px-4 py-2">REB</th>
+                            <th class="px-4 py-2">AST</th>
+                            <th class="px-4 py-2">STL</th>
+                            <th class="px-4 py-2">BLK</th>
+                            <th class="px-4 py-2">TO</th>
+                            <th class="px-4 py-2">PF</th>
+                            <th class="px-4 py-2">PTS</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @forelse($gamelog as $log)
+                            <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100">
+                                <td class="px-4 py-2">{{ $log->game_date ? \Carbon\Carbon::parse($log->game_date)->format('M d, Y') : '-' }}</td>
+                                <td class="px-4 py-2 flex items-center space-x-2">
+                                    @if($log->opponent_logo)
+                                        <img src="{{ $log->opponent_logo }}" class="h-6 w-6 rounded-full">
+                                    @endif
+                                    {{ $log->opponent_name ?? '-' }}
+                                </td>
+                                <td class="px-4 py-2">{{ $log->result ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->score ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->minutes ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->fg ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->fg_pct ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->three_pt ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->three_pt_pct ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->ft ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->ft_pct ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->rebounds ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->assists ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->steals ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->blocks ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->turnovers ?? '-' }}</td>
+                                <td class="px-4 py-2">{{ $log->fouls ?? '-' }}</td>
+                                <td class="px-4 py-2 font-bold">{{ $log->points ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="18" class="px-4 py-4 text-center text-gray-500">
+                                    No gamelogs available.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
-
-        @php
-            $labels = $gamelog['labels'] ?? [];
-            $eventsMeta = $gamelog['events'] ?? [];
-        @endphp
-
-        @foreach($gamelog['seasonTypes'] ?? [] as $season)
-            <h2 class="text-2xl font-semibold mb-4">{{ $season['displayName'] }}</h2>
-
-            @foreach($season['categories'] ?? [] as $category)
-                @if($category['type'] === 'event' && !empty($category['events']))
-                    <h3 class="text-xl font-bold mb-2">{{ $category['displayName'] }}</h3>
-                    <div class="overflow-x-auto bg-white shadow rounded-lg mb-8">
-                        <table class="min-w-full text-left text-sm">
-                            <thead class="bg-gray-50 border-b sticky top-0">
-                                <tr>
-                                    <th class="px-4 py-2">Date</th>
-                                    <th class="px-4 py-2">Opponent</th>
-                                    <th class="px-4 py-2">Result</th>
-                                    <th class="px-4 py-2">Score</th>
-                                    @foreach($labels as $label)
-                                        <th class="px-4 py-2">{{ $label }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($category['events'] as $event)
-                                    @php
-                                        $meta = $eventsMeta[$event['eventId']] ?? null;
-                                    @endphp
-                                    <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100">
-                                        <td class="px-4 py-2">
-                                            {{ $meta ? \Carbon\Carbon::parse($meta['gameDate'])->format('M d, Y') : $event['eventId'] }}
-                                        </td>
-                                        <td class="px-4 py-2 flex items-center space-x-2">
-                                            @if($meta && !empty($meta['opponent']['logo']))
-                                                <img src="{{ $meta['opponent']['logo'] }}" class="h-6 w-6 rounded-full">
-                                            @endif
-                                            {{ $meta['opponent']['displayName'] ?? '-' }}
-                                        </td>
-                                        <td class="px-4 py-2">{{ $meta['gameResult'] ?? '-' }}</td>
-                                        <td class="px-4 py-2">{{ $meta['score'] ?? '-' }}</td>
-                                        @foreach($event['stats'] as $value)
-                                            <td class="px-4 py-2">{{ $value }}</td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-
-                @if(in_array($category['type'], ['total','avg']))
-                    <h3 class="text-xl font-bold mb-2">{{ $category['displayName'] }}</h3>
-                    <div class="overflow-x-auto bg-white shadow rounded-lg mb-8">
-                        <table class="min-w-full text-left text-sm">
-                            <thead class="bg-gray-50 border-b sticky top-0">
-                                <tr>
-                                    @foreach($labels as $label)
-                                        <th class="px-4 py-2">{{ $label }}</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="odd:bg-white even:bg-gray-50">
-                                    @foreach($category['totals'] ?? $category['stats'] ?? [] as $value)
-                                        <td class="px-4 py-2">{{ $value }}</td>
-                                    @endforeach
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            @endforeach
-        @endforeach
     </main>
 </body>
 </html>

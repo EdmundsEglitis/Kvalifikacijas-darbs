@@ -10,7 +10,7 @@ class NbaPlayerGameLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'player_id',
+        'player_external_id',
         'event_id',
 
         'game_date',
@@ -37,6 +37,7 @@ class NbaPlayerGameLog extends Model
 
     public function player()
     {
-        return $this->belongsTo(NbaPlayer::class, 'player_id');
+        return $this->belongsTo(NbaPlayer::class, 'player_external_id', 'external_id');
     }
+    
 }

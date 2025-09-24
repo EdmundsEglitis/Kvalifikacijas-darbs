@@ -21,5 +21,13 @@ class NbaPlayer extends Model
         'team_name',
         'team_logo',
     ];
+
+// In App\Models\NbaPlayer.php
+public function gamelogs()
+{
+    return $this->hasMany(NbaPlayerGameLog::class, 'player_external_id', 'external_id');
+}
+
+
 }
 

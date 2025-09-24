@@ -13,11 +13,18 @@ return new class extends Migration
     {
         Schema::create('nba_player_game_logs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('player_id')
-                  ->constrained('nba_players')
+
+            // Use external_id instead of local id
+            $table->unsignedBigInteger('player_external_id');
+            $table->foreign('player_external_id')
+                  ->references('external_id')
+                  ->on('nba_players')
                   ->onDelete('cascade');
 
-            $table->bigInteger('event_id')->unique(); // unique game identifier
+            $table->bigInteger('event_id');
+
+            // Composite unique: one row per player per event
+            $table->unique(['player_external_id', 'event_id'], 'player_event_unique');
 
             // New fields for better querying
             $table->date('game_date')->nullable();

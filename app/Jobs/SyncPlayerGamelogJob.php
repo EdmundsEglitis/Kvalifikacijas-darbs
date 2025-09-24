@@ -2,114 +2,95 @@
 
 namespace App\Jobs;
 
-use App\Models\NbaPlayer;
 use App\Models\NbaPlayerGamelog;
 use App\Services\NbaService;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class SyncPlayerGamelogJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /** @var int|string */
-    public $playerId;
+    public int $playerId;
 
-    /**
-     * @param int|string $playerId
-     */
-    public function __construct($playerId)
+    public function __construct(int $playerId)
     {
         $this->playerId = $playerId;
     }
 
-    public function handle(NbaService $nbaService)
+    public function handle(NbaService $nbaService): void
     {
-        $player = NbaPlayer::find($this->playerId);
-        if (!$player) {
-            Log::warning("SyncPlayerGamelogJob: Player not found for ID {$this->playerId}");
+        set_time_limit(0);
+
+        // Fetch gamelog from API
+        $gamelog = $nbaService->playerGameLog($this->playerId);
+
+        if (empty($gamelog)) {
             return;
         }
 
-        $gamelog = $nbaService->playerGameLog($player->external_id);
+        $labels      = $gamelog['labels'] ?? [];
+        $eventsMeta  = $gamelog['events'] ?? [];
+        $seasonTypes = $gamelog['seasonTypes'] ?? [];
 
-        if (empty($gamelog['seasonTypes'])) {
-            Log::info("SyncPlayerGamelogJob: No events for player {$player->id}");
-            return;
-        }
-
-        foreach ($gamelog['seasonTypes'] as $season) {
-            $seasonName = isset($season['displayName']) ? $season['displayName'] : null;
-
-            foreach (isset($season['categories']) ? $season['categories'] : [] as $category) {
-                if (!isset($category['type']) || $category['type'] !== 'event') {
+        foreach ($seasonTypes as $season) {
+            foreach ($season['categories'] ?? [] as $category) {
+                if (($category['type'] ?? null) !== 'event' || empty($category['events'])) {
                     continue;
                 }
 
-                foreach (isset($category['events']) ? $category['events'] : [] as $event) {
-                    try {
-                        
-                        $eventId = null;
-                        if (isset($event['eventId'])) {
-                            $eventId = $event['eventId'];
-                        } elseif (isset($event['id'])) {
-                            $eventId = $event['id'];
-                        }
+                foreach ($category['events'] as $event) {
+                    $eventId = $event['eventId'] ?? null;
+                    $stats   = $event['stats'] ?? [];
 
-                        if (!$eventId) {
-                            Log::warning("SyncPlayerGamelogJob: Missing eventId for player {$player->id}. Raw event: " . json_encode($event));
-                            continue;
-                        }
-
-                        $meta = isset($gamelog['events'][$eventId]) ? $gamelog['events'][$eventId] : null;
-                        if (!$meta) {
-                            Log::warning("SyncPlayerGamelogJob: No metadata found for event {$eventId} (player {$player->id})");
-                            continue;
-                        }
-
-                        
-                        $stats = [];
-                        if (isset($event['stats'])) {
-                            foreach ($event['stats'] as $stat) {
-                                if (isset($stat['abbreviation']) && isset($stat['displayValue'])) {
-                                    $stats[$stat['abbreviation']] = $stat['displayValue'];
-                                }
-                            }
-                        }
-
-                        NbaPlayerGamelog::updateOrCreate(
-                            [
-                                'player_id' => $player->id,
-                                'event_id'  => $eventId,
-                            ],
-                            [
-                                'minutes'       => isset($stats['MIN']) ? $stats['MIN'] : null,
-                                'fg'            => isset($stats['FG']) ? $stats['FG'] : null,
-                                'fg_pct'        => isset($stats['FG%']) ? (float)$stats['FG%'] : null,
-                                'three_pt'      => isset($stats['3PT']) ? $stats['3PT'] : null,
-                                'three_pt_pct'  => isset($stats['3P%']) ? (float)$stats['3P%'] : null,
-                                'ft'            => isset($stats['FT']) ? $stats['FT'] : null,
-                                'ft_pct'        => isset($stats['FT%']) ? (float)$stats['FT%'] : null,
-                                'rebounds'      => isset($stats['REB']) ? $stats['REB'] : null,
-                                'assists'       => isset($stats['AST']) ? $stats['AST'] : null,
-                                'steals'        => isset($stats['STL']) ? $stats['STL'] : null,
-                                'blocks'        => isset($stats['BLK']) ? $stats['BLK'] : null,
-                                'turnovers'     => isset($stats['TO']) ? $stats['TO'] : null,
-                                'fouls'         => isset($stats['PF']) ? $stats['PF'] : null,
-                                'points'        => isset($stats['PTS']) ? $stats['PTS'] : null,
-                                'updated_at'    => now(),
-                            ]
-                        );
-
-                        Log::info("SyncPlayerGamelogJob: Saved gamelog for player {$player->id}, event {$eventId}");
-                    } catch (\Throwable $e) {
-                        $eventKey = isset($event['eventId']) ? $event['eventId'] : 'unknown';
-                        Log::error("SyncPlayerGamelogJob failed for player {$player->id}, event {$eventKey}: {$e->getMessage()}");
+                    if (!$eventId) {
+                        continue;
                     }
+
+                    // Pair labels with values
+                    $columns = [];
+                    foreach ($labels as $i => $label) {
+                        $columns[$label] = $stats[$i] ?? null;
+                    }
+
+                    $meta = $eventsMeta[$eventId] ?? [];
+
+                    // Prepare payload
+                    $payload = [
+                        'game_date'     => isset($meta['gameDate']) ? Carbon::parse($meta['gameDate'])->toDateString() : null,
+                        'opponent_name' => $meta['opponent']['displayName'] ?? null,
+                        'opponent_logo' => $meta['opponent']['logo'] ?? null,
+                        'result'        => $meta['gameResult'] ?? null,
+                        'score'         => $meta['score'] ?? null,
+
+                        'minutes'       => $columns['MIN'] ?? null,
+                        'fg'            => $columns['FG'] ?? null,
+                        'fg_pct'        => isset($columns['FG%']) ? (float)$columns['FG%'] : null,
+                        'three_pt'      => $columns['3PT'] ?? null,
+                        'three_pt_pct'  => isset($columns['3PT%']) ? (float)$columns['3PT%'] : (isset($columns['3P%']) ? (float)$columns['3P%'] : null),
+                        'ft'            => $columns['FT'] ?? null,
+                        'ft_pct'        => isset($columns['FT%']) ? (float)$columns['FT%'] : null,
+                        'rebounds'      => $columns['REB'] ?? null,
+                        'assists'       => $columns['AST'] ?? null,
+                        'steals'        => $columns['STL'] ?? null,
+                        'blocks'        => $columns['BLK'] ?? null,
+                        'turnovers'     => $columns['TO'] ?? null,
+                        'fouls'         => $columns['PF'] ?? null,
+                        'points'        => $columns['PTS'] ?? null,
+                    ];
+
+                    // Save to DB
+                    NbaPlayerGamelog::updateOrCreate(
+                        [
+                            'player_external_id' => $this->playerId,
+                            'event_id'           => $eventId,
+                        ],
+                        $payload
+                    );
                 }
             }
         }

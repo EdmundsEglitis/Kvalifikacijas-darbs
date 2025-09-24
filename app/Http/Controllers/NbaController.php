@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\NbaPlayer;
 use App\Services\NbaService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -138,17 +138,20 @@ class NbaController extends Controller
 
     public function showPlayer(Request $request, $id)
     {
-        $player  = $this->nba->playerInfo($id);
-        $gamelog = $this->nba->playerGameLog($id);
-        if (empty($player)) {
+        $player = NbaPlayer::where('external_id', $id)
+                    ->with('gamelogs')
+                    ->first();
+    
+        if (!$player) {
             abort(404, 'Player not found');
         }
-
+    
         return view('nba.player_show', [
-            'player'        => $player,
-            'gamelog'       => $gamelog,
+            'player'  => $player,
+            'gamelog' => $player->gamelogs,
         ]);
     }
+    
 
     public function upcomingGames()
     {

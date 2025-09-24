@@ -21,10 +21,10 @@ class ApiSyncService
     public function sync()
     {
         //$this->syncPlayers();
-        $this->syncTeams();
-        $this->syncUpcomingGames();
+        //$this->syncTeams();
+        //$this->syncUpcomingGames();
         //$this->syncPlayerDetails();
-        //$this->syncPlayerGamelogs();
+        $this->syncPlayerGamelogs();
 
         // $this->syncGames(); // optional if you want game syncing too
     }
@@ -112,15 +112,17 @@ class ApiSyncService
                 });
             }
 
-public function syncPlayerGamelogs(): void
-{
-
-    NbaPlayer::limit(10)->get()->each(function ($player) {
-        \App\Jobs\SyncPlayerGamelogJob::dispatch($player->id);
-    });
-
-    echo "Dispatched gamelog jobs for 10 test players.\n";
-}
+            public function syncPlayerGamelogs(): void
+            {
+                \App\Models\NbaPlayer::chunk(50, function ($players) {
+                    foreach ($players as $player) {
+                        SyncPlayerGamelogJob::dispatch($player->external_id);
+                    }
+                });
+                
+            }
+            
+            
 
 
         }
