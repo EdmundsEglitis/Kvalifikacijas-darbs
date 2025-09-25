@@ -13,6 +13,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(GameSeeder::class);
+        $this->call(PlayerGameStatSeeder::class);
+
         // 1. Create main leagues
         $mainLeagues = collect([
             'LBL&LBSL',

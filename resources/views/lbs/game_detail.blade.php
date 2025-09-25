@@ -8,143 +8,122 @@
 </head>
 <body class="antialiased bg-[#111827] text-[#F3F4F6]">
 
-  <!-- Main Navbar -->
-  <nav class="bg-[#111827]/80 backdrop-blur-md fixed w-full top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between h-16 items-center">
-        <div class="flex items-center space-x-4">
-          <a href="{{ route('home') }}">
-            <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
-                 class="h-8 w-8 filter invert hover:opacity-80 transition">
+  {{-- Navbar with back button --}}
+  <x-sub-league-tabs :parentLeagues="$parentLeagues" :subLeague="$game->team1->league ?? null">
+    <a href="{{ url()->previous() }}" 
+       class="ml-4 px-3 py-2 rounded bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a3e635] transition">
+      ← Atpakaļ
+    </a>
+  </x-sub-league-tabs>
+
+  <main class="pt-32 max-w-6xl mx-auto px-4 space-y-12">
+    
+    {{-- Game header --}}
+    <section class="bg-[#1f2937] rounded-xl shadow p-6 border border-[#374151]">
+      <div class="flex items-center justify-center gap-10">
+        {{-- Team 1 --}}
+        <div class="flex flex-col items-center">
+          <a href="{{ route('lbs.team.overview', $game->team1->id) }}" class="group">
+            <img src="{{ asset('storage/' . $game->team1->logo) }}" 
+                 alt="{{ $game->team1->name }}" 
+                 class="h-20 w-20 object-contain mb-2 bg-white rounded shadow group-hover:scale-105 transition">
+            <h2 class="text-lg font-bold group-hover:text-[#84CC16] transition">{{ $game->team1->name }}</h2>
           </a>
-          <a href="{{ route('lbs.home') }}">
-            <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
-                 class="h-10">
+        </div>
+
+        {{-- Score --}}
+        <div class="text-4xl font-extrabold text-white">
+          {{ $team1Score }} : {{ $team2Score }}
+        </div>
+
+        {{-- Team 2 --}}
+        <div class="flex flex-col items-center">
+          <a href="{{ route('lbs.team.overview', $game->team2->id) }}" class="group">
+            <img src="{{ asset('storage/' . $game->team2->logo) }}" 
+                 alt="{{ $game->team2->name }}" 
+                 class="h-20 w-20 object-contain mb-2 bg-white rounded shadow group-hover:scale-105 transition">
+            <h2 class="text-lg font-bold group-hover:text-[#84CC16] transition">{{ $game->team2->name }}</h2>
           </a>
         </div>
-        <div class="hidden md:flex space-x-6">
-          @foreach(\App\Models\League::whereNull('parent_id')->get() as $league)
-            <a href="{{ route('lbs.league.show', $league->id) }}"
-               class="font-medium hover:text-[#84CC16] transition">
-              {{ $league->name }}
-            </a>
-          @endforeach
-        </div>
-        <div class="md:hidden flex items-center">
-          <button id="menu-btn" class="focus:outline-none"
-                  onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
-            <img src="{{ asset('burger-menu-svgrepo-com.svg') }}"
-                 alt="Menu" class="h-8 w-8 filter invert">
-          </button>
-        </div>
       </div>
-    </div>
-    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
-      <div class="space-y-2 px-4 py-3">
-        @foreach(\App\Models\League::whereNull('parent_id')->get() as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}"
-             class="block font-medium hover:text-[#84CC16] transition">
-            {{ $league->name }}
-          </a>
-        @endforeach
+
+      <div class="mt-4 text-center text-sm text-[#F3F4F6]/70">
+        🗓 {{ \Carbon\Carbon::parse($game->date)->format('d.m.Y H:i') }}
+        @if(!empty($game->venue)) · 📍 {{ $game->venue }} @endif
       </div>
-    </div>
-  </nav>
+    </section>
 
-  <!-- Game Context Navbar -->
-  <nav class="bg-[#0f172a]/80 backdrop-blur border-b border-white/10 fixed top-16 w-full z-40">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex space-x-6 py-3 text-sm sm:text-base">
-        <a href="{{ route('lbs.team.overview', $game->team1->id) }}"
-           class="text-[#F3F4F6]/80 hover:text-[#84CC16]">{{ $game->team1->name }} PĀRSKATS</a>
-        <a href="{{ route('lbs.team.overview', $game->team2->id) }}"
-           class="text-[#F3F4F6]/80 hover:text-[#84CC16]">{{ $game->team2->name }} PĀRSKATS</a>
-      </div>
-    </div>
-  </nav>
+    {{-- Player stats per team --}}
+    <section>
+      <h2 class="text-2xl font-bold text-white mb-6">Spēlētāju statistika</h2>
 
-  <main class="pt-32 max-w-6xl mx-auto px-4 space-y-8">
-
-    <div class="bg-[#1f2937] shadow rounded-lg p-6 border border-[#374151]">
-      <h2 class="text-2xl font-bold mb-2 text-white">{{ $game->team1->name }} vs {{ $game->team2->name }}</h2>
-      <p class="text-[#F3F4F6]/70 mb-2">Datums: {{ $game->date }}</p>
-      <p class="text-xl font-semibold mb-4 text-[#84CC16]">Rezultāts: {{ $team1Score }} : {{ $team2Score }}</p>
-
-      @if($game->team1_q1 !== null)
-      <div class="grid grid-cols-2 gap-4 mb-6">
-        <div class="bg-[#0f172a] p-3 rounded border border-[#374151]">
-          <h3 class="font-semibold mb-2 text-white">{{ $game->team1->name }} ceturtdaļas</h3>
-          <p>Q1: {{ $game->team1_q1 }}</p>
-          <p>Q2: {{ $game->team1_q2 }}</p>
-          <p>Q3: {{ $game->team1_q3 }}</p>
-          <p>Q4: {{ $game->team1_q4 }}</p>
-        </div>
-        <div class="bg-[#0f172a] p-3 rounded border border-[#374151]">
-          <h3 class="font-semibold mb-2 text-white">{{ $game->team2->name }} ceturtdaļas</h3>
-          <p>Q1: {{ $game->team2_q1 }}</p>
-          <p>Q2: {{ $game->team2_q2 }}</p>
-          <p>Q3: {{ $game->team2_q3 }}</p>
-          <p>Q4: {{ $game->team2_q4 }}</p>
-        </div>
-      </div>
-      @endif
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        @foreach([$game->team1_id, $game->team2_id] as $teamId)
-          @php
-            $team = $teamId == $game->team1_id ? $game->team1 : $game->team2;
-            $stats = $playerStats[$teamId] ?? collect();
-            $totals = [
-              'points' => $stats->sum('points'),
-              'reb' => $stats->sum('reb'),
-              'ast' => $stats->sum('ast'),
-              'eff' => $stats->sum('eff'),
-            ];
-          @endphp
-          <div class="bg-[#0f172a] shadow rounded-lg p-4 border border-[#374151]">
-            <h2 class="text-xl font-bold mb-2 text-white">{{ $team->name }} Spēlētāju statistika</h2>
-            <div class="overflow-x-auto">
-              <table class="min-w-full table-auto border-collapse">
-                <thead>
-                  <tr class="bg-[#1f2937] text-[#F3F4F6]/80">
-                    <th class="px-2 py-1 text-left">Spēlētājs</th>
-                    <th class="px-2 py-1 text-right">PTS</th>
-                    <th class="px-2 py-1 text-right">REB</th>
-                    <th class="px-2 py-1 text-right">AST</th>
-                    <th class="px-2 py-1 text-right">EFF</th>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {{-- Team 1 stats --}}
+        <div>
+          <h3 class="text-xl font-semibold mb-3">{{ $game->team1->name }}</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-[#1f2937] border border-[#374151] rounded">
+              <thead class="bg-[#374151] text-xs uppercase text-[#F3F4F6]/70">
+                <tr>
+                  <th class="px-3 py-2 text-left">Spēlētājs</th>
+                  <th class="px-3 py-2 text-right">Punkti</th>
+                  <th class="px-3 py-2 text-right">Atl.</th>
+                  <th class="px-3 py-2 text-right">Piesp.</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#374151]">
+                @foreach($playerStats[$game->team1->id] ?? [] as $stat)
+                  <tr class="hover:bg-[#2d3748] transition">
+                    <td class="px-3 py-2">
+                      <a href="{{ route('lbs.player.show', $stat->player->id) }}" 
+                         class="hover:text-[#84CC16]">
+                        {{ $stat->player->name }}
+                      </a>
+                    </td>
+                    <td class="px-3 py-2 text-right">{{ $stat->points }}</td>
+                    <td class="px-3 py-2 text-right">{{ $stat->reb }}</td>
+                    <td class="px-3 py-2 text-right">{{ $stat->ast }}</td>
                   </tr>
-                </thead>
-                <tbody>
-  @foreach($stats as $stat)
-    <tr class="hover:bg-[#1f2937]/70 transition">
-      <td class="px-2 py-1">
-        <a href="{{ route('lbs.player.show', $stat->player->id) }}" 
-           class="hover:text-[#84CC16]">
-          {{ $stat->player->name }}
-        </a>
-      </td>
-      <td class="px-2 py-1 text-right text-[#84CC16]">{{ $stat->points }}</td>
-      <td class="px-2 py-1 text-right">{{ $stat->reb }}</td>
-      <td class="px-2 py-1 text-right">{{ $stat->ast }}</td>
-      <td class="px-2 py-1 text-right">{{ $stat->eff }}</td>
-    </tr>
-  @endforeach
-  <tr class="font-bold bg-[#1f2937]">
-    <td class="px-2 py-1">Kopā</td>
-    <td class="px-2 py-1 text-right text-[#84CC16]">{{ $totals['points'] }}</td>
-    <td class="px-2 py-1 text-right">{{ $totals['reb'] }}</td>
-    <td class="px-2 py-1 text-right">{{ $totals['ast'] }}</td>
-    <td class="px-2 py-1 text-right">{{ $totals['eff'] }}</td>
-  </tr>
-</tbody>
-
-              </table>
-            </div>
+                @endforeach
+              </tbody>
+            </table>
           </div>
-        @endforeach
-      </div>
-    </div>
-  </main>
+        </div>
 
+        {{-- Team 2 stats --}}
+        <div>
+          <h3 class="text-xl font-semibold mb-3">{{ $game->team2->name }}</h3>
+          <div class="overflow-x-auto">
+            <table class="min-w-full bg-[#1f2937] border border-[#374151] rounded">
+              <thead class="bg-[#374151] text-xs uppercase text-[#F3F4F6]/70">
+                <tr>
+                  <th class="px-3 py-2 text-left">Spēlētājs</th>
+                  <th class="px-3 py-2 text-right">Punkti</th>
+                  <th class="px-3 py-2 text-right">Atl.</th>
+                  <th class="px-3 py-2 text-right">Piesp.</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#374151]">
+                @foreach($playerStats[$game->team2->id] ?? [] as $stat)
+                  <tr class="hover:bg-[#2d3748] transition">
+                    <td class="px-3 py-2">
+                      <a href="{{ route('lbs.player.show', $stat->player->id) }}" 
+                         class="hover:text-[#84CC16]">
+                        {{ $stat->player->name }}
+                      </a>
+                    </td>
+                    <td class="px-3 py-2 text-right">{{ $stat->points }}</td>
+                    <td class="px-3 py-2 text-right">{{ $stat->reb }}</td>
+                    <td class="px-3 py-2 text-right">{{ $stat->ast }}</td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </body>
 </html>

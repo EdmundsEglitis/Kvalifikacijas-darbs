@@ -190,42 +190,60 @@ class LbsController extends Controller
         return view('lbs.team_detail', compact('team', 'averageStats', 'bestPlayers', 'wins', 'losses'));
     }
     
-    public function teamGames($id)
-    {
-        $team = Team::findOrFail($id);
-    
-        $parentLeagues = League::whereNull('parent_id')->get(); 
-    
-        $games = Game::where('team1_id', $team->id)
-            ->orWhere('team2_id', $team->id)
-            ->with(['team1', 'team2'])
-            ->get()
-            ->map(function ($game) {
+public function teamGames($id)
+{
+    $team = Team::findOrFail($id);
 
-                $game->score1 = $game->score2 = 0;
-    
-                if ($game->score) {
-                    if (str_contains($game->score, '-')) {
-                        $parts = explode('-', $game->score);
-                    } elseif (str_contains($game->score, ':')) {
-                        $parts = explode(':', $game->score);
-                    } else {
-                        $parts = [];
-                    }
-    
-                    $game->score1 = isset($parts[0]) ? (int)$parts[0] : 0;
-                    $game->score2 = isset($parts[1]) ? (int)$parts[1] : 0;
+    $parentLeagues = League::whereNull('parent_id')->get();
+
+    // Fetch games where this team played
+    $games = Game::where('team1_id', $team->id)
+        ->orWhere('team2_id', $team->id)
+        ->with(['team1', 'team2'])
+        ->get()
+        ->map(function ($game) {
+            // Default
+            $game->score1 = $game->score2 = 0;
+
+            // If stored as "100-95" or "100:95"
+            if ($game->score) {
+                if (str_contains($game->score, '-')) {
+                    $parts = explode('-', $game->score);
+                } elseif (str_contains($game->score, ':')) {
+                    $parts = explode(':', $game->score);
                 } else {
-                    $game->score1 = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
-                    $game->score2 = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
+                    $parts = [];
                 }
-    
-                return $game;
-            });
-    
-        return view('lbs.team_games', compact('team', 'games', 'parentLeagues'));
-    }
-    
+
+                $game->score1 = isset($parts[0]) ? (int) $parts[0] : 0;
+                $game->score2 = isset($parts[1]) ? (int) $parts[1] : 0;
+            } else {
+                // If no "score", sum quarter scores
+                $game->score1 = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
+                $game->score2 = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
+            }
+
+            return $game;
+        });
+
+    // Split into upcoming and past games
+    $upcomingGames = $games->filter(fn($g) => $g->date && $g->date->isFuture())
+                           ->sortBy('date')
+                           ->values();
+
+    $pastGames = $games->filter(fn($g) => $g->date && ($g->date->isPast() || $g->date->isToday()))
+                       ->sortByDesc('date')
+                       ->values();
+
+    return view('lbs.team_games', compact(
+        'team',
+        'parentLeagues',
+        'games',
+        'upcomingGames',
+        'pastGames'
+    ));
+}
+
 
     public function teamPlayers($id)
     {
@@ -233,50 +251,111 @@ class LbsController extends Controller
         return view('lbs.team_players', compact('team'));
     }
 
-    public function teamStats($id)
-    {
-        $team = Team::findOrFail($id);
-        $games = Game::where('team1_id', $team->id)
-            ->orWhere('team2_id', $team->id)
-            ->get();
+public function teamStats($id)
+{
+    $team = Team::with(['players.games'])->findOrFail($id);
 
-        $wins = $games->where('winner_id', $team->id)->count();
-        $losses = $games->count() - $wins;
+    $games = Game::where('team1_id', $team->id)
+        ->orWhere('team2_id', $team->id)
+        ->get();
 
-        return view('lbs.team_stats', compact('team', 'games', 'wins', 'losses'));
+    $wins = $games->where('winner_id', $team->id)->count();
+    $losses = $games->count() - $wins;
+
+    $totalGames = $games->count() ?: 1;
+
+    // Stats we want to calculate
+    $statKeys = [
+        'points' => 'Punkti',
+        'oreb'   => 'Atl. bumbas uzbrukumā',
+        'dreb'   => 'Atl. bumbas aizsardzībā',
+        'reb'    => 'Atl. bumbas',
+        'ast'    => 'Piespēles',
+        'pf'     => 'Fouls',
+        'tov'    => 'Kļūdas',
+        'stl'    => 'Pārķertās',
+        'blk'    => 'Bloķētie metieni',
+        'dunk'   => 'Danki',
+    ];
+
+    // Calculate team averages
+    $averageStats = [];
+    foreach ($statKeys as $key => $label) {
+        $total = $team->players->sum(fn($p) => $p->games->sum("pivot.$key"));
+        $averageStats[$key] = [
+            'label' => $label,
+            'avg'   => $total / $totalGames,
+        ];
     }
 
-    public function showGame($id)
-    {
-        $game = Game::with([
-            'team1',
-            'team2',
-            'playerGameStats.player'
-        ])->findOrFail($id);
-    
-        $team1Score = $team2Score = 0;
-    
-        if ($game->score) {
+    // Player averages
+    $playersStats = $team->players->map(function ($player) {
+        $gamesPlayed = $player->games->count() ?: 1;
 
-            if (str_contains($game->score, '-')) {
-                $parts = explode('-', $game->score);
-            } elseif (str_contains($game->score, ':')) {
-                $parts = explode(':', $game->score);
-            } else {
-                $parts = [];
-            }
-    
-            $team1Score = isset($parts[0]) ? (int)$parts[0] : 0;
-            $team2Score = isset($parts[1]) ? (int)$parts[1] : 0;
+        return [
+            'id' => $player->id,
+            'name' => $player->name,
+            'photo' => $player->photo,
+            'gamesPlayed' => $gamesPlayed,
+            'ppg' => $player->games->sum('pivot.points') / $gamesPlayed,
+            'rpg' => $player->games->sum('pivot.reb') / $gamesPlayed,
+            'apg' => $player->games->sum('pivot.ast') / $gamesPlayed,
+            'minutes' => $player->games->sum(function ($g) {
+                return strtotime($g->pivot->minutes) - strtotime('00:00');
+            }) / $gamesPlayed,
+        ];
+    });
+
+    return view('lbs.team_stats', compact(
+        'team',
+        'games',
+        'wins',
+        'losses',
+        'averageStats',
+        'playersStats'
+    ));
+}
+
+public function showGame($id)
+{
+    $game = Game::with([
+        'team1',
+        'team2',
+        'playerGameStats.player'
+    ])->findOrFail($id);
+
+    // Parse scores
+    $team1Score = $team2Score = 0;
+
+    if ($game->score) {
+        if (str_contains($game->score, '-')) {
+            $parts = explode('-', $game->score);
+        } elseif (str_contains($game->score, ':')) {
+            $parts = explode(':', $game->score);
         } else {
-            $team1Score = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
-            $team2Score = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
+            $parts = [];
         }
-    
-        $playerStats = $game->playerGameStats->groupBy('team_id');
-    
-        return view('lbs.game_detail', compact('game', 'team1Score', 'team2Score', 'playerStats'));
+
+        $team1Score = isset($parts[0]) ? (int)$parts[0] : 0;
+        $team2Score = isset($parts[1]) ? (int)$parts[1] : 0;
+    } else {
+        $team1Score = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
+        $team2Score = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
     }
+
+    $playerStats = $game->playerGameStats->groupBy('team_id');
+
+    $parentLeagues = League::whereNull('parent_id')->get();
+
+    return view('lbs.game_detail', compact(
+        'game',
+        'team1Score',
+        'team2Score',
+        'playerStats',
+        'parentLeagues'
+    ));
+}
+
     
     
     public function subLeagueNews($id)

@@ -134,7 +134,7 @@
 
                   {{-- Score --}}
                   <div class="text-center">
-                    <div class="text-3xl font-extrabold text-white tracking-wide">
+                    <div class="text-1xl font-extrabold text-white tracking-wide">
                       {{ ($s1 !== null && $s2 !== null) ? ($s1.' : '.$s2) : '—' }}
                     </div>
                     <div class="text-xs mt-1 text-[#F3F4F6]/60">Galarezultāts</div>
