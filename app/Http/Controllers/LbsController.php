@@ -330,27 +330,29 @@ class LbsController extends Controller
 
     public function subleagueCalendar($id)
     {
-            $subLeague = League::with('teams')->findOrFail($id);
-            $parentLeagues = League::whereNull('parent_id')->get();
-        
-            $teamIds = $subLeague->teams->pluck('id');
-            $games = Game::whereIn('team1_id', $teamIds)
-                         ->orWhereIn('team2_id', $teamIds)
-                         ->with(['team1', 'team2'])
-                         ->orderBy('date', 'asc')
-                         ->get();
-        
-            $upcomingGames = $games->filter(fn($g) => $g->date->isFuture());
-            $pastGames     = $games->filter(fn($g) => $g->date->isPast());
-        
-            return view('lbs.subleague_calendar', compact(
-                'subLeague',
-                'parentLeagues',
-                'games',
-                'upcomingGames',
-                'pastGames'
-            ));
+        $subLeague     = League::with('teams')->findOrFail($id);
+        $parentLeagues = League::whereNull('parent_id')->get();
+    
+        $teamIds = $subLeague->teams->pluck('id');
+    
+        $games = Game::whereIn('team1_id', $teamIds)
+            ->orWhereIn('team2_id', $teamIds)
+            ->with(['team1', 'team2', 'winner'])   // <-- add winner
+            ->orderBy('date', 'asc')
+            ->get();
+    
+        $upcomingGames = $games->filter(fn($g) => $g->date->isFuture());
+        $pastGames     = $games->filter(fn($g) => $g->date->isPast());
+    
+        return view('lbs.subleague_calendar', compact(
+            'subLeague',
+            'parentLeagues',
+            'games',
+            'upcomingGames',
+            'pastGames'
+        ));
     }
+    
 
     public function show($id)
     {

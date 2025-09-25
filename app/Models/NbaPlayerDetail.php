@@ -50,4 +50,41 @@ class NbaPlayerDetail extends Model
         'status'          => 'array',
         'active'          => 'boolean',
     ];
+
+    public function getRouteKeyName()
+    {
+        return 'external_id';
+    }
+
+    public function player()
+    {
+        return $this->belongsTo(NbaPlayer::class, 'external_id', 'external_id');
+    }
+
+    /* 🔹 Clean Accessors for JSON fields */
+
+    public function getPositionNameAttribute()
+    {
+        return $this->position['displayName'] ?? $this->position['name'] ?? null;
+    }
+
+    public function getStatusNameAttribute()
+    {
+        return $this->status['name'] ?? null;
+    }
+
+    public function getTeamIdAttribute()
+    {
+        return $this->team['id'] ?? null;
+    }
+
+    public function getTeamNameAttribute()
+    {
+        return $this->team['name'] ?? null;
+    }
+
+    public function getTeamLogoAttribute()
+    {
+        return $this->team['logo'] ?? null;
+    }
 }

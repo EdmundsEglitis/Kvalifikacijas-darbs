@@ -18,4 +18,13 @@ class NbaTeam extends Model
         'logo_dark',
         'url',
     ];
+    public function getRouteKeyName()
+    {
+        return 'external_id';
+    }
+
+    public function players()
+    {
+        return $this->hasMany(NbaPlayer::class, 'team_id', 'external_id');
+    }
 }

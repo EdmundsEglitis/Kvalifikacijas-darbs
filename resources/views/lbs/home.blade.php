@@ -6,110 +6,94 @@
   <title>LBS – Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* ensure transform & opacity transitions work */
-    .fade-in-section {
-      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-    }
+    /* smooth reveal */
+    .fade-in-section { transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+
+    /* nav states */
+    .nav-transparent { background-color: transparent; }
+    .nav-solid { background-color: rgba(17, 24, 39, 0.85); } /* #111827 at ~85% */
   </style>
 </head>
 <body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
-  <!-- NAVBAR -->
-  <nav class="fixed inset-x-0 top-0 z-50 bg-[#111827]/80 backdrop-blur-md">
-  <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-    {{-- LEFT: Home + LBS Logo --}}
-    <div class="flex items-center space-x-3">
-      <a href="{{ route('home') }}" class="block">
-        <img
-          src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
-          alt="Home"
-          class="h-8 w-8 filter invert transition"
-        />
-      </a>
-      <a href="{{ route('lbs.home') }}" class="block">
-        <img
-          src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
-          alt="LBS Logo"
-          class="h-10"
-        />
-      </a>
+  <!-- NAVBAR (transparent over hero, solid after scroll) -->
+  <nav id="site-nav"
+       class="fixed inset-x-0 top-0 z-50 nav-transparent backdrop-blur-md transition-colors duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+      {{-- LEFT: Home + LBS --}}
+      <div class="flex items-center space-x-3">
+        <a href="{{ route('home') }}" class="block" aria-label="Home">
+          <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
+               alt="" class="h-8 w-8 filter invert transition"/>
+        </a>
+        <a href="{{ route('lbs.home') }}" class="block" aria-label="LBS">
+          <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
+               alt="LBS Logo" class="h-10 rounded"/>
+        </a>
+      </div>
+
+      {{-- RIGHT: desktop links + hamburger --}}
+      <div class="flex items-center space-x-4">
+        <div class="hidden md:flex space-x-8">
+          @foreach($parentLeagues as $league)
+            <a href="{{ route('lbs.league.show', $league->id) }}"
+               class="font-medium hover:text-[#84CC16] transition">
+              {{ $league->name }}
+            </a>
+          @endforeach
+        </div>
+
+        <button id="menu-btn" class="md:hidden focus:outline-none" aria-label="Menu">
+          <img src="{{ asset('burger-menu-svgrepo-com.svg') }}"
+               alt="" class="h-8 w-8 filter invert transition"/>
+        </button>
+      </div>
     </div>
 
-    {{-- RIGHT: Leagues (desktop) + Hamburger (mobile) --}}
-    <div class="flex items-center space-x-4">
-      {{-- desktop league links --}}
-      <div class="hidden md:flex space-x-8">
+    {{-- MOBILE MENU --}}
+    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
+      <div class="px-4 py-4 space-y-2">
         @foreach($parentLeagues as $league)
-          <a
-            href="{{ route('lbs.league.show', $league->id) }}"
-            class="font-medium hover:text-[#84CC16] transition"
-          >
+          <a href="{{ route('lbs.league.show', $league->id) }}"
+             class="block font-medium hover:text-[#84CC16] transition">
             {{ $league->name }}
           </a>
         @endforeach
       </div>
-
-      {{-- mobile menu button --}}
-      <button id="menu-btn" class="md:hidden focus:outline-none">
-        <img
-          src="{{ asset('burger-menu-svgrepo-com.svg') }}"
-          alt="Menu"
-          class="h-8 w-8 filter invert transition"
-        />
-      </button>
     </div>
-  </div>
+  </nav>
 
-  {{-- MOBILE MENU --}}
-  <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
-    <div class="px-4 py-4 space-y-2">
-      @foreach($parentLeagues as $league)
-        <a
-          href="{{ route('lbs.league.show', $league->id) }}"
-          class="block font-medium hover:text-[#84CC16] transition"
-        >
-          {{ $league->name }}
-        </a>
-      @endforeach
-    </div>
-  </div>
-</nav>
-
-
-  <main class="pt-24">
+  <main class="pt-16"><!-- hero will slide under the 64px navbar -->
 
     <!-- HERO -->
     @if($heroImage)
-  <section
-    id="hero"
-    class="relative w-full h-[75vh] sm:h-[80vh] lg:h-screen bg-fixed bg-cover bg-center"
-    style="background-image: url('{{ Storage::url($heroImage->image_path) }}');"
-  >
-    {{-- dark overlay --}}
-    <div class="absolute inset-0 bg-black/60"></div>
+      <section
+        id="hero"
+        class="relative -mt-16 w-full h-[75vh] sm:h-[80vh] lg:h-screen bg-fixed bg-cover bg-center"
+        style="background-image: url('{{ Storage::url($heroImage->image_path) }}');"
+      >
+        {{-- dark overlay --}}
+        <div class="absolute inset-0 bg-black/60"></div>
 
-    {{-- centered content --}}
-    <div class="relative z-10 flex h-full items-center justify-center px-6 text-center">
-      <div class="max-w-3xl space-y-6 fade-in-section opacity-0 translate-y-6">
-        {{-- overlay title (optional) --}}
-        @if($heroImage->title)
-          <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-lg">
-            {{ $heroImage->title }}
-          </h1>
-        @endif
-
-        {{-- CTA to news --}}
-        <a
-          href="#news"
-          class="inline-block mt-4 px-8 py-3 rounded-full bg-[#84CC16] text-[#111827]
-                 font-semibold uppercase tracking-wide hover:bg-[#a6e23a] transition"
-        >
-          Skatīt jaunākās ziņas
-        </a>
-      </div>
-    </div>
-  </section>
-@endif
+        {{-- centered content --}}
+        <div class="relative z-10 flex h-full items-center justify-center px-6 text-center">
+          <div class="max-w-3xl space-y-6 fade-in-section opacity-0 translate-y-6">
+            @if($heroImage->title)
+              <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white drop-shadow-lg">
+                {{ $heroImage->title }}
+              </h1>
+            @endif
+            <div class="flex items-center justify-center gap-4">
+              <a href="#news"
+                 class="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-[#84CC16] text-[#111827] font-semibold tracking-wide hover:bg-[#a6e23a] transition">
+                Skatīt jaunākās ziņas
+                <span class="translate-y-[1px]">↓</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    @endif
 
     <!-- FEATURES -->
     <section class="py-12 bg-[#111827]">
@@ -143,31 +127,37 @@
           Jaunākās Ziņas
         </h2>
 
-        <!-- Secondary Panels -->
+        <!-- Secondary Panels (two big cards, fixed image height) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           @foreach(['secondary-1','secondary-2'] as $slot)
             @if($bySlot[$slot] ?? false)
               <article
-                class="group bg-[#F3F4F6] rounded-xl overflow-hidden shadow-lg border-t-4 border-[#F97316]
-                       flex flex-col transform transition-shadow transition-transform duration-300 ease-in-out
-                       hover:scale-105 hover:shadow-2xl fade-in-section opacity-0 translate-y-6"
-              >
-                <img loading="lazy"
-                     src="{{ $bySlot[$slot]->preview_image }}"
-                     alt="{{ $bySlot[$slot]->title }}"
-                     class="w-full h-60 object-cover transition-transform duration-300 group-hover:scale-110"/>
+                class="group bg-[#0f172a] rounded-2xl overflow-hidden shadow-lg border border-[#1f2937]/60
+                       flex flex-col hover:shadow-2xl fade-in-section opacity-0 translate-y-6 transition">
+                <!-- fixed image area with object-contain -->
+                <div class="relative w-full h-[260px] bg-[#0b1220]">
+                  <img
+                    loading="lazy"
+                    src="{{ $bySlot[$slot]->preview_image }}"
+                    alt="{{ $bySlot[$slot]->title }}"
+                    class="absolute inset-0 m-auto max-h-full max-w-full object-contain"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#0b1220] via-transparent to-transparent"></div>
+                </div>
+
                 <div class="p-6 flex flex-col flex-1">
-                  <h3 class="text-2xl font-semibold text-[#111827] mb-2">
+                  <h3 class="text-2xl font-semibold text-white mb-2">
                     {{ $bySlot[$slot]->title }}
                   </h3>
-                  <p class="flex-1 text-[#111827]/90">{{ $bySlot[$slot]->excerpt }}</p>
+                  <p class="flex-1 text-[#F3F4F6]/90 line-clamp-3">{{ $bySlot[$slot]->excerpt }}</p>
                   <div class="mt-4 flex items-center justify-between">
-                    <time class="text-sm text-[#111827]/70">
+                    <time class="text-sm text-[#F3F4F6]/60">
                       {{ $bySlot[$slot]->created_at->format('Y-m-d') }}
                     </time>
                     <a href="{{ route('news.show', $bySlot[$slot]->id) }}"
-                       class="text-[#84CC16] font-medium hover:underline">
-                      Lasīt vairāk →
+                       class="inline-flex items-center gap-2 text-[#84CC16] font-medium hover:underline text-2xl">
+                      Lasīt vairāk
+                      <span>→</span>
                     </a>
                   </div>
                 </div>
@@ -176,31 +166,36 @@
           @endforeach
         </div>
 
-        <!-- Three Small Cards -->
+        <!-- Three Small Cards (fixed image height) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
           @foreach(['slot-1','slot-2','slot-3'] as $slot)
             @if($bySlot[$slot] ?? false)
               <article
-                class="group bg-[#F3F4F6] rounded-xl overflow-hidden shadow-lg border-t-4 border-[#F97316]
-                       flex flex-col transform transition-shadow transition-transform duration-300 ease-in-out
-                       hover:scale-105 hover:shadow-2xl fade-in-section opacity-0 translate-y-6"
-              >
-                <img loading="lazy"
-                     src="{{ $bySlot[$slot]->preview_image }}"
-                     alt="{{ $bySlot[$slot]->title }}"
-                     class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"/>
-                <div class="p-4 flex flex-col flex-1">
-                  <h4 class="text-lg font-semibold text-[#111827] mb-1">
+                class="group bg-[#0f172a] rounded-2xl overflow-hidden shadow-lg border border-[#1f2937]/60
+                       flex flex-col hover:shadow-2xl fade-in-section opacity-0 translate-y-6 transition">
+                <!-- fixed image area with object-contain -->
+                <div class="relative w-full h-[220px] bg-[#0b1220]">
+                  <img
+                    loading="lazy"
+                    src="{{ $bySlot[$slot]->preview_image }}"
+                    alt="{{ $bySlot[$slot]->title }}"
+                    class="absolute inset-0 m-auto max-h-full max-w-full object-contain"
+                  />
+                  <div class="absolute inset-0 bg-gradient-to-t from-[#0b1220] via-transparent to-transparent"></div>
+                </div>
+
+                <div class="p-5 flex flex-col flex-1">
+                  <h4 class="text-lg font-semibold text-white mb-1">
                     {{ $bySlot[$slot]->title }}
                   </h4>
-                  <p class="flex-1 text-[#111827]/90">{{ $bySlot[$slot]->excerpt }}</p>
+                  <p class="flex-1 text-[#F3F4F6]/90 line-clamp-2">{{ $bySlot[$slot]->excerpt }}</p>
                   <div class="mt-3 flex items-center justify-between">
-                    <time class="text-xs text-[#111827]/70">
+                    <time class="text-xs text-[#F3F4F6]/60">
                       {{ $bySlot[$slot]->created_at->format('Y-m-d') }}
                     </time>
                     <a href="{{ route('news.show', $bySlot[$slot]->id) }}"
-                       class="text-[#84CC16] font-medium hover:underline text-sm">
-                      Lasīt →
+                       class="text-[#84CC16] font-medium hover:underline text-2xl inline-flex items-center gap-1">
+                      Lasīt <span>→</span>
                     </a>
                   </div>
                 </div>
@@ -258,10 +253,24 @@
         });
       }, { threshold: 0.1 });
 
-      document.querySelectorAll('.fade-in-section').forEach((el) => {
-        observer.observe(el);
-      });
+      document.querySelectorAll('.fade-in-section').forEach((el) => observer.observe(el));
     });
+
+    // Navbar: transparent at top, solid after scroll
+    (function() {
+      const nav = document.getElementById('site-nav');
+      const update = () => {
+        if (window.scrollY > 10) {
+          nav.classList.add('nav-solid');
+          nav.classList.remove('nav-transparent');
+        } else {
+          nav.classList.add('nav-transparent');
+          nav.classList.remove('nav-solid');
+        }
+      };
+      update();
+      window.addEventListener('scroll', update);
+    })();
   </script>
 </body>
 </html>

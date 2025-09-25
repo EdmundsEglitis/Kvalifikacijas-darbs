@@ -24,4 +24,13 @@ class NbaGame extends Model
         'away_team_short',
         'away_team_logo',
     ];
+    public function homeTeam()
+    {
+        return $this->belongsTo(NbaTeam::class, 'home_team_id', 'external_id');
+    }
+
+    public function awayTeam()
+    {
+        return $this->belongsTo(NbaTeam::class, 'away_team_id', 'external_id');
+    }
 }
