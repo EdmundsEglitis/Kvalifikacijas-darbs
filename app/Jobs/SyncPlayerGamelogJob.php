@@ -10,24 +10,57 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class SyncPlayerGamelogJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $playerId;
+    /** @var array<int> */
+    public array $playerIds;
 
-    public function __construct(int $playerId)
+    /**
+     * Timeout for queue workers (in seconds)
+     */
+    public int $timeout = 120;
+
+    /**
+     * Max attempts per job before failing
+     */
+    public int $tries = 3;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(array $playerIds)
     {
-        $this->playerId = $playerId;
+        $this->playerIds = $playerIds;
     }
 
+    /**
+     * Execute the job.
+     */
     public function handle(NbaService $nbaService): void
     {
         set_time_limit(0);
 
-        // Fetch gamelog from API
-        $gamelog = $nbaService->playerGameLog($this->playerId);
+        foreach ($this->playerIds as $playerId) {
+            try {
+                $this->processPlayer($nbaService, $playerId);
+            } catch (\Throwable $e) {
+                Log::error("Failed syncing gamelog for player {$playerId}", [
+                    'exception' => $e,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Process one player's gamelog and bulk upsert to DB
+     */
+    protected function processPlayer(NbaService $nbaService, int $playerId): void
+    {
+        $gamelog = $nbaService->playerGameLog($playerId);
 
         if (empty($gamelog)) {
             return;
@@ -36,6 +69,8 @@ class SyncPlayerGamelogJob implements ShouldQueue
         $labels      = $gamelog['labels'] ?? [];
         $eventsMeta  = $gamelog['events'] ?? [];
         $seasonTypes = $gamelog['seasonTypes'] ?? [];
+
+        $rows = [];
 
         foreach ($seasonTypes as $season) {
             foreach ($season['categories'] ?? [] as $category) {
@@ -59,8 +94,10 @@ class SyncPlayerGamelogJob implements ShouldQueue
 
                     $meta = $eventsMeta[$eventId] ?? [];
 
-                    // Prepare payload
-                    $payload = [
+                    $rows[] = [
+                        'player_external_id' => $playerId,
+                        'event_id'           => $eventId,
+
                         'game_date'     => isset($meta['gameDate']) ? Carbon::parse($meta['gameDate'])->toDateString() : null,
                         'opponent_name' => $meta['opponent']['displayName'] ?? null,
                         'opponent_logo' => $meta['opponent']['logo'] ?? null,
@@ -81,18 +118,20 @@ class SyncPlayerGamelogJob implements ShouldQueue
                         'turnovers'     => $columns['TO'] ?? null,
                         'fouls'         => $columns['PF'] ?? null,
                         'points'        => $columns['PTS'] ?? null,
-                    ];
 
-                    // Save to DB
-                    NbaPlayerGamelog::updateOrCreate(
-                        [
-                            'player_external_id' => $this->playerId,
-                            'event_id'           => $eventId,
-                        ],
-                        $payload
-                    );
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ];
                 }
             }
+        }
+
+        if (!empty($rows)) {
+            NbaPlayerGamelog::upsert(
+                $rows,
+                ['player_external_id', 'event_id'], // unique keys
+                array_keys($rows[0]) // update all columns
+            );
         }
     }
 }

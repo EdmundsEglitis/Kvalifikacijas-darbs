@@ -21,9 +21,9 @@
             <div class="hidden md:flex space-x-8 text-sm font-medium">
                 <a href="{{ route('nba.players') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Players</a>
                 <a href="{{ route('nba.games.upcoming') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Upcoming Games</a>
-                <a href="{{ route('nba.games.all') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">All Games</a>
                 <a href="{{ route('nba.teams') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Teams</a>
-                <a href="{{ route('nba.stats') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Stats</a>
+                <a href="{{ route('nba.standings.explorer') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Compare teams</a>
+                <a href="{{ route('nba.standings.explorer') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Compare players</a>
             </div>
 
             <!-- MOBILE BUTTON -->

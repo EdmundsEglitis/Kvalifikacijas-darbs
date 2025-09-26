@@ -287,4 +287,18 @@ public function allPlayersInfoForCron(): array
     return $allLogs;
 }
 
+public function standings(int $season = 2024): array
+{
+    $response = $this->request('/nba-league-standings', [
+        'year' => $season,
+    ]);
+
+    // Defensive: ensure keys exist
+    return $response['response']['standings'] ?? [];
+}
+
+
+
+
+
 }

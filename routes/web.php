@@ -17,7 +17,8 @@ Route::prefix('nba')->group(function () {
     //show routes
     Route::get('/nba/teams/{id}', [NbaController::class, 'showTeam'])->name('nba.team.show');
     Route::get('/nba/players/{id}', [NbaController::class, 'showPlayer'])->name('nba.player.show');
-
+    Route::get('/nba/standings/explorer', [NbaController::class, 'explorer'])->name('nba.standings.explorer');
+    Route::get('/nba/compare/players', [NbaController::class, 'playersExplorer'])->name('nba.compare');
 
 
 
