@@ -23,7 +23,7 @@
                 <a href="{{ route('nba.games.upcoming') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Upcoming Games</a>
                 <a href="{{ route('nba.teams') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Teams</a>
                 <a href="{{ route('nba.standings.explorer') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Compare teams</a>
-                <a href="{{ route('nba.standings.explorer') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Compare players</a>
+                <a href="{{ route('nba.compare') }}" class="text-[#F3F4F6] hover:text-[#84CC16] transition">Compare players</a>
             </div>
 
             <!-- MOBILE BUTTON -->

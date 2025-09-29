@@ -18,7 +18,7 @@
       @if($team->logo)
         <img src="{{ asset('storage/' . $team->logo) }}"
              alt="{{ $team->name }}"
-             class="h-28 w-28 object-contain rounded-xl shadow bg-white p-3">
+             class="h-28 w-28 object-contain rounded-xl shadow bg-[#111827] p-3 ring-2 ring-[#84CC16]/40">
       @endif
       <h1 class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow">
         {{ $team->name }}

@@ -13,62 +13,7 @@
 </head>
 <body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
-  {{-- MAIN NAVBAR (transparent on top, solid after scroll) --}}
-  <nav id="site-nav" class="fixed inset-x-0 top-0 z-50 nav-transparent backdrop-blur-md transition-colors duration-300">
-    <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center space-x-4">
-        <a href="{{ route('home') }}" aria-label="Home">
-          <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}" alt="" class="h-8 w-8 filter invert hover:opacity-80"/>
-        </a>
-        <a href="{{ route('lbs.home') }}" aria-label="LBS">
-          <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}" alt="LBS Logo" class="h-10 rounded"/>
-        </a>
-      </div>
 
-      <div class="hidden md:flex space-x-8">
-        @foreach($parentLeagues as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}"
-             class="font-medium hover:text-[#84CC16] transition">
-            {{ $league->name }}
-          </a>
-        @endforeach
-      </div>
-
-      <button id="menu-btn" class="md:hidden focus:outline-none" aria-label="Menu">
-        <img src="{{ asset('burger-menu-svgrepo-com.svg') }}" alt="" class="h-8 w-8 filter invert"/>
-      </button>
-    </div>
-    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
-      <div class="px-4 py-3 space-y-2">
-        @foreach($parentLeagues as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}"
-             class="block font-medium hover:text-[#84CC16] transition">
-            {{ $league->name }}
-          </a>
-        @endforeach
-      </div>
-    </div>
-  </nav>
-
-  {{-- SUB-LEAGUE TABS (sticky under main nav) --}}
-  <nav class="fixed top-16 inset-x-0 z-40 bg-[#0b1220] border-b border-[#1f2937]/60">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap gap-6 py-3 text-sm">
-        @foreach([
-          'news'     => 'JAUNUMI',
-          'calendar' => 'KALENDĀRS',
-          'teams'    => 'KOMANDAS',
-          'stats'    => 'STATISTIKA',
-        ] as $route => $label)
-          <a href="{{ route("lbs.subleague.$route", $subLeague->id) }}"
-             class="uppercase tracking-wide transition
-                    {{ request()->routeIs("lbs.subleague.$route") ? 'text-[#84CC16] font-semibold' : 'text-[#F3F4F6]/80 hover:text-[#84CC16]' }}">
-            {{ $label }}
-          </a>
-        @endforeach
-      </div>
-    </div>
-  </nav>
 
   <main class="pt-32"><!-- room for fixed navs -->
 

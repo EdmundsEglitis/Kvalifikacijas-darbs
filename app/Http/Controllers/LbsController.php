@@ -275,7 +275,7 @@ public function teamStats($id)
         'tov'    => 'Kļūdas',
         'stl'    => 'Pārķertās',
         'blk'    => 'Bloķētie metieni',
-        'dunk'   => 'Danki',
+        'eff'   => 'effektivitāte'
     ];
 
     // Calculate team averages

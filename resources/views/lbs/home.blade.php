@@ -16,52 +16,7 @@
 </head>
 <body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
-  <!-- NAVBAR (transparent over hero, solid after scroll) -->
-  <nav id="site-nav"
-       class="fixed inset-x-0 top-0 z-50 nav-transparent backdrop-blur-md transition-colors duration-300">
-    <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-      {{-- LEFT: Home + LBS --}}
-      <div class="flex items-center space-x-3">
-        <a href="{{ route('home') }}" class="block" aria-label="Home">
-          <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}"
-               alt="" class="h-8 w-8 filter invert transition"/>
-        </a>
-        <a href="{{ route('lbs.home') }}" class="block" aria-label="LBS">
-          <img src="{{ asset('415986933_1338154883529529_7481933183149808416_n.jpg') }}"
-               alt="LBS Logo" class="h-10 rounded"/>
-        </a>
-      </div>
-
-      {{-- RIGHT: desktop links + hamburger --}}
-      <div class="flex items-center space-x-4">
-        <div class="hidden md:flex space-x-8">
-          @foreach($parentLeagues as $league)
-            <a href="{{ route('lbs.league.show', $league->id) }}"
-               class="font-medium hover:text-[#84CC16] transition">
-              {{ $league->name }}
-            </a>
-          @endforeach
-        </div>
-
-        <button id="menu-btn" class="md:hidden focus:outline-none" aria-label="Menu">
-          <img src="{{ asset('burger-menu-svgrepo-com.svg') }}"
-               alt="" class="h-8 w-8 filter invert transition"/>
-        </button>
-      </div>
-    </div>
-
-    {{-- MOBILE MENU --}}
-    <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/90 backdrop-blur-lg">
-      <div class="px-4 py-4 space-y-2">
-        @foreach($parentLeagues as $league)
-          <a href="{{ route('lbs.league.show', $league->id) }}"
-             class="block font-medium hover:text-[#84CC16] transition">
-            {{ $league->name }}
-          </a>
-        @endforeach
-      </div>
-    </div>
-  </nav>
+ <x-lbs-navbar :parentLeagues="$parentLeagues" />
 
   <main class="pt-16"><!-- hero will slide under the 64px navbar -->
 

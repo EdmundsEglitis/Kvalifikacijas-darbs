@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
+
 class Game extends Model
 {
     use HasFactory;
@@ -108,4 +109,5 @@ class Game extends Model
     {
         return !is_null($this->winner_id) || !is_null($this->final_score);
     }
+    
 }

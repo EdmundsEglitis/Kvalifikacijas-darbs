@@ -3,11 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\NbaController;
 use App\Http\Controllers\LbsController;
+use App\Http\Controllers\HomeController;
 use App\Services\ApiSyncService;
 
-Route::get('/', function () {
-    return view('home'); 
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // NBA section
 Route::prefix('nba')->group(function () {

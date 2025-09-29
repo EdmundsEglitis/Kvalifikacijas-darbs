@@ -54,9 +54,9 @@
                     <div class="flex-1 flex items-center justify-center gap-6">
                       {{-- Team 1 --}}
                       <div class="flex flex-col items-center gap-2 w-28">
-                        <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
+                        <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden ">
                           @if($game->team1?->logo)
-                            <img src="{{ asset('storage/' . $game->team1->logo) }}" alt="{{ $game->team1->name }}" class="h-full w-full object-contain" loading="lazy">
+                            <img src="{{ asset('storage/' . $game->team1->logo) }}" alt="{{ $game->team1->name }}" class="h-full w-full object-contain "  loading="lazy">
                           @endif
                         </div>
                         <span class="text-sm font-semibold">{{ $game->team1->name }}</span>
