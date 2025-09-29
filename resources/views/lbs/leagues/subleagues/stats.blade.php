@@ -136,7 +136,7 @@
                   </a>
                 </td>
                 <td class="px-4 py-3">
-                  <a href="{{ route('lbs.team.overview', $player->team->id) }}" class="hover:text-[#84CC16]">
+                  <a href="{{ route('lbs.team.show', $player->team->id) }}" class="hover:text-[#84CC16]">
                     {{ $player->team->name }}
                   </a>
                 </td>

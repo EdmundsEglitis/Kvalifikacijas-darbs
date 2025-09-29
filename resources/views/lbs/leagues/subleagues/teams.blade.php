@@ -36,7 +36,7 @@
             @if($team->logo)
               <img src="{{ asset('storage/' . $team->logo) }}" alt="{{ $team->name }}" class="mt-2 h-24 w-auto object-contain">
             @endif
-            <a href="{{ route('lbs.team.overview', $team->id) }}" 
+            <a href="{{ route('lbs.team.show', $team->id) }}" 
                class="mt-4 text-center bg-[#84CC16] text-[#111827] py-2 rounded font-semibold hover:bg-[#a6e23a] transition">
               Skatīt komandu
             </a>

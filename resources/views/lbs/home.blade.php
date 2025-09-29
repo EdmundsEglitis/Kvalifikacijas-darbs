@@ -109,7 +109,7 @@
                     <time class="text-sm text-[#F3F4F6]/60">
                       {{ $bySlot[$slot]->created_at->format('Y-m-d') }}
                     </time>
-                    <a href="{{ route('news.show', $bySlot[$slot]->id) }}"
+                    <a href="{{ route('lbs.news.show', $bySlot[$slot]->id) }}"
                        class="inline-flex items-center gap-2 text-[#84CC16] font-medium hover:underline text-2xl">
                       Lasīt vairāk
                       <span>→</span>
@@ -148,7 +148,7 @@
                     <time class="text-xs text-[#F3F4F6]/60">
                       {{ $bySlot[$slot]->created_at->format('Y-m-d') }}
                     </time>
-                    <a href="{{ route('news.show', $bySlot[$slot]->id) }}"
+                    <a href="{{ route('lbs.news.show', $bySlot[$slot]->id) }}"
                        class="text-[#84CC16] font-medium hover:underline text-2xl inline-flex items-center gap-1">
                       Lasīt <span>→</span>
                     </a>

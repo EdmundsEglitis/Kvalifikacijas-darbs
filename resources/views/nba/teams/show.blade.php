@@ -8,26 +8,7 @@
 </head>
 <body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
-  {{-- NAVBAR --}}
-  <nav class="fixed inset-x-0 top-0 z-50 bg-[#111827]/90 backdrop-blur-md border-b border-[#1f2937]">
-    <div class="max-w-7xl mx-auto h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <a href="{{ route('home') }}" class="shrink-0">
-          <img src="{{ asset('home-icon-silhouette-svgrepo-com.svg') }}" alt="Home" class="h-8 w-8 filter invert"/>
-        </a>
-        <a href="{{ route('nba.home') }}" class="text-white font-bold hover:text-[#84CC16]">NBA</a>
-      </div>
-
-      {{-- Collapsible on mobile (simple) --}}
-      <div class="hidden sm:flex items-center gap-5 text-sm font-medium">
-        <a href="{{ route('nba.players') }}" class="hover:text-[#84CC16]">Players</a>
-        <a href="{{ route('nba.games.upcoming') }}" class="hover:text-[#84CC16]">Upcoming Games</a>
-        <a href="{{ route('nba.games.all') }}" class="hover:text-[#84CC16]">All Games</a>
-        <a href="{{ route('nba.teams') }}" class="hover:text-[#84CC16]">Teams</a>
-        <a href="{{ route('nba.stats') }}" class="hover:text-[#84CC16]">Stats</a>
-      </div>
-    </div>
-  </nav>
+<x-nba-navbar />
 
   <main class="pt-24 max-w-7xl mx-auto px-4 space-y-10">
 

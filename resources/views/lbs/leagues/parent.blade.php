@@ -138,7 +138,7 @@
                   <time class="text-xs text-[#F3F4F6]/60">
                     {{ $item->created_at->format('Y-m-d') }}
                   </time>
-                  <a href="{{ route('news.show', $item->id) }}"
+                  <a href="{{ route('lbs.news.show', $item->id) }}"
                      class="text-[#84CC16] font-medium hover:underline text-sm inline-flex items-center gap-1">
                     Lasīt <span>→</span>
                   </a>

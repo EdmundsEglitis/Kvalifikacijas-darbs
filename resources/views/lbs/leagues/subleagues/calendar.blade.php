@@ -49,7 +49,7 @@
                         <span class="text-xs text-gray-500">No Logo</span>
                       @endif
                     </div>
-                    <a href="{{ route('lbs.team.overview', $game->team1->id) }}"
+                      <a href="{{ route('lbs.team.show', $game->team1->id) }}"
                        class="text-sm font-semibold hover:text-[#84CC16] transition">
                       {{ $game->team1->name }}
                     </a>
@@ -66,7 +66,7 @@
                         <span class="text-xs text-gray-500">No Logo</span>
                       @endif
                     </div>
-                    <a href="{{ route('lbs.team.overview', $game->team2->id) }}"
+                    <a href="{{ route('lbs.team.show', $game->team2->id) }}"
                        class="text-sm font-semibold hover:text-[#84CC16] transition">
                       {{ $game->team2->name }}
                     </a>
@@ -126,7 +126,7 @@
                         <span class="text-xs text-gray-500">No Logo</span>
                       @endif
                     </div>
-                    <a href="{{ route('lbs.team.overview', $game->team1->id) }}"
+                    <a href="{{ route('lbs.team.show', $game->team1->id) }}"
                        class="text-sm font-semibold transition {{ $isWinner1 ? 'text-[#84CC16]' : 'hover:text-[#84CC16]' }}">
                       {{ $game->team1->name }}
                     </a>
@@ -149,7 +149,7 @@
                         <span class="text-xs text-gray-500">No Logo</span>
                       @endif
                     </div>
-                    <a href="{{ route('lbs.team.overview', $game->team2->id) }}"
+                    <a href="{{ route('lbs.team.show', $game->team2->id) }}"
                        class="text-sm font-semibold transition {{ $isWinner2 ? 'text-[#84CC16]' : 'hover:text-[#84CC16]' }}">
                       {{ $game->team2->name }}
                     </a>

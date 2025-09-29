@@ -23,7 +23,7 @@
       <div class="flex items-center justify-center gap-10">
         {{-- Team 1 --}}
         <div class="flex flex-col items-center">
-          <a href="{{ route('lbs.team.overview', $game->team1->id) }}" class="group">
+          <a href="{{ route('lbs.team.show', $game->team1->id) }}" class="group">
             <img src="{{ asset('storage/' . $game->team1->logo) }}" 
                  alt="{{ $game->team1->name }}" 
                  class="h-20 w-20 object-contain mb-2 bg-white rounded shadow group-hover:scale-105 transition">
@@ -38,7 +38,7 @@
 
         {{-- Team 2 --}}
         <div class="flex flex-col items-center">
-          <a href="{{ route('lbs.team.overview', $game->team2->id) }}" class="group">
+          <a href="{{ route('lbs.team.show', $game->team2->id) }}" class="group">
             <img src="{{ asset('storage/' . $game->team2->logo) }}" 
                  alt="{{ $game->team2->name }}" 
                  class="h-20 w-20 object-contain mb-2 bg-white rounded shadow group-hover:scale-105 transition">

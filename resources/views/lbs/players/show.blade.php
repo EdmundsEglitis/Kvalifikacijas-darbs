@@ -34,7 +34,7 @@
           <h1 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight">{{ $player->name }}</h1>
           <p class="mt-1 text-[#9CA3AF]">
             Komanda:
-            <a href="{{ route('lbs.team.overview', $player->team->id) }}"
+            <a href="{{ route('lbs.team.show', $player->team->id) }}"
                class="text-[#84CC16] hover:underline font-medium">
               {{ $player->team->name }}
             </a>
@@ -96,7 +96,7 @@
             <div class="flex items-start justify-between gap-3">
               <div>
                 <div class="text-sm text-gray-300">{{ $stat->game->date->format('d.m.Y') }}</div>
-                <a href="{{ route('lbs.team.overview', $opponent->id) }}"
+                <a href="{{ route('lbs.team.show', $opponent->id) }}"
                    class="block text-base font-semibold text-white hover:text-[#84CC16] truncate">
                   {{ $opponent->name }}
                 </a>
@@ -166,7 +166,7 @@
               <tr class="hover:bg-[#223041] transition">
                 <td class="px-3 py-2 text-sm text-center whitespace-nowrap">{{ $stat->game->date->format('d.m.Y') }}</td>
                 <td class="px-3 py-2 text-sm text-center">
-                  <a href="{{ route('lbs.team.overview', $opponent->id) }}" class="hover:text-[#84CC16] font-medium">
+                  <a href="{{ route('lbs.team.show', $opponent->id) }}" class="hover:text-[#84CC16] font-medium">
                     {{ $opponent->name }}
                   </a>
                 </td>

@@ -47,7 +47,7 @@
 <nav class="bg-[#0f172a]/80 backdrop-blur border-b border-white/10 fixed top-16 w-full z-40">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex space-x-6 py-3 text-sm sm:text-base">
-      <a href="{{ route('lbs.team.overview', $team->id) }}"
+      <a href="{{ route('lbs.team.show', $team->id) }}"
          class="{{ request()->routeIs('lbs.team.overview') ? 'text-[#84CC16] font-bold' : 'text-[#F3F4F6]/80 hover:text-[#84CC16]' }}">
         PĀRSKATS
       </a>
