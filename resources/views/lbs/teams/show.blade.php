@@ -1,27 +1,26 @@
-<!DOCTYPE html>
-<html lang="lv" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ $team->name }} — Komandas pārskats</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="antialiased bg-[#111827] text-[#F3F4F6]">
+@extends('layouts.app')
 
-  {{-- Main + sub tabs for this team --}}
-  <x-team-navbar :parentLeagues="$parentLeagues" :team="$team" />
+@section('title', $team->name . ' — Komandas pārskats')
 
-  <main class="pt-32 max-w-6xl mx-auto px-4 space-y-12">
+{{-- Sub tabs under the unified header --}}
+@section('subnav')
+  <x-teamnav :team="$team" />
+@endsection
+
+@section('content')
+  <main class="max-w-6xl mx-auto px-4 space-y-12 pt-6">
 
     {{-- Team Header --}}
     <section class="bg-[#1f2937] border border-[#374151] rounded-2xl p-6 shadow">
       <div class="flex items-center gap-5">
         <div class="h-24 w-24 rounded-xl bg-[#111827] grid place-items-center overflow-hidden ring-2 ring-[#84CC16]/40">
           @if($team->logo)
-            <img src="{{ asset('storage/' . $team->logo) }}"
-                 alt="{{ $team->name }}"
-                 class="h-full w-full object-contain"
-                 loading="lazy">
+            <img
+              src="{{ asset('storage/' . $team->logo) }}"
+              alt="{{ $team->name }}"
+              class="h-full w-full object-contain"
+              loading="lazy"
+            >
           @else
             <span class="text-xs text-gray-400">No Logo</span>
           @endif
@@ -34,7 +33,8 @@
           <div class="mt-3 flex flex-wrap items-center gap-3">
             <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#84CC16]/15 border border-[#84CC16]/30 text-[#84CC16] text-sm font-semibold">
               <span class="h-2 w-2 rounded-full bg-[#84CC16]"></span>
-              Bilance: <span class="tabular-nums">{{ (int)($wins ?? 0) }}–{{ (int)($losses ?? 0) }}</span>
+              Bilance:
+              <span class="tabular-nums">{{ (int)($wins ?? 0) }}–{{ (int)($losses ?? 0) }}</span>
             </span>
           </div>
         </div>
@@ -100,7 +100,9 @@
           @foreach($bestPlayers as $stat => $player)
             @if($player)
               <div class="min-h-[140px] p-5 bg-[#1f2937] border border-[#374151] rounded-xl shadow hover:border-[#84CC16] transition">
-                <div class="text-xs uppercase tracking-wide text-[#F3F4F6]/60">{{ ucfirst($stat) }} līderis</div>
+                <div class="text-xs uppercase tracking-wide text-[#F3F4F6]/60">
+                  {{ ucfirst($stat) }} līderis
+                </div>
                 <a href="{{ route('lbs.player.show', $player->id) }}"
                    class="block mt-2 text-lg font-bold text-white hover:text-[#84CC16] transition">
                   {{ $player->name }}
@@ -116,5 +118,4 @@
     </section>
 
   </main>
-</body>
-</html>
+@endsection

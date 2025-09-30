@@ -1,23 +1,19 @@
-<!DOCTYPE html>
-<html lang="lv" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ $team->name }} — Spēles</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="antialiased bg-[#111827] text-[#F3F4F6]">
+@extends('layouts.app')
+@section('title', $team->name . ' — Spēles')
 
-  {{-- Main + Sub Tabs --}}
-  <x-team-navbar :parentLeagues="$parentLeagues" :team="$team" />
+{{-- Team subnav under the main navbar --}}
+@section('subnav')
+<x-teamnav :team="$team" />
+@endsection
 
-  <main class="pt-32 max-w-6xl mx-auto px-4 space-y-12">
+@section('content')
+  <div class="max-w-6xl mx-auto px-4 space-y-12 pt-6">
 
     {{-- Team Record --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-4">Komandas rezultāts</h2>
       @php
-        $wins = $games->where('winner_id', $team->id)->count();
+        $wins   = $games->where('winner_id', $team->id)->count();
         $losses = $games->count() - $wins;
       @endphp
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -40,6 +36,7 @@
         <p class="mt-2 text-[#F3F4F6]/70">Šai komandai vēl nav spēļu.</p>
       @else
         <div class="space-y-10">
+
           {{-- Upcoming --}}
           @if($upcomingGames->isNotEmpty())
             <div>
@@ -54,9 +51,12 @@
                     <div class="flex-1 flex items-center justify-center gap-6">
                       {{-- Team 1 --}}
                       <div class="flex flex-col items-center gap-2 w-28">
-                        <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden ">
+                        <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team1?->logo)
-                            <img src="{{ asset('storage/' . $game->team1->logo) }}" alt="{{ $game->team1->name }}" class="h-full w-full object-contain "  loading="lazy">
+                            <img src="{{ asset('storage/' . $game->team1->logo) }}"
+                                 alt="{{ $game->team1->name }}"
+                                 class="h-full w-full object-contain"
+                                 loading="lazy">
                           @endif
                         </div>
                         <span class="text-sm font-semibold">{{ $game->team1->name }}</span>
@@ -68,7 +68,10 @@
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team2?->logo)
-                            <img src="{{ asset('storage/' . $game->team2->logo) }}" alt="{{ $game->team2->name }}" class="h-full w-full object-contain" loading="lazy">
+                            <img src="{{ asset('storage/' . $game->team2->logo) }}"
+                                 alt="{{ $game->team2->name }}"
+                                 class="h-full w-full object-contain"
+                                 loading="lazy">
                           @endif
                         </div>
                         <span class="text-sm font-semibold">{{ $game->team2->name }}</span>
@@ -76,7 +79,8 @@
                     </div>
 
                     <div class="mt-4 text-sm text-[#F3F4F6]/70">
-                      🗓 {{ \Carbon\Carbon::parse($game->date)->format('d.m.Y H:i') }}
+                    🗓 {{ $game->date ? \Carbon\Carbon::parse($game->date)->format('d.m.Y H:i') : '—' }}
+
                     </div>
 
                     <a href="{{ route('lbs.game.detail', $game->id) }}"
@@ -101,7 +105,10 @@
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team1?->logo)
-                            <img src="{{ asset('storage/' . $game->team1->logo) }}" alt="{{ $game->team1->name }}" class="h-full w-full object-contain" loading="lazy">
+                            <img src="{{ asset('storage/' . $game->team1->logo) }}"
+                                 alt="{{ $game->team1->name }}"
+                                 class="h-full w-full object-contain"
+                                 loading="lazy">
                           @endif
                         </div>
                         <span class="text-sm font-semibold">{{ $game->team1->name }}</span>
@@ -119,7 +126,10 @@
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team2?->logo)
-                            <img src="{{ asset('storage/' . $game->team2->logo) }}" alt="{{ $game->team2->name }}" class="h-full w-full object-contain" loading="lazy">
+                            <img src="{{ asset('storage/' . $game->team2->logo) }}"
+                                 alt="{{ $game->team2->name }}"
+                                 class="h-full w-full object-contain"
+                                 loading="lazy">
                           @endif
                         </div>
                         <span class="text-sm font-semibold">{{ $game->team2->name }}</span>
@@ -127,7 +137,8 @@
                     </div>
 
                     <div class="mt-4 text-sm text-[#F3F4F6]/70">
-                      🗓 {{ \Carbon\Carbon::parse($game->date)->format('d.m.Y H:i') }}
+                    🗓 {{ $game->date ? \Carbon\Carbon::parse($game->date)->format('d.m.Y H:i') : '—' }}
+
                     </div>
 
                     <a href="{{ route('lbs.game.detail', $game->id) }}"
@@ -139,10 +150,10 @@
               </div>
             </div>
           @endif
+
         </div>
       @endif
     </section>
 
-  </main>
-</body>
-</html>
+  </div>
+@endsection

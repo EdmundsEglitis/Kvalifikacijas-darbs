@@ -1,27 +1,31 @@
-<!DOCTYPE html>
-<html lang="lv" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <title>{{ $player->name }} – Spēlētāja profils</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @keyframes fadeUp { from {opacity:0; transform:translateY(8px)} to {opacity:1; transform:translateY(0)} }
-    .fade-up { animation: fadeUp .45s ease both }
-  </style>
-</head>
-<body class="bg-[#111827] text-[#F3F4F6] antialiased">
-  <x-team-navbar :parentLeagues="$parentLeagues" :team="$player->team" />
+@extends('layouts.app')
+@section('title', $player->name . ' – Spēlētāja profils')
 
-  <main class="pt-28 sm:pt-32 max-w-6xl mx-auto px-4 space-y-12 sm:space-y-16">
+{{-- Subnav: team tabs below the main navbar (only if the player has a team) --}}
+@section('subnav')
+  @if(!empty($player->team))
+  <x-teamnav :team="$player->team" />
+  @endif
+@endsection
 
-    <!-- Player Info -->
-    <section class="fade-up grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 md:gap-8">
+@section('content')
+  @php
+    // Safe defaults for totals/averages
+    $games    = (int) ($totals['games'] ?? 0);
+    $avg      = fn($k) => isset($averages[$k]) ? $averages[$k] : '—';
+  @endphp
+<br>
+  <div class="max-w-6xl mx-auto px-4 space-y-12 sm:space-y-16">
+
+    {{-- Player Info --}}
+    <section class="grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 md:gap-8">
       <div class="flex md:block justify-center">
-        @if($player->photo)
-          <img src="{{ asset('storage/' . $player->photo) }}"
-               alt="{{ $player->name }}"
-               class="h-28 w-28 sm:h-36 sm:w-36 rounded-full border-4 border-[#84CC16]/60 shadow-lg object-cover">
+        @if(!empty($player->photo))
+          <img
+            src="{{ asset('storage/' . $player->photo) }}"
+            alt="{{ $player->name }}"
+            class="h-28 w-28 sm:h-36 sm:w-36 rounded-full border-4 border-[#84CC16]/60 shadow-lg object-cover"
+          >
         @else
           <div class="h-28 w-28 sm:h-36 sm:w-36 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs sm:text-sm">
             No Photo
@@ -32,13 +36,15 @@
       <div class="space-y-4 text-center md:text-left">
         <div>
           <h1 class="text-2xl sm:text-4xl font-extrabold text-white leading-tight">{{ $player->name }}</h1>
-          <p class="mt-1 text-[#9CA3AF]">
-            Komanda:
-            <a href="{{ route('lbs.team.show', $player->team->id) }}"
-               class="text-[#84CC16] hover:underline font-medium">
-              {{ $player->team->name }}
-            </a>
-          </p>
+          @if(!empty($player->team))
+            <p class="mt-1 text-[#9CA3AF]">
+              Komanda:
+              <a href="{{ route('lbs.team.show', $player->team->id) }}"
+                 class="text-[#84CC16] hover:underline font-medium">
+                {{ $player->team->name }}
+              </a>
+            </p>
+          @endif
         </div>
 
         <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 sm:gap-3 text-sm text-[#9CA3AF]">
@@ -58,22 +64,25 @@
       </div>
     </section>
 
-    <!-- Season Totals / Averages -->
-    <section class="fade-up">
+    {{-- Season Totals / Averages --}}
+    <section>
       <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Sezonas kopsavilkums</h2>
-      @if($totals['games'] > 0)
+
+      @if($games > 0)
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           @foreach([
-            ['label' => 'Spēles', 'value' => $totals['games']],
-            ['label' => 'Vid. punkti', 'value' => $averages['points']],
-            ['label' => 'Vid. atl. bumbas', 'value' => $averages['reb']],
-            ['label' => 'Vid. piespēles', 'value' => $averages['ast']],
-            ['label' => 'Vid. pārtvertās', 'value' => $averages['stl']],
-            ['label' => 'Vid. efektivitāte', 'value' => $averages['eff']]
+            ['label' => 'Spēles',            'value' => $games],
+            ['label' => 'Vid. punkti',       'value' => $avg('points')],
+            ['label' => 'Vid. atl. bumbas',  'value' => $avg('reb')],
+            ['label' => 'Vid. piespēles',    'value' => $avg('ast')],
+            ['label' => 'Vid. pārtvertās',   'value' => $avg('stl')],
+            ['label' => 'Vid. efektivitāte', 'value' => $avg('eff')],
           ] as $stat)
             <div class="bg-[#1f2937] p-4 sm:p-5 rounded-xl text-center shadow border border-[#374151] hover:border-[#84CC16] transition">
               <div class="text-xs sm:text-sm text-[#9CA3AF]">{{ $stat['label'] }}</div>
-              <div class="mt-0.5 text-xl sm:text-2xl font-extrabold text-[#84CC16]">{{ $stat['value'] }}</div>
+              <div class="mt-0.5 text-xl sm:text-2xl font-extrabold text-[#84CC16]">
+                {{ is_numeric($stat['value']) ? (str_contains((string)$stat['value'], '.') ? number_format((float)$stat['value'], 1) : $stat['value']) : $stat['value'] }}
+              </div>
             </div>
           @endforeach
         </div>
@@ -82,71 +91,62 @@
       @endif
     </section>
 
-    <!-- Per Game Stats -->
-    <section class="fade-up">
+    {{-- Per Game Stats --}}
+    <section>
       <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Spēļu statistika</h2>
 
-      <!-- Mobile CARDS -->
+      {{-- Mobile cards --}}
       <div class="space-y-3 sm:space-y-4 md:hidden">
         @foreach($player->playerGameStats as $stat)
           @php
-            $opponent = $stat->game->team1->id === $player->team_id ? $stat->game->team2 : $stat->game->team1;
+            $g = $stat->game ?? null;
+            if (!$g) continue;
+            $opponent = ($g->team1?->id ?? null) === ($player->team_id ?? null) ? ($g->team2 ?? null) : ($g->team1 ?? null);
           @endphp
           <article class="bg-[#1f2937] border border-[#374151] rounded-xl p-4 shadow hover:shadow-lg transition">
             <div class="flex items-start justify-between gap-3">
               <div>
-                <div class="text-sm text-gray-300">{{ $stat->game->date->format('d.m.Y') }}</div>
-                <a href="{{ route('lbs.team.show', $opponent->id) }}"
-                   class="block text-base font-semibold text-white hover:text-[#84CC16] truncate">
-                  {{ $opponent->name }}
-                </a>
+                <div class="text-sm text-gray-300">{{ optional($g->date)->format('d.m.Y') }}</div>
+                @if($opponent)
+                  <a href="{{ route('lbs.team.show', $opponent->id) }}"
+                     class="block text-base font-semibold text-white hover:text-[#84CC16] truncate">
+                    {{ $opponent->name }}
+                  </a>
+                @endif
               </div>
               <div class="text-right">
                 <div class="text-xs text-gray-400">Punkti</div>
-                <div class="text-lg font-bold text-[#84CC16]">{{ $stat->points }}</div>
+                <div class="text-lg font-bold text-[#84CC16]">{{ $stat->points ?? '—' }}</div>
               </div>
             </div>
 
             <dl class="mt-3 grid grid-cols-3 gap-2 text-xs">
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">Min</dt><dd class="font-semibold">{{ $stat->minutes }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">2PM/2PA</dt><dd class="font-semibold">{{ $stat->fgm2 }}/{{ $stat->fga2 }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">3PM/3PA</dt><dd class="font-semibold">{{ $stat->fgm3 }}/{{ $stat->fga3 }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">FTM/FTA</dt><dd class="font-semibold">{{ $stat->ftm }}/{{ $stat->fta }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">REB</dt><dd class="font-semibold">{{ $stat->reb }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">AST</dt><dd class="font-semibold">{{ $stat->ast }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">STL</dt><dd class="font-semibold">{{ $stat->stl }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">BLK</dt><dd class="font-semibold">{{ $stat->blk }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">TOV</dt><dd class="font-semibold">{{ $stat->tov }}</dd>
-              </div>
-              <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
-                <dt class="text-gray-400">PF</dt><dd class="font-semibold">{{ $stat->pf }}</dd>
-              </div>
+              @foreach([
+                ['Min',   $stat->minutes ?? '—'],
+                ['2PM/2PA', ($stat->fgm2 ?? '—') . '/' . ($stat->fga2 ?? '—')],
+                ['3PM/3PA', ($stat->fgm3 ?? '—') . '/' . ($stat->fga3 ?? '—')],
+                ['FTM/FTA', ($stat->ftm  ?? '—') . '/' . ($stat->fta  ?? '—')],
+                ['REB',  $stat->reb ?? '—'],
+                ['AST',  $stat->ast ?? '—'],
+                ['STL',  $stat->stl ?? '—'],
+                ['BLK',  $stat->blk ?? '—'],
+                ['TOV',  $stat->tov ?? '—'],
+                ['PF',   $stat->pf  ?? '—'],
+              ] as [$label,$val])
+                <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center">
+                  <dt class="text-gray-400">{{ $label }}</dt>
+                  <dd class="font-semibold">{{ $val }}</dd>
+                </div>
+              @endforeach
               <div class="rounded-lg bg-white/5 border border-white/10 p-2 text-center col-span-3">
-                <dt class="text-gray-400">EFF</dt><dd class="font-semibold">{{ $stat->eff }}</dd>
+                <dt class="text-gray-400">EFF</dt><dd class="font-semibold">{{ $stat->eff ?? '—' }}</dd>
               </div>
             </dl>
           </article>
         @endforeach
       </div>
 
-      <!-- Desktop TABLE -->
+      {{-- Desktop table --}}
       <div class="hidden md:block overflow-x-auto rounded-xl shadow-lg border border-[#374151]">
         <table class="min-w-full divide-y divide-[#374151]">
           <thead class="bg-[#0f172a] sticky top-0 z-10">
@@ -159,29 +159,33 @@
           <tbody class="divide-y divide-[#374151]">
             @foreach($player->playerGameStats as $stat)
               @php
-                $opponent = $stat->game->team1->id === $player->team_id
-                  ? $stat->game->team2
-                  : $stat->game->team1;
+                $g = $stat->game ?? null;
+                if (!$g) continue;
+                $opponent = ($g->team1?->id ?? null) === ($player->team_id ?? null) ? ($g->team2 ?? null) : ($g->team1 ?? null);
               @endphp
               <tr class="hover:bg-[#223041] transition">
-                <td class="px-3 py-2 text-sm text-center whitespace-nowrap">{{ $stat->game->date->format('d.m.Y') }}</td>
+                <td class="px-3 py-2 text-sm text-center whitespace-nowrap">{{ optional($g->date)->format('d.m.Y') }}</td>
                 <td class="px-3 py-2 text-sm text-center">
-                  <a href="{{ route('lbs.team.show', $opponent->id) }}" class="hover:text-[#84CC16] font-medium">
-                    {{ $opponent->name }}
-                  </a>
+                  @if($opponent)
+                    <a href="{{ route('lbs.team.show', $opponent->id) }}" class="hover:text-[#84CC16] font-medium">
+                      {{ $opponent->name }}
+                    </a>
+                  @else
+                    —
+                  @endif
                 </td>
-                <td class="px-3 py-2 text-center">{{ $stat->minutes }}</td>
-                <td class="px-3 py-2 text-center font-semibold text-[#84CC16]">{{ $stat->points }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->fgm2 }}/{{ $stat->fga2 }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->fgm3 }}/{{ $stat->fga3 }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->ftm }}/{{ $stat->fta }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->reb }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->ast }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->stl }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->blk }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->tov }}</td>
-                <td class="px-3 py-2 text-center">{{ $stat->pf }}</td>
-                <td class="px-3 py-2 text-center font-semibold">{{ $stat->eff }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->minutes ?? '—' }}</td>
+                <td class="px-3 py-2 text-center font-semibold text-[#84CC16]">{{ $stat->points ?? '—' }}</td>
+                <td class="px-3 py-2 text-center">{{ ($stat->fgm2 ?? '—') }}/{{ ($stat->fga2 ?? '—') }}</td>
+                <td class="px-3 py-2 text-center">{{ ($stat->fgm3 ?? '—') }}/{{ ($stat->fga3 ?? '—') }}</td>
+                <td class="px-3 py-2 text-center">{{ ($stat->ftm  ?? '—') }}/{{ ($stat->fta  ?? '—') }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->reb ?? '—' }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->ast ?? '—' }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->stl ?? '—' }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->blk ?? '—' }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->tov ?? '—' }}</td>
+                <td class="px-3 py-2 text-center">{{ $stat->pf  ?? '—' }}</td>
+                <td class="px-3 py-2 text-center font-semibold">{{ $stat->eff ?? '—' }}</td>
               </tr>
             @endforeach
           </tbody>
@@ -189,6 +193,5 @@
       </div>
     </section>
 
-  </main>
-</body>
-</html>
+  </div>
+@endsection

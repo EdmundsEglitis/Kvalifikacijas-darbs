@@ -1,19 +1,18 @@
-<!DOCTYPE html>
-<html lang="lv" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ $subLeague->name }} – Kalendārs</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="antialiased bg-[#111827] text-[#F3F4F6]">
+@extends('layouts.app')
+@section('title', $subLeague->name . ' – Kalendārs')
 
-  {{-- Main + Sub tabs (styled + scroll-reactive) --}}
-  <x-sub-league-tabs :parentLeagues="$parentLeagues" :subLeague="$subLeague" />
+{{-- Sub-league tabs under the main navbar --}}
+@section('subnav')
+  <x-lbs-subnav :subLeague="$subLeague" />
+@endsection
 
-  <main class="pt-32 max-w-6xl mx-auto px-4">
+@section('content')
+  <div class="max-w-6xl mx-auto px-4">
+
     <header class="mb-8">
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-white">{{ $subLeague->name }} — Kalendārs</h1>
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-white">
+        {{ $subLeague->name }} — Kalendārs
+      </h1>
       @if(!empty($seasonLabel))
         <p class="mt-2 text-[#F3F4F6]/70">{{ $seasonLabel }}</p>
       @endif
@@ -22,6 +21,7 @@
     @if($games->isEmpty())
       <p class="mt-6 text-[#F3F4F6]/70">Nav pieejamu spēļu.</p>
     @else
+
       {{-- UPCOMING --}}
       @if($upcomingGames->isNotEmpty())
         <section class="mb-12">
@@ -49,7 +49,7 @@
                         <span class="text-xs text-gray-500">No Logo</span>
                       @endif
                     </div>
-                      <a href="{{ route('lbs.team.show', $game->team1->id) }}"
+                    <a href="{{ route('lbs.team.show', $game->team1->id) }}"
                        class="text-sm font-semibold hover:text-[#84CC16] transition">
                       {{ $game->team1->name }}
                     </a>
@@ -105,7 +105,6 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($pastGames as $game)
               @php
-                // Prefer accessor $game->final_score (score string OR computed from quarters)
                 $final = $game->final_score ?? null;
                 $s1 = $s2 = null;
                 if ($final && str_contains($final, '-')) {
@@ -174,7 +173,7 @@
           </div>
         </section>
       @endif
+
     @endif
-  </main>
-</body>
-</html>
+  </div>
+@endsection
