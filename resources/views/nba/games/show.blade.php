@@ -1,25 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $game->team1->name ?? 'Team 1' }} vs {{ $game->team2->name ?? 'Team 2' }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 font-sans">
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center space-x-4">
-                    <a href="{{ route('home') }}" class="text-xl font-bold text-gray-800">NBA Dashboard</a>
-                    <a href="{{ route('games') }}" class="text-gray-600 hover:text-gray-900">All Games</a>
-                    <a href="{{ route('players') }}" class="text-gray-600 hover:text-gray-900">All Players</a>
-                </div>
-            </div>
-        </div>
-    </nav>
+@extends('layouts.nba')
+@section('title','Show game')
+
+@section('content')
 
     <div class="container mx-auto p-6">
         <h1 class="text-3xl font-bold mb-4">Game Summary</h1>

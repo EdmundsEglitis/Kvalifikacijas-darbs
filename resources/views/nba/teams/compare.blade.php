@@ -1,14 +1,8 @@
-{{-- resources/views/nba/standings_explorer.blade.php --}}
-<!DOCTYPE html>
-<html lang="lv">
-<head>
-  <meta charset="UTF-8" />
-  <title>Standings Explorer & Compare</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-[#111827] text-[#F3F4F6] antialiased">
-<x-nba-navbar />
+
+@extends('layouts.nba')
+@section('title','Team Compare')
+
+@section('content')
 <br><br>
 <br><br>
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
@@ -368,3 +362,4 @@
 
 </body>
 </html>
+@endsection

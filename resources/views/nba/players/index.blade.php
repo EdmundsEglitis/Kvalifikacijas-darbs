@@ -1,14 +1,8 @@
-<!DOCTYPE html>
-<html lang="lv">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NBA – Spēlētāji</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="antialiased text-[#F3F4F6] bg-[#111827]">
-    <x-nba-navbar />
 
+@extends('layouts.nba')
+@section('title','All players')
+
+@section('content')
     <main class="pt-20 max-w-7xl mx-auto px-4">
         <h1 class="text-3xl font-bold text-white mb-6">NBA Spēlētāji</h1>
 
@@ -139,3 +133,4 @@
     </main>
 </body>
 </html>
+@endsection

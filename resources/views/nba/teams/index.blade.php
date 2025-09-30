@@ -1,13 +1,7 @@
-<!DOCTYPE html>
-<html lang="lv">
-<head>
-    <meta charset="UTF-8">
-    <title>NBA – All Teams</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="antialiased text-[#F3F4F6] bg-[#111827]">
-    <x-nba-navbar />
+@extends('layouts.nba')
+@section('title','All teams')
 
+@section('content')
     <main class="pt-20 max-w-7xl mx-auto px-4">
         <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <h1 class="text-3xl font-bold text-white">All NBA Teams</h1>
@@ -71,3 +65,4 @@
     </main>
 </body>
 </html>
+@endsection

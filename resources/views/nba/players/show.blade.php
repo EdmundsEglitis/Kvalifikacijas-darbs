@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ $player->full_name }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="antialiased text-[#F3F4F6] bg-[#111827]">
-<x-nba-navbar />
+
+@extends('layouts.nba')
+@section('title','Show player')
+
+@section('content')
 
     <main class="pt-24 max-w-7xl mx-auto px-4 space-y-10">
         <!-- HEADER -->
@@ -149,3 +145,4 @@
     </main>
 </body>
 </html>
+@endsection

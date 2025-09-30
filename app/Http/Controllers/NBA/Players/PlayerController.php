@@ -130,140 +130,149 @@ class PlayerController extends Controller
         ]);
     }
 
-    // /nba/compare/players
-    public function compare(Request $request)
-    {
-        // build season list from logs
-        $seasonRows = NbaPlayerGamelog::query()
-            ->selectRaw('DISTINCT YEAR(game_date) AS season')
-            ->orderByDesc('season')
-            ->pluck('season')
-            ->toArray();
+// /nba/compare/players
+public function compare(Request $request)
+{
+    // seasons for filters
+    $seasonRows = NbaPlayerGamelog::query()
+        ->selectRaw('DISTINCT YEAR(game_date) AS season')
+        ->orderByDesc('season')
+        ->pluck('season')
+        ->toArray();
 
-        $minSeason = $seasonRows ? min($seasonRows) : 2021;
-        $maxSeason = $seasonRows ? max($seasonRows) : (int) date('Y');
+    $minSeason = $seasonRows ? min($seasonRows) : 2021;
+    $maxSeason = $seasonRows ? max($seasonRows) : (int) date('Y');
 
-        $from = (int) $request->input('from', $minSeason);
-        $to   = (int) $request->input('to', $maxSeason);
-        if ($from > $to) { [$from, $to] = [$to, $from]; }
+    $from = (int) $request->input('from', $minSeason);
+    $to   = (int) $request->input('to', $maxSeason);
+    if ($from > $to) { [$from, $to] = [$to, $from]; }
 
-        $teamQuery   = trim((string) $request->input('team', ''));
-        $playerQuery = trim((string) $request->input('player', ''));
+    $teamQuery   = trim((string) $request->input('team', ''));
+    $playerQuery = trim((string) $request->input('player', ''));
 
-        $agg = NbaPlayerGamelog::query()
-            ->join('nba_players as p', 'p.external_id', '=', 'nba_player_game_logs.player_external_id')
-            ->leftJoin('nba_player_details as d', 'd.external_id', '=', 'p.external_id')
-            ->leftJoin('nba_teams as t', 't.external_id', '=', 'p.team_id')
-            ->selectRaw('
-                YEAR(nba_player_game_logs.game_date) as season,
-                p.external_id as player_id,
-                COALESCE(p.full_name, CONCAT(p.first_name," ",p.last_name)) as player_name,
-                p.team_id as team_id,
-                p.team_name as team_name,
-                t.abbreviation as team_abbr,
-                p.team_logo as p_logo,
-                t.logo as t_logo,
-                COALESCE(d.headshot_href, p.image) as headshot,
-                COUNT(*) as games,
-                SUM(CASE WHEN UPPER(TRIM(result)) LIKE "W%" THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN UPPER(TRIM(result)) LIKE "L%" THEN 1 ELSE 0 END) as losses,
-                AVG(points) as ppg, AVG(rebounds) as rpg, AVG(assists) as apg,
-                AVG(steals) as spg, AVG(blocks) as bpg, AVG(turnovers) as tpg, AVG(minutes) as mpg,
-                AVG(fg_pct) as fg_pct, AVG(three_pt_pct) as three_pt_pct, AVG(ft_pct) as ft_pct
-            ')
-            ->when($from, fn($q) => $q->whereRaw('YEAR(nba_player_game_logs.game_date) >= ?', [$from]))
-            ->when($to,   fn($q) => $q->whereRaw('YEAR(nba_player_game_logs.game_date) <= ?', [$to]))
-            ->when($teamQuery !== '', function ($q) use ($teamQuery) {
-                $like = "%{$teamQuery}%";
-                $q->where(function ($sub) use ($like) {
-                    $sub->where('p.team_name', 'like', $like)
-                        ->orWhere('t.abbreviation', 'like', $like);
-                });
-            })
-            ->when($playerQuery !== '', function ($q) use ($playerQuery) {
-                $like = "%{$playerQuery}%";
-                $q->where(function ($sub) use ($like) {
-                    $sub->where('p.full_name', 'like', $like)
-                        ->orWhere('p.first_name', 'like', $like)
-                        ->orWhere('p.last_name', 'like', $like);
-                });
-            })
-            ->groupBy('season','player_id','player_name','team_id','team_name','team_abbr','p_logo','t_logo','headshot')
-            ->orderByDesc('season')
-            ->orderBy('player_name');
+    // safe per-page bounds
+    $perPage = (int) $request->input('per_page', 50);
+    $perPage = max(10, min($perPage, 100));
 
-        $collection = $agg->get();
+    $agg = NbaPlayerGamelog::query()
+        ->join('nba_players as p', 'p.external_id', '=', 'nba_player_game_logs.player_external_id')
+        ->leftJoin('nba_player_details as d', 'd.external_id', '=', 'p.external_id')
+        ->leftJoin('nba_teams as t', 't.external_id', '=', 'p.team_id')
+        ->selectRaw('
+            YEAR(nba_player_game_logs.game_date) as season,
+            p.external_id as player_id,
+            COALESCE(p.full_name, CONCAT(p.first_name," ",p.last_name)) as player_name,
+            p.team_id as team_id,
+            p.team_name as team_name,
+            t.abbreviation as team_abbr,
+            p.team_logo as p_logo,
+            t.logo as t_logo,
+            COALESCE(d.headshot_href, p.image) as headshot,
+            COUNT(*) as games,
+            SUM(CASE WHEN UPPER(TRIM(result)) LIKE "W%" THEN 1 ELSE 0 END) as wins,
+            SUM(CASE WHEN UPPER(TRIM(result)) LIKE "L%" THEN 1 ELSE 0 END) as losses,
+            AVG(points) as ppg, AVG(rebounds) as rpg, AVG(assists) as apg,
+            AVG(steals) as spg, AVG(blocks) as bpg, AVG(turnovers) as tpg, AVG(minutes) as mpg,
+            AVG(fg_pct) as fg_pct, AVG(three_pt_pct) as three_pt_pct, AVG(ft_pct) as ft_pct
+        ')
+        ->when($from, fn($q) => $q->whereRaw('YEAR(nba_player_game_logs.game_date) >= ?', [$from]))
+        ->when($to,   fn($q) => $q->whereRaw('YEAR(nba_player_game_logs.game_date) <= ?', [$to]))
+        ->when($teamQuery !== '', function ($q) use ($teamQuery) {
+            $like = "%{$teamQuery}%";
+            $q->where(function ($sub) use ($like) {
+                $sub->where('p.team_name', 'like', $like)
+                    ->orWhere('t.abbreviation', 'like', $like);
+            });
+        })
+        ->when($playerQuery !== '', function ($q) use ($playerQuery) {
+            $like = "%{$playerQuery}%";
+            $q->where(function ($sub) use ($like) {
+                $sub->where('p.full_name', 'like', $like)
+                    ->orWhere('p.first_name', 'like', $like)
+                    ->orWhere('p.last_name', 'like', $like);
+            });
+        })
+        ->groupBy('season','player_id','player_name','team_id','team_name','team_abbr','p_logo','t_logo','headshot')
+        ->orderByDesc('season')
+        ->orderBy('player_name');
 
-        $percentFmt = function ($v) {
-            if ($v === null) return '—';
-            $n = (float)$v;
-            return $n <= 1 ? number_format($n * 100, 1) . '%' : number_format($n, 1) . '%';
-        };
+    // DB-level pagination
+    $paginator = $agg->paginate($perPage)->withQueryString();
 
-        $rows = $collection->map(function ($r) use ($percentFmt) {
-            $one = fn($v) => $v !== null ? number_format($v, 1) : '—';
-            $logo = $r->p_logo ?: $r->t_logo;
+    // percentage formatter
+    $percentFmt = function ($v) {
+        if ($v === null) return '—';
+        $n = (float)$v;
+        return $n <= 1 ? number_format($n * 100, 1) . '%' : number_format($n, 1) . '%';
+    };
 
-            $payload = json_encode([
-                'season'   => (int) $r->season,
-                'player'   => $r->player_name,
-                'player_id'=> (int) $r->player_id,
-                'team'     => $r->team_name,
-                'abbr'     => $r->team_abbr,
-                'logo'     => $logo,
-                'headshot' => $r->headshot,
-                'games'    => (int) $r->games,
-                'wins'     => (int) $r->wins,
-                'losses'   => (int) $r->losses,
-                'ppg'      => $r->ppg, 'rpg' => $r->rpg, 'apg' => $r->apg,
-                'spg'      => $r->spg, 'bpg' => $r->bpg, 'tpg' => $r->tpg, 'mpg' => $r->mpg,
-                'fg_pct'   => $r->fg_pct, 'tp_pct' => $r->three_pt_pct, 'ft_pct' => $r->ft_pct,
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    // map only current page items, then put them back on the paginator
+    $mapped = $paginator->getCollection()->map(function ($r) use ($percentFmt) {
+        $one  = fn($v) => $v !== null ? number_format($v, 1) : '—';
+        $logo = $r->p_logo ?: $r->t_logo;
 
-            return [
-                'season'     => (int) $r->season,
-                'player_id'  => (int) $r->player_id,
-                'player'     => $r->player_name,
-                'team_id'    => (int) $r->team_id,
-                'team'       => $r->team_name,
-                'abbr'       => $r->team_abbr,
-                'logo'       => $logo,
-                'headshot'   => $r->headshot,
-                'games'      => (int) $r->games,
-                'wins'       => (int) $r->wins,
-                'losses'     => (int) $r->losses,
-                'wl_text'    => $r->wins.'–'.$r->losses,
-                'ppg'        => $one($r->ppg),
-                'rpg'        => $one($r->rpg),
-                'apg'        => $one($r->apg),
-                'spg'        => $one($r->spg),
-                'bpg'        => $one($r->bpg),
-                'tpg'        => $one($r->tpg),
-                'mpg'        => $one($r->mpg),
-                'fg_pct'     => $percentFmt($r->fg_pct),
-                'tp_pct'     => $percentFmt($r->three_pt_pct),
-                'ft_pct'     => $percentFmt($r->ft_pct),
-                'data_text'  => strtolower(trim(($r->player_name ?? '').' '.$r->team_name.' '.($r->team_abbr ?? ''))),
-                'payload'    => $payload,
-            ];
-        });
+        $payload = json_encode([
+            'season'   => (int) $r->season,
+            'player'   => $r->player_name,
+            'player_id'=> (int) $r->player_id,
+            'team'     => $r->team_name,
+            'abbr'     => $r->team_abbr,
+            'logo'     => $logo,
+            'headshot' => $r->headshot,
+            'games'    => (int) $r->games,
+            'wins'     => (int) $r->wins,
+            'losses'   => (int) $r->losses,
+            'ppg'      => $r->ppg, 'rpg' => $r->rpg, 'apg' => $r->apg,
+            'spg'      => $r->spg, 'bpg' => $r->bpg, 'tpg' => $r->tpg, 'mpg' => $r->mpg,
+            'fg_pct'   => $r->fg_pct, 'tp_pct' => $r->three_pt_pct, 'ft_pct' => $r->ft_pct,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        // NEW view path (players/compare)
-        return view('nba.players.compare', [
-            'seasons'     => array_values($seasonRows),
-            'from'        => $from,
-            'to'          => $to,
-            'teamQuery'   => $teamQuery,
-            'playerQuery' => $playerQuery,
-            'rows'        => $rows,
-            'legend'      => [
-                ['W/L','Team record in games the player appeared.'],
-                ['PPG / RPG / APG','Points / Rebounds / Assists per game.'],
-                ['SPG / BPG','Steals / Blocks per game.'],
-                ['TOV','Turnovers per game (lower is better).'],
-                ['MPG','Minutes per game.'],
-                ['FG% / 3P% / FT%','Shooting percentages (averaged from logs).'],
-            ],
-        ]);
-    }
+        return [
+            'season'     => (int) $r->season,
+            'player_id'  => (int) $r->player_id,
+            'player'     => $r->player_name,
+            'team_id'    => (int) $r->team_id,
+            'team'       => $r->team_name,
+            'abbr'       => $r->team_abbr,
+            'logo'       => $logo,
+            'headshot'   => $r->headshot,
+            'games'      => (int) $r->games,
+            'wins'       => (int) $r->wins,
+            'losses'     => (int) $r->losses,
+            'wl_text'    => $r->wins.'–'.$r->losses,
+            'ppg'        => $one($r->ppg),
+            'rpg'        => $one($r->rpg),
+            'apg'        => $one($r->apg),
+            'spg'        => $one($r->spg),
+            'bpg'        => $one($r->bpg),
+            'tpg'        => $one($r->tpg),
+            'mpg'        => $one($r->mpg),
+            'fg_pct'     => $percentFmt($r->fg_pct),
+            'tp_pct'     => $percentFmt($r->three_pt_pct),
+            'ft_pct'     => $percentFmt($r->ft_pct),
+            'data_text'  => strtolower(trim(($r->player_name ?? '').' '.$r->team_name.' '.($r->team_abbr ?? ''))),
+            'payload'    => $payload,
+        ];
+    });
+
+    $paginator->setCollection($mapped);
+
+    return view('nba.players.compare', [ // uses your layout-based view
+        'seasons'     => array_values($seasonRows),
+        'from'        => $from,
+        'to'          => $to,
+        'teamQuery'   => $teamQuery,
+        'playerQuery' => $playerQuery,
+        'rows'        => $paginator,
+        'legend'      => [
+            ['W/L','Team record in games the player appeared.'],
+            ['PPG / RPG / APG','Points / Rebounds / Assists per game.'],
+            ['SPG / BPG','Steals / Blocks per game.'],
+            ['TOV','Turnovers per game (lower is better).'],
+            ['MPG','Minutes per game.'],
+            ['FG% / 3P% / FT%','Shooting percentages (averaged from logs).'],
+        ],
+    ]);
+}
+
 }

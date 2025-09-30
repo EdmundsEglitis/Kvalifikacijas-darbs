@@ -8,7 +8,6 @@
 @endpush
 
 @section('content')
-  {{-- HERO (no negative margin; layout already handles navbar spacing) --}}
   @if($heroImage)
     <section
       id="hero"
@@ -16,7 +15,6 @@
       style="background-image: url('{{ Storage::url($heroImage->image_path) }}');"
     >
       <div class="absolute inset-0 bg-black/60"></div>
-
       <div class="relative z-10 flex h-full items-center justify-center px-6 text-center">
         <div class="max-w-3xl space-y-6 fade-in-section opacity-0 translate-y-6">
           @if($heroImage->title)
@@ -36,7 +34,6 @@
     </section>
   @endif
 
-  {{-- FEATURES --}}
   <section class="py-12 bg-[#111827]">
     <div class="max-w-7xl mx-auto px-4 text-center space-y-8">
       <h2 class="text-3xl font-bold text-white fade-in-section opacity-0 translate-y-6">
@@ -61,14 +58,12 @@
     </div>
   </section>
 
-  {{-- NEWS GRID --}}
   <section id="news" class="py-16 bg-[#111827]">
     <div class="max-w-7xl mx-auto px-4 space-y-12">
       <h2 class="text-3xl font-bold text-white text-center fade-in-section opacity-0 translate-y-6">
         Jaunākās Ziņas
       </h2>
 
-      {{-- Secondary panels --}}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @foreach(['secondary-1','secondary-2'] as $slot)
           @if($bySlot[$slot] ?? false)
@@ -106,7 +101,6 @@
         @endforeach
       </div>
 
-      {{-- Three small cards --}}
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         @foreach(['slot-1','slot-2','slot-3'] as $slot)
           @if($bySlot[$slot] ?? false)
@@ -145,29 +139,52 @@
     </div>
   </section>
 
-  {{-- CTA --}}
-  <section class="py-16 bg-[#F97316] fade-in-section opacity-0 translate-y-6">
-    <div class="max-w-7xl mx-auto text-center px-4">
-      <h2 class="text-3xl md:text-4xl font-bold text-white">
-        Pievienojies LBS kopienai!
-      </h2>
-      <p class="mt-4 text-white/90">
-        Abonē mūsu jaunumu vēstuli, lai nekad nepalaistu garām svarīgāko.
-      </p>
-      <form class="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-        <input type="email"
-               placeholder="Tavs e-pasts"
-               class="w-full sm:w-auto px-4 py-2 rounded-full border-0 focus:ring-2 focus:ring-[#84CC16]"
-               required/>
-        <button type="submit"
-                class="px-6 py-2 rounded-full bg-[#111827] text-[#F3F4F6] font-semibold hover:bg-[#1f2937] transition">
-          Abonēt
-        </button>
-      </form>
+  {{-- Inspired "Explore" band (replaces the email subscribe block) --}}
+  <section class="py-14 bg-gradient-to-b from-[#0b1220] to-[#111827]">
+    <div class="max-w-7xl mx-auto px-4 space-y-8">
+      <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Izpēti LBS sadaļas</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <a href="#news"
+           class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+          <div class="text-sm text-[#9CA3AF]">Ziņas</div>
+          <div class="mt-2 text-2xl font-bold text-white">Jaunākās</div>
+          <div class="mt-3 text-[#F3F4F6]/80">Aktualitātes no Latvijas basketbola.</div>
+          <div class="mt-4 text-[#84CC16] font-semibold">Skatīt →</div>
+        </a>
+
+        @if(Route::has('lbs.calendar'))
+          <a href="{{ route('lbs.calendar') }}"
+             class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+            <div class="text-sm text-[#9CA3AF]">Kalendārs</div>
+            <div class="mt-2 text-2xl font-bold text-white">Spēles</div>
+            <div class="mt-3 text-[#F3F4F6]/80">Grafiks un rezultāti.</div>
+            <div class="mt-4 text-[#84CC16] font-semibold">Atvērt →</div>
+          </a>
+        @endif
+
+        @if(Route::has('lbs.standings'))
+          <a href="{{ route('lbs.standings') }}"
+             class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+            <div class="text-sm text-[#9CA3AF]">Turnīra Tabula</div>
+            <div class="mt-2 text-2xl font-bold text-white">Pozīcijas</div>
+            <div class="mt-3 text-[#F3F4F6]/80">Komandu vietas un forma.</div>
+            <div class="mt-4 text-[#84CC16] font-semibold">Apskatīt →</div>
+          </a>
+        @endif
+
+        @if(Route::has('lbs.teams'))
+          <a href="{{ route('lbs.teams') }}"
+             class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+            <div class="text-sm text-[#9CA3AF]">Komandas</div>
+            <div class="mt-2 text-2xl font-bold text-white">Direktorija</div>
+            <div class="mt-3 text-[#F3F4F6]/80">Logo, sastāvi un statistika.</div>
+            <div class="mt-4 text-[#84CC16] font-semibold">Skatīt →</div>
+          </a>
+        @endif
+      </div>
     </div>
   </section>
 
-  {{-- FOOTER --}}
   <footer class="py-8 bg-[#111827] text-[#F3F4F6]/70 text-center text-sm fade-in-section opacity-0 translate-y-6">
     &copy; {{ date('Y') }} LBS. Visas tiesības aizsargātas.
   </footer>
@@ -175,7 +192,6 @@
 
 @push('scripts')
 <script>
-  // Fade-in on scroll (kept; nav script removed)
   document.addEventListener("DOMContentLoaded", function () {
     const els = document.querySelectorAll('.fade-in-section');
     if (!('IntersectionObserver' in window)) {
