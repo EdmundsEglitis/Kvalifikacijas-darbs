@@ -1,10 +1,7 @@
-
 @extends('layouts.nba')
 @section('title','Team Compare')
 
 @section('content')
-<br><br>
-<br><br>
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
 
     {{-- Filters --}}
@@ -36,24 +33,10 @@
           />
         </div>
 
-        <div class="flex gap-3">
-          <button type="submit"
-                  class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a3e635] transition w-full">
-            Apply
-          </button>
-          <a href="{{ route('nba.standings.explorer') }}"
-             class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition w-full">
-            Reset
-          </a>
-        </div>
 
         <div class="lg:col-span-4 flex flex-wrap items-center gap-3 pt-1">
           <input id="q" type="text" placeholder="Quick search in table…"
                  class="flex-1 min-w-[220px] bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none" />
-          <a href="{{ route('nba.standings.explorer', array_merge(request()->query(), ['export' => 1])) }}"
-             class="inline-flex items-center px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition">
-            Export CSV
-          </a>
         </div>
       </form>
     </section>
@@ -172,194 +155,188 @@
 
   </main>
 
-<script>
-  /* ===== Quick filter ===== */
-  const q = document.getElementById('q');
-  const rows = Array.from(document.querySelectorAll('#standingsTable tbody tr'));
-  q?.addEventListener('input', (e) => {
-    const term = e.target.value.trim().toLowerCase();
-    rows.forEach(r => {
-      const hay = (r.dataset.team + ' ' + r.dataset.season).toLowerCase();
-      r.style.display = hay.includes(term) ? '' : 'none';
-    });
-  });
+  <script>
+    // ===== Fast filter (seeded from ?team=) =====
+    const q = document.getElementById('q');
+    const tableRows = Array.from(document.querySelectorAll('#standingsTable tbody tr'));
 
-  /* ===== Sort (client-side) ===== */
-  const headers = document.querySelectorAll('th[data-sort]');
-  headers.forEach(h => {
-    h.addEventListener('click', () => {
-      const idx = Array.from(h.parentElement.children).indexOf(h);
-      const tbody = document.querySelector('#standingsTable tbody');
-      const trs = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.style.display !== 'none');
-
-      const asc = !(h.dataset.asc === 'true');
-      headers.forEach(x => x.removeAttribute('data-asc'));
-      h.dataset.asc = asc;
-
-      trs.sort((a,b) => {
-        const A = a.children[idx].innerText.trim();
-        const B = b.children[idx].innerText.trim();
-        const nA = parseFloat(A.replace('+',''));
-        const nB = parseFloat(B.replace('+',''));
-        const bothNum = !isNaN(nA) && !isNaN(nB);
-        if (bothNum) return asc ? (nA - nB) : (nB - nA);
-        return asc ? A.localeCompare(B) : B.localeCompare(A);
+    function applyFilters() {
+      const term = (q?.value || '').trim().toLowerCase();
+      tableRows.forEach(r => {
+        const hay = (r.dataset.team + ' ' + r.dataset.season).toLowerCase();
+        r.style.display = hay.includes(term) ? '' : 'none';
       });
+    }
 
-      tbody.append(...trs);
+    // Seed quick search from query (?team=)
+    (function seedFromQuery() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const seed = params.get('team');
+        if (seed && q) {
+          q.value = seed;
+          applyFilters();
+        }
+      } catch {}
+    })();
+
+    q?.addEventListener('input', applyFilters);
+
+    // ===== Sort only visible rows =====
+    const headers = document.querySelectorAll('#standingsTable thead th[data-sort]');
+    headers.forEach(h => {
+      h.addEventListener('click', () => {
+        const idx   = Array.from(h.parentElement.children).indexOf(h);
+        const tbody = document.querySelector('#standingsTable tbody');
+        const asc   = !(h.dataset.asc === 'true');
+        headers.forEach(x => x.removeAttribute('data-asc'));
+        h.dataset.asc = asc;
+
+        const visible = Array.from(tbody.querySelectorAll('tr')).filter(tr => tr.style.display !== 'none');
+
+        const num = (txt) => {
+          if (!txt) return NaN;
+          const t = txt.replace('%','').replace('+','').replace('—','').trim();
+          const n = parseFloat(t);
+          return isNaN(n) ? NaN : n;
+        };
+
+        visible.sort((a,b) => {
+          const A  = a.children[idx].innerText.trim();
+          const B  = b.children[idx].innerText.trim();
+          const An = num(A), Bn = num(B);
+          const both = isFinite(An) && isFinite(Bn);
+          if (both) return asc ? (An - Bn) : (Bn - An);
+          return asc ? A.localeCompare(B) : B.localeCompare(A);
+        });
+
+        tbody.append(...visible);
+      });
     });
-  });
 
-  /* ===== Compare selection ===== */
-  const selBoxes   = document.querySelectorAll('.rowSel');
-  const compareBtn = document.getElementById('compareBtn');
-  const clearSelBtn= document.getElementById('clearSelBtn');
-  const compareArea= document.getElementById('compareArea');
-  const compareGrid= document.getElementById('compareGrid');
+    // ===== Compare selection & cards =====
+    const selBoxes   = document.querySelectorAll('.rowSel');
+    const compareBtn = document.getElementById('compareBtn');
+    const clearSelBtn= document.getElementById('clearSelBtn');
+    const compareArea= document.getElementById('compareArea');
+    const compareGrid= document.getElementById('compareGrid');
 
-  function selectedPayloads() {
-    return Array.from(selBoxes)
-      .filter(x => x.checked)
-      .slice(0,5)
-      .map(x => JSON.parse(x.dataset.payload));
-  }
+    function selectedPayloads() {
+      return Array.from(selBoxes)
+        .filter(x => x.checked)
+        .slice(0,5)
+        .map(x => JSON.parse(x.dataset.payload));
+    }
 
-  selBoxes.forEach(cb => {
-    cb.addEventListener('change', () => {
+    selBoxes.forEach(cb => {
+      cb.addEventListener('change', () => {
+        const sel = selectedPayloads();
+        if (sel.length > 5) { cb.checked = false; return; }
+        compareBtn.disabled = sel.length === 0;
+      });
+    });
+
+    clearSelBtn.addEventListener('click', () => {
+      selBoxes.forEach(x => x.checked = false);
+      compareBtn.disabled = true;
+      compareGrid.innerHTML = '';
+      compareArea.classList.add('hidden');
+    });
+
+    const numVal = (v) => (v===null||v===undefined||v==='—') ? NaN : Number(v);
+
+    function vsLeader(sel, field, higherIsBetter = true) {
+      const values = sel.map(p => numVal(p[field]));
+      const valid  = values.filter(v => isFinite(v));
+      if (!valid.length) return sel.map(_ => ({ label: '—', cls: 'text-gray-300' }));
+
+      const leader = higherIsBetter ? Math.max(...valid) : Math.min(...valid);
+
+      return values.map(v => {
+        if (!isFinite(v)) return { label: '—', cls: 'text-gray-300' };
+        let behindPct;
+        if (leader === 0) behindPct = 0;
+        else if (higherIsBetter) behindPct = ((leader - v) / Math.abs(leader)) * 100;
+        else behindPct = ((v - leader) / Math.abs(leader)) * 100;
+
+        if (Math.abs(behindPct) < 0.5) return { label: 'Leader', cls: 'text-[#84CC16]' };
+        return { label: `-${Math.round(behindPct)}% vs leader`, cls: 'text-[#F97316]' };
+      });
+    }
+
+    const lineLeader = (c) => `<div class="text-xs mt-0.5 ${c.cls}">${c.label}</div>`;
+
+    compareBtn.addEventListener('click', () => {
       const sel = selectedPayloads();
-      if (sel.length > 5) { cb.checked = false; return; }
-      compareBtn.disabled = sel.length === 0;
+      if (!sel.length) { compareArea.classList.add('hidden'); return; }
+
+      const cmpWin  = vsLeader(sel, 'win_percent', true);
+      const cmpPPG  = vsLeader(sel, 'ppg',         true);
+      const cmpOPP  = vsLeader(sel, 'opp_ppg',     false);
+      const cmpDiff = vsLeader(sel, 'diff',        true);
+
+      compareGrid.innerHTML = sel.map((p, idx) => {
+        const winPct   = (p.win_percent ?? null) !== null ? `${Math.round(Number(p.win_percent) * 100)}%` : '—';
+        const diffTxt  = (p.diff ?? null) === null ? '—' : (p.diff >= 0 ? ('+'+p.diff) : p.diff);
+        const streakTxt= (p.streak ?? null) === null ? '—' : (p.streak > 0 ? 'W'+p.streak : (p.streak < 0 ? 'L'+Math.abs(p.streak) : '—'));
+        const logoImg  = p.logo
+          ? `<img src="${p.logo}" alt="${p.team} logo" class="h-6 w-6 object-contain rounded bg-white p-[2px]" />`
+          : `<span class="inline-flex items-center justify-center h-6 w-6 rounded bg-white/10 text-[10px]">${p.abbr ?? '—'}</span>`;
+
+        return `
+          <article class="bg-[#0f172a]/60 border border-[#374151] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                ${logoImg}
+                <div class="text-white font-semibold">${p.team} (${p.abbr ?? '—'})</div>
+              </div>
+              <div class="text-xs text-[#F3F4F6]/70">${p.season}</div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 text-sm">
+              <div>
+                <div class="text-[#F3F4F6]/60 text-xs">W/L</div>
+                <div class="font-semibold">${p.wins ?? '—'}–${p.losses ?? '—'}</div>
+                ${lineLeader(cmpWin[idx])}
+              </div>
+              <div>
+                <div class="text-[#F3F4F6]/60 text-xs">Win%</div>
+                <div class="font-semibold">${winPct}</div>
+                ${lineLeader(cmpWin[idx])}
+              </div>
+              <div>
+                <div class="text-[#F3F4F6]/60 text-xs">Seed</div>
+                <div class="font-semibold">${p.seed ?? '—'}</div>
+              </div>
+              <div>
+                <div class="text-[#F3F4F6]/60 text-xs">PPG</div>
+                <div class="font-semibold">${p.ppg ?? '—'}</div>
+                ${lineLeader(cmpPPG[idx])}
+              </div>
+              <div>
+                <div class="text-[#F3F4F6]/60 text-xs">OPP PPG</div>
+                <div class="font-semibold">${p.opp_ppg ?? '—'}</div>
+                ${lineLeader(cmpOPP[idx])}
+              </div>
+              <div>
+                <div class="text-[#F3F4F6]/60 text-xs">Diff</div>
+                <div class="font-semibold ${p.diff==null?'':(p.diff>=0?'text-[#84CC16]':'text-[#F97316]')}">${diffTxt}</div>
+                ${lineLeader(cmpDiff[idx])}
+              </div>
+            </div>
+
+            <div class="mt-3 flex flex-wrap gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Home: ${p.home ?? '—'}</span>
+              <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Road: ${p.road ?? '—'}</span>
+              <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">L10: ${p.l10 ?? '—'}</span>
+              <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Streak: ${streakTxt}</span>
+              ${p.clincher ? `<span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Clincher: ${p.clincher}</span>` : ''}
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      compareArea.classList.toggle('hidden', sel.length === 0);
     });
-  });
-
-  clearSelBtn.addEventListener('click', () => {
-    selBoxes.forEach(x => x.checked = false);
-    compareBtn.disabled = true;
-    compareGrid.innerHTML = '';
-    compareArea.classList.add('hidden');
-  });
-
-  /* ===== Helpers for leader-only comparison ===== */
-
-  const num = (v) => (v === null || v === undefined || v === '—') ? NaN : Number(v);
-
-  // For each stat, compute percent BEHIND the leader (0% = leader)
-  function vsLeader(sel, field, higherIsBetter = true) {
-    const values = sel.map(p => num(p[field]));
-    const valid  = values.filter(v => isFinite(v));
-    if (!valid.length) return sel.map(_ => ({ label: '—', cls: 'text-gray-300' }));
-
-    const leader = higherIsBetter
-      ? Math.max(...valid)   // best is max when higher is better
-      : Math.min(...valid);  // best is min when lower is better
-
-    return values.map(v => {
-      if (!isFinite(v)) return { label: '—', cls: 'text-gray-300' };
-      // percent behind leader (always >= 0 for non-leaders)
-      let behindPct;
-      if (leader === 0) {
-        behindPct = 0; // avoid divide-by-zero; treat equals as leader
-      } else if (higherIsBetter) {
-        behindPct = ((leader - v) / Math.abs(leader)) * 100;
-      } else {
-        behindPct = ((v - leader) / Math.abs(leader)) * 100;
-      }
-      if (Math.abs(behindPct) < 0.5) {
-        // close enough to leader → mark as leader
-        return { label: 'Leader', cls: 'text-[#84CC16]' };
-      }
-      const label = `-${Math.round(behindPct)}% vs leader`;
-      return { label, cls: 'text-[#F97316]' };
-    });
-  }
-
-  function lineLeader(comp) {
-    return `<div class="text-xs mt-0.5 ${comp.cls}">${comp.label}</div>`;
-  }
-
-  /* ===== Compare click ===== */
-  compareBtn.addEventListener('click', () => {
-    const sel = selectedPayloads();
-    if (!sel.length) { compareArea.classList.add('hidden'); return; }
-
-    // Which direction is "better":
-    const cmpWin  = vsLeader(sel, 'win_percent', true);
-    const cmpPPG  = vsLeader(sel, 'ppg',         true);
-    const cmpOPP  = vsLeader(sel, 'opp_ppg',     false); // lower is better
-    const cmpDiff = vsLeader(sel, 'diff',        true);
-
-    compareGrid.innerHTML = sel.map((p, idx) => {
-      const winPct   = (p.win_percent ?? null) !== null ? `${Math.round(Number(p.win_percent) * 100)}%` : '—';
-      const diffTxt  = (p.diff ?? null) === null ? '—' : (p.diff >= 0 ? ('+'+p.diff) : p.diff);
-      const streakTxt= (p.streak ?? null) === null ? '—' : (p.streak > 0 ? 'W'+p.streak : (p.streak < 0 ? 'L'+Math.abs(p.streak) : '—'));
-      const logoImg  = p.logo
-        ? `<img src="${p.logo}" alt="${p.team} logo" class="h-6 w-6 object-contain rounded bg-white p-[2px]" />`
-        : `<span class="inline-flex items-center justify-center h-6 w-6 rounded bg-white/10 text-[10px]">${p.abbr ?? '—'}</span>`;
-
-      return `
-        <article class="bg-[#0f172a]/60 border border-[#374151] rounded-xl p-4">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-2">
-              ${logoImg}
-              <div class="text-white font-semibold">${p.team} (${p.abbr ?? '—'})</div>
-            </div>
-            <div class="text-xs text-[#F3F4F6]/70">${p.season}</div>
-          </div>
-
-          <div class="grid grid-cols-3 gap-3 text-sm">
-            <div>
-              <div class="text-[#F3F4F6]/60 text-xs">W/L</div>
-              <div class="font-semibold">${p.wins ?? '—'}–${p.losses ?? '—'}</div>
-              ${lineLeader(cmpWin[idx])}
-            </div>
-
-            <div>
-              <div class="text-[#F3F4F6]/60 text-xs">Win%</div>
-              <div class="font-semibold">${winPct}</div>
-              ${lineLeader(cmpWin[idx])}
-            </div>
-
-            <div>
-              <div class="text-[#F3F4F6]/60 text-xs">Seed</div>
-              <div class="font-semibold">${p.seed ?? '—'}</div>
-            </div>
-
-            <div>
-              <div class="text-[#F3F4F6]/60 text-xs">PPG</div>
-              <div class="font-semibold">${p.ppg ?? '—'}</div>
-              ${lineLeader(cmpPPG[idx])}
-            </div>
-
-            <div>
-              <div class="text-[#F3F4F6]/60 text-xs">OPP PPG</div>
-              <div class="font-semibold">${p.opp_ppg ?? '—'}</div>
-              ${lineLeader(cmpOPP[idx])}
-            </div>
-
-            <div>
-              <div class="text-[#F3F4F6]/60 text-xs">Diff</div>
-              <div class="font-semibold ${p.diff==null?'':(p.diff>=0?'text-[#84CC16]':'text-[#F97316]')}">${diffTxt}</div>
-              ${lineLeader(cmpDiff[idx])}
-            </div>
-          </div>
-
-          <div class="mt-3 flex flex-wrap gap-2 text-xs">
-            <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Home: ${p.home ?? '—'}</span>
-            <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Road: ${p.road ?? '—'}</span>
-            <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">L10: ${p.l10 ?? '—'}</span>
-            <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Streak: ${streakTxt}</span>
-            ${p.clincher ? `<span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Clincher: ${p.clincher}</span>` : ''}
-          </div>
-        </article>
-      `;
-    }).join('');
-
-    compareArea.classList.toggle('hidden', sel.length === 0);
-  });
-</script>
-
-
-
-</body>
-</html>
+  </script>
 @endsection

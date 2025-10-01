@@ -54,12 +54,9 @@
            class="px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition focus:outline-none focus:ring-2 focus:ring-white/30">
           Reset
         </a>
-        <input id="q" type="text" placeholder="Quick search…"
+        <input id="q" type="text" placeholder="Quick search the players in this page"
                class="flex-1 min-w-[200px] bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40" />
-        <a href="{{ route('nba.compare', array_merge(request()->query(), ['export'=>1])) }}"
-           class="px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition focus:outline-none focus:ring-2 focus:ring-white/30">
-          Export CSV
-        </a>
+
       </div>
     </form>
   </section>
@@ -93,15 +90,10 @@
     </div>
   </section>
 
-  {{-- Pagination (top for quicker nav) --}}
+  {{-- Pagination (top, dark) --}}
   @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)
-    <div class="flex justify-between items-center">
-      <div class="text-xs text-gray-400">
-        Page {{ $rows->currentPage() }} of {{ $rows->lastPage() }}
-      </div>
-      <div class="text-sm">
-        {{ $rows->onEachSide(1)->links() }}
-      </div>
+    <div class="flex justify-end mt-4">
+      {{ $rows->appends(request()->query())->onEachSide(1)->links('vendor.pagination.custom-dark') }}
     </div>
   @endif
 
@@ -221,10 +213,10 @@
     </div>
   </section>
 
-  {{-- Pagination (bottom) --}}
+  {{-- Pagination (bottom, dark) --}}
   @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)
-    <div class="flex justify-end">
-      {{ $rows->onEachSide(1)->links() }}
+    <div class="flex justify-end mt-4">
+      {{ $rows->appends(request()->query())->onEachSide(1)->links('vendor.pagination.custom-dark') }}
     </div>
   @endif
 
@@ -239,6 +231,7 @@
       @endforeach
     </div>
   </section>
+
 
 </main>
 @endsection

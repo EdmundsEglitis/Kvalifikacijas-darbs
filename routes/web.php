@@ -17,6 +17,7 @@ use App\Http\Controllers\Lbs\Leagues\SubleagueController;
 use App\Http\Controllers\Lbs\Teams\TeamController as LbsTeamController;
 use App\Http\Controllers\Lbs\Games\GameController as LbsGameController;
 use App\Http\Controllers\Lbs\Players\PlayerController as LbsPlayerController;
+use App\Http\Controllers\Lbs\Teams\CompareController as LbsTeamsCompare;
 use App\Services\ApiSyncService;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -64,33 +65,27 @@ Route::prefix('nba')->name('nba.')->group(function () {
 Route::prefix('lbs')->name('lbs.')->group(function () {
     Route::get('/', [LbsHomeController::class, 'home'])->name('home');
 
-    // News
     Route::get('/news/{id}', [LbsNewsController::class, 'show'])->name('news.show');
-
-    // Parent league
     Route::get('/league/{id}', [ParentLeagueController::class, 'show'])->name('league.show');
 
-    // Sub-league hub + tabs
     Route::prefix('/sub-league/{id}')->group(function () {
-        Route::get('/',            [SubleagueController::class, 'show'])->name('subleague.show');       // overview
-        Route::get('/news',        [SubleagueController::class, 'news'])->name('subleague.news');
-        Route::get('/calendar',    [SubleagueController::class, 'calendar'])->name('subleague.calendar');
-        Route::get('/teams',       [SubleagueController::class, 'teams'])->name('subleague.teams');
-        Route::get('/stats',       [SubleagueController::class, 'stats'])->name('subleague.stats');
+        Route::get('/',         [SubleagueController::class, 'show'])->name('subleague.show');
+        Route::get('/news',     [SubleagueController::class, 'news'])->name('subleague.news');
+        Route::get('/calendar', [SubleagueController::class, 'calendar'])->name('subleague.calendar');
+        Route::get('/teams',    [SubleagueController::class, 'teams'])->name('subleague.teams');
+        Route::get('/stats',    [SubleagueController::class, 'stats'])->name('subleague.stats');
     });
 
-    // Teams
-    Route::get('/team/{team}',              [LbsTeamController::class, 'show'])->name('team.show');
-    Route::get('/team/{team}/games',        [LbsTeamController::class, 'games'])->name('team.games');
-    Route::get('/team/{team}/players',      [LbsTeamController::class, 'players'])->name('team.players');
-    Route::get('/team/{team}/stats',        [LbsTeamController::class, 'stats'])->name('team.stats');
+    Route::get('/team/{team}',         [LbsTeamController::class, 'show'])->name('team.show');
+    Route::get('/team/{team}/games',   [LbsTeamController::class, 'games'])->name('team.games');
+    Route::get('/team/{team}/players', [LbsTeamController::class, 'players'])->name('team.players');
+    Route::get('/team/{team}/stats',   [LbsTeamController::class, 'stats'])->name('team.stats');
 
-    // Individual game
-    Route::get('/game/{id}', [LbsGameController::class, 'show'])->name('game.detail');
-
-    // Player
+    Route::get('/game/{id}',    [LbsGameController::class, 'show'])->name('game.detail');
     Route::get('/players/{id}', [LbsPlayerController::class, 'show'])->name('player.show');
 
+    // NEW: Compare Teams (no "team" prefix in path)
+    Route::get('/compare/teams', [LbsTeamsCompare::class, 'explorer'])->name('compare.teams');
 });
 
 
