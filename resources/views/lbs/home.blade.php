@@ -34,29 +34,52 @@
     </section>
   @endif
 
-  <section class="py-12 bg-[#111827]">
-    <div class="max-w-7xl mx-auto px-4 text-center space-y-8">
-      <h2 class="text-3xl font-bold text-white fade-in-section opacity-0 translate-y-6">
-        Kāpēc izvēlēties LBS?
-      </h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        @foreach([
-          ['icon'=>'M12 2L2 22h20L12 2z','title'=>'Live Rezultāti','text'=>'Ik sekundi atjaunināti rezultāti un statistika.'],
-          ['icon'=>'M12 2A10 10 0 1 1 2 12 10 10 0 0 1 12 2','title'=>'Ekspertu Analīze','text'=>'Padziļinātas spēļu analīzes un komandu pārskati.'],
-          ['icon'=>'M4 4h16v16H4z','title'=>'Mobilā Lietotne','text'=>'Sekojiet līdzi tiešraidēm jebkurā ierīcē.'],
-          ['icon'=>'M12 2L22 22H2L12 2z','title'=>'Kopiena','text'=>'Pievienojies fanu forumiem un dalies viedokļos.'],
-        ] as $feature)
-          <div class="space-y-4 fade-in-section opacity-0 translate-y-6">
-            <svg class="mx-auto h-12 w-12 text-[#84CC16]" fill="currentColor" viewBox="0 0 24 24">
-              <path d="{{ $feature['icon'] }}"/>
-            </svg>
-            <h3 class="text-xl font-semibold text-white">{{ $feature['title'] }}</h3>
-            <p class="text-[#F3F4F6]/80">{{ $feature['text'] }}</p>
-          </div>
-        @endforeach
-      </div>
+  {{-- Inspired "Explore" band (hardcoded links) --}}
+<section class="py-14 bg-gradient-to-b from-[#0b1220] to-[#111827]">
+  <div class="max-w-7xl mx-auto px-4 space-y-8">
+    <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Izpēti LBS sadaļas</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      {{-- Jaunākās ziņas (anchor on LBS home) --}}
+      <a href="{{ url('/lbs') }}#news"
+         class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+        <div class="text-sm text-[#9CA3AF]">Ziņas</div>
+        <div class="mt-2 text-2xl font-bold text-white">Jaunākās</div>
+        <div class="mt-3 text-[#F3F4F6]/80">Aktualitātes no Latvijas basketbola.</div>
+        <div class="mt-4 text-[#84CC16] font-semibold">Skatīt →</div>
+      </a>
+
+      {{-- Konkrēta līga (ID = 1) --}}
+      <a href="{{ url('/lbs/league/1') }}"
+         class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+        <div class="text-sm text-[#9CA3AF]">Līga</div>
+        <div class="mt-2 text-2xl font-bold text-white">Līga #1</div>
+        <div class="mt-3 text-[#F3F4F6]/80">Pamatinformācija un saturs par līgu.</div>
+        <div class="mt-4 text-[#84CC16] font-semibold">Atvērt →</div>
+      </a>
+
+      {{-- Komandu salīdzinātājs --}}
+      <a href="{{ url('/lbs/compare/teams') }}"
+         class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+        <div class="text-sm text-[#9CA3AF]">Komandas</div>
+        <div class="mt-2 text-2xl font-bold text-white">Salīdzināt</div>
+        <div class="mt-3 text-[#F3F4F6]/80">Salīdzini komandas pēc sezonām un metrikām.</div>
+        <div class="mt-4 text-[#84CC16] font-semibold">Atvērt →</div>
+      </a>
+
+      {{-- Spēlētāju salīdzinātājs --}}
+      <a href="{{ url('/lbs/compare/players') }}"
+         class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
+        <div class="text-sm text-[#9CA3AF]">Spēlētāji</div>
+        <div class="mt-2 text-2xl font-bold text-white">Salīdzināt</div>
+        <div class="mt-3 text-[#F3F4F6]/80">Salīdzini spēlētāju statistiku.</div>
+        <div class="mt-4 text-[#84CC16] font-semibold">Atvērt →</div>
+      </a>
+
     </div>
-  </section>
+  </div>
+</section>
 
   <section id="news" class="py-16 bg-[#111827]">
     <div class="max-w-7xl mx-auto px-4 space-y-12">
@@ -135,52 +158,6 @@
             </article>
           @endif
         @endforeach
-      </div>
-    </div>
-  </section>
-
-  {{-- Inspired "Explore" band (replaces the email subscribe block) --}}
-  <section class="py-14 bg-gradient-to-b from-[#0b1220] to-[#111827]">
-    <div class="max-w-7xl mx-auto px-4 space-y-8">
-      <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Izpēti LBS sadaļas</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <a href="#news"
-           class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
-          <div class="text-sm text-[#9CA3AF]">Ziņas</div>
-          <div class="mt-2 text-2xl font-bold text-white">Jaunākās</div>
-          <div class="mt-3 text-[#F3F4F6]/80">Aktualitātes no Latvijas basketbola.</div>
-          <div class="mt-4 text-[#84CC16] font-semibold">Skatīt →</div>
-        </a>
-
-        @if(Route::has('lbs.calendar'))
-          <a href="{{ route('lbs.calendar') }}"
-             class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
-            <div class="text-sm text-[#9CA3AF]">Kalendārs</div>
-            <div class="mt-2 text-2xl font-bold text-white">Spēles</div>
-            <div class="mt-3 text-[#F3F4F6]/80">Grafiks un rezultāti.</div>
-            <div class="mt-4 text-[#84CC16] font-semibold">Atvērt →</div>
-          </a>
-        @endif
-
-        @if(Route::has('lbs.standings'))
-          <a href="{{ route('lbs.standings') }}"
-             class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
-            <div class="text-sm text-[#9CA3AF]">Turnīra Tabula</div>
-            <div class="mt-2 text-2xl font-bold text-white">Pozīcijas</div>
-            <div class="mt-3 text-[#F3F4F6]/80">Komandu vietas un forma.</div>
-            <div class="mt-4 text-[#84CC16] font-semibold">Apskatīt →</div>
-          </a>
-        @endif
-
-        @if(Route::has('lbs.teams'))
-          <a href="{{ route('lbs.teams') }}"
-             class="group rounded-2xl p-6 bg-[#0f172a] border border-[#1f2937]/70 hover:border-[#84CC16] transition shadow">
-            <div class="text-sm text-[#9CA3AF]">Komandas</div>
-            <div class="mt-2 text-2xl font-bold text-white">Direktorija</div>
-            <div class="mt-3 text-[#F3F4F6]/80">Logo, sastāvi un statistika.</div>
-            <div class="mt-4 text-[#84CC16] font-semibold">Skatīt →</div>
-          </a>
-        @endif
       </div>
     </div>
   </section>

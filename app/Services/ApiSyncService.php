@@ -25,12 +25,11 @@ class ApiSyncService
     {
         //$this->syncPlayers();
         //$this->syncTeams();
-        //$this->syncUpcomingGames();
+        $this->syncUpcomingGames();
         //$this->syncPlayerDetails();
         //$this->syncPlayerGamelogs();
-        $this->syncStandingsRange(2021);
-        //$this->testStandings(); // for testing only
-        // $this->syncGames(); // optional if you want game syncing too
+        //$this->syncStandingsRange(2021);
+        // $this->syncGames(); 
     }
 
     protected function syncPlayers(): void

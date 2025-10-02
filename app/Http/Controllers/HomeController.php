@@ -5,16 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\News;
-use App\Models\Game;                 // LBS games table
-use App\Models\NbaPlayerGameLog;     // NBA player logs
+use App\Models\Game;                 
+use App\Models\NbaPlayerGameLog;     
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        /* ----------------------------
-         * NEWS (slots + latest 3)
-         * ---------------------------- */
         $desiredSlots = ['secondary-1', 'secondary-2'];
 
         $newsCandidates = News::query()
@@ -28,7 +25,6 @@ class HomeController extends Controller
                 return $n;
             });
 
-        // Map by slot with fallback to first unused items
         $bySlot = [];
         foreach ($desiredSlots as $slot) {
             $slotItem = $newsCandidates->firstWhere('position', $slot);
@@ -43,7 +39,6 @@ class HomeController extends Controller
             }
         }
 
-        // Latest 3 generic news
         $news = News::query()
             ->whereNull('league_id')
             ->orderByDesc('created_at')
@@ -59,44 +54,54 @@ class HomeController extends Controller
                 ];
             });
 
-        /* ----------------------------
-         * NBA last completed game
-         * ---------------------------- */
-        $lastNba = NbaPlayerGameLog::query()
-            ->join('nba_players as p', 'p.external_id', '=', 'nba_player_game_logs.player_external_id')
-            ->whereNotNull('nba_player_game_logs.score')
-            ->whereNotNull('nba_player_game_logs.game_date')
-            ->orderByDesc('nba_player_game_logs.game_date')
-            ->selectRaw('
-                nba_player_game_logs.game_date as game_date,
-                nba_player_game_logs.score     as score,
-                p.team_name                    as team_name,
-                p.team_logo                    as team_logo,
-                nba_player_game_logs.opponent_name  as opp_name,
-                nba_player_game_logs.opponent_logo  as opp_logo
-            ')
-            ->first();
+$latestDate = \App\Models\NbaPlayerGameLog::query()
+    ->whereNotNull('score')
+    ->whereNotNull('game_date')
+    ->max('game_date');
 
-        $nba = null;
-        if ($lastNba) {
-            [$s1, $s2] = $this->splitScore($lastNba->score);
-            $nba = [
-                'date'      => $lastNba->game_date,
-                'team1'     => ['name' => $lastNba->team_name, 'logo' => $lastNba->team_logo],
-                'team2'     => ['name' => $lastNba->opp_name,  'logo' => $lastNba->opp_logo],
-                'score1'    => $s1,
-                'score2'    => $s2,
-                'league'    => 'NBA',
-            ];
-        }
+// If nothing yet, keep $nba = null
+$nba = null;
 
-        /* ----------------------------
-         * LBS last completed game
-         * ---------------------------- */
+if ($latestDate) {
+    // 2) Pick one representative row from that latest date
+    //    (join to players only for team meta)
+    $lastNba = \App\Models\NbaPlayerGameLog::query()
+        ->join('nba_players as p', 'p.external_id', '=', 'nba_player_game_logs.player_external_id')
+        ->where('nba_player_game_logs.game_date', $latestDate)
+        ->whereNotNull('nba_player_game_logs.score')
+        // prefer the newest updated row within that date
+        ->orderByDesc('nba_player_game_logs.updated_at')
+        ->orderByDesc('nba_player_game_logs.id')
+        ->selectRaw('
+            nba_player_game_logs.game_date as game_date,
+            nba_player_game_logs.score     as score,
+            p.team_name                    as team_name,
+            p.team_logo                    as team_logo,
+            nba_player_game_logs.opponent_name  as opp_name,
+            nba_player_game_logs.opponent_logo  as opp_logo
+        ')
+        ->first();
+
+    if ($lastNba) {
+        // In case score has spaces or odd formatting
+        [$s1, $s2] = $this->splitScore(trim((string)$lastNba->score));
+
+        $nba = [
+            'date'   => $lastNba->game_date,
+            'team1'  => ['name' => $lastNba->team_name, 'logo' => $lastNba->team_logo],
+            'team2'  => ['name' => $lastNba->opp_name,  'logo' => $lastNba->opp_logo],
+            'score1' => $s1,
+            'score2' => $s2,
+            'league' => 'NBA',
+        ];
+    }
+}
+
+
         $lastLbsGame = Game::query()
         ->with(['team1.league', 'team2.league'])
-        ->whereNotNull('winner_id')   // completed
-        ->whereNotNull('score')       // score entered
+        ->whereNotNull('winner_id')   
+        ->whereNotNull('score')   
         ->orderByDesc('date')
         ->first();
     
@@ -124,7 +129,7 @@ class HomeController extends Controller
     }
 
 
-                // --- Player contrasts (PPG & Overall) like before ---
+
                 $year = (int) date('Y');
 
                 $base = NbaPlayerGameLog::query()
@@ -167,9 +172,7 @@ class HomeController extends Controller
         ]);
     }
 
-    /* ============================
-     * Helpers
-     * ============================ */
+  
 
      private function splitScore(?string $score): array
      {
@@ -177,24 +180,24 @@ class HomeController extends Controller
              return [null, null];
          }
      
-         // Normalize separators to hyphen
+
          $norm = trim(str_replace(
              ['–', '—', '−', ':', '|', '/', '\\', 'to'],
              '-',
              $score
          ));
      
-         // Prefer "grab first two integer groups" – works for "103-91", "103 91", etc.
+
          if (preg_match_all('/\d+/', $norm, $m) >= 2) {
              return [ (int)$m[0][0], (int)$m[0][1] ];
          }
      
-         // Fallback: split on hyphen after normalization
+
          $parts = array_map('trim', explode('-', $norm));
          $a = isset($parts[0]) && $parts[0] !== '' ? (int)preg_replace('/\D/', '', $parts[0]) : null;
          $b = isset($parts[1]) && $parts[1] !== '' ? (int)preg_replace('/\D/', '', $parts[1]) : null;
      
-         // Heuristic: sometimes score ends up like "9672" (meaning 96–72).
+
          if ($a !== null && $b === null && strlen((string)$a) >= 4 && strlen((string)$a) % 2 === 0) {
              $s   = (string)$a;
              $mid = (int)(strlen($s) / 2);
@@ -207,18 +210,18 @@ class HomeController extends Controller
 
     private function extractNewsImage(?string $heroImage, ?string $content): ?string
     {
-        // 1) Explicit hero image wins
+
         if ($heroImage) {
             return preg_match('~^https?://~i', $heroImage) ? $heroImage : asset($heroImage);
         }
         if (!$content) return null;
 
-        // 2) First <img src="...">
+
         if (preg_match('~<img[^>]+src=["\']([^"\']+)["\']~i', $content, $m)) {
             return $m[1];
         }
 
-        // 3) Trix data-trix-attachment JSON (encoded with &quot;)
+
         $decoded = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         if (preg_match('~data-trix-attachment=["\']({.*?})["\']~i', $decoded, $mm)) {
             $json  = $mm[1];
@@ -229,7 +232,7 @@ class HomeController extends Controller
             }
         }
 
-        // 4) Any http(s) image-looking URL as last fallback
+
         if (preg_match('~https?://[^\s"\']+\.(png|jpe?g|webp|gif)~i', $decoded, $m)) {
             return $m[0];
         }
