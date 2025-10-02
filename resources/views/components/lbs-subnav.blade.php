@@ -33,6 +33,11 @@
          class="whitespace-nowrap px-4 py-2 rounded-md text-sm font-semibold bg-[#84CC16] text-[#111827] hover:bg-[#a3e635] transition">
         Komandu salīdzināšana
       </a>
+
+      <a href="{{ route('lbs.compare.players', ['league' => $subLeague->id]) }}"
+         class="whitespace-nowrap px-4 py-2 rounded-md text-sm font-semibold bg-[#84CC16] text-[#111827] hover:bg-[#a3e635] transition">
+        Spēlētāju salīdzināšana
+      </a>
     </div>
   </div>
 </nav>

@@ -18,11 +18,12 @@ use App\Http\Controllers\Lbs\Teams\TeamController as LbsTeamController;
 use App\Http\Controllers\Lbs\Games\GameController as LbsGameController;
 use App\Http\Controllers\Lbs\Players\PlayerController as LbsPlayerController;
 use App\Http\Controllers\Lbs\Teams\CompareController as LbsTeamsCompare;
+use App\Http\Controllers\Lbs\Players\CompareController as LbsplayersCompare;
 use App\Services\ApiSyncService;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// NBA section
+// NBA sections
 Route::prefix('nba')->name('nba.')->group(function () {
     Route::get('/',               [NbaHomeController::class, 'home'])->name('home');
 
@@ -86,6 +87,7 @@ Route::prefix('lbs')->name('lbs.')->group(function () {
 
     // NEW: Compare Teams (no "team" prefix in path)
     Route::get('/compare/teams', [LbsTeamsCompare::class, 'explorer'])->name('compare.teams');
+    Route::get('/compare/players', [LbsPlayersCompare::class, 'explorer'])->name('compare.players');
 });
 
 

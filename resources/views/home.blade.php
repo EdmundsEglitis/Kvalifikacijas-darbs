@@ -164,23 +164,37 @@
   </div>
 </section>
 
-
 @if($bestOverall && $worstOverall)
   <section class="fade-up" style="animation-delay:240ms">
     <h3 class="text-xl font-semibold mb-3">🏆 Labākais vs sliktākais (kopējais rādītājs)</h3>
     <div class="bg-[#111827] border border-[#1f2937] rounded-2xl p-4 sm:p-6">
       <div class="grid grid-cols-1 sm:grid-cols-3 items-center gap-6">
+        {{-- Best overall --}}
         <div class="flex items-center gap-4">
-          @if(!empty($bestOverall->headshot))
-            <img src="{{ $bestOverall->headshot }}" class="h-14 w-14 rounded-full object-cover ring-1 ring-white/10" alt="">
-          @else
-            <div class="h-14 w-14 rounded-full bg-white/10"></div>
-          @endif
+          <a
+            href="{{ isset($bestOverall->player_id)
+                      ? route('nba.player.show', $bestOverall->player_id)
+                      : (isset($bestOverall->id) ? route('nba.player.show', $bestOverall->id) : '#') }}"
+            class="shrink-0"
+          >
+            @if(!empty($bestOverall->headshot))
+              <img src="{{ $bestOverall->headshot }}" class="h-14 w-14 rounded-full object-cover ring-1 ring-white/10" alt="">
+            @else
+              <div class="h-14 w-14 rounded-full bg-white/10"></div>
+            @endif
+          </a>
           <div>
             <div class="text-xs text-gray-400">Labākais Overall</div>
-            <div class="font-semibold">{{ $bestOverall->name }}</div>
+            <a
+              href="{{ isset($bestOverall->player_id)
+                        ? route('nba.player.show', $bestOverall->player_id)
+                        : (isset($bestOverall->id) ? route('nba.player.show', $bestOverall->id) : '#') }}"
+              class="font-semibold hover:text-[#84CC16]"
+            >
+              {{ $bestOverall->name }}
+            </a>
             <div class="text-sm text-gray-400">{{ $bestOverall->team }}</div>
-            <div class="text-[#84CC16] font-bold">{{ number_format($bestOverall->overall,1) }}</div>
+            <div class="text-[#84CC16] font-bold">{{ number_format($bestOverall->overall, 1) }}</div>
             <div class="text-[11px] text-gray-400">PTS + 2*REB + 2*AST + 1.5*STL + 1.5*BLK − 1.5*TOV</div>
           </div>
         </div>
@@ -189,17 +203,32 @@
           <span class="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-sm">VS</span>
         </div>
 
+        {{-- Worst overall --}}
         <div class="flex items-center gap-4 sm:justify-end">
-          @if(!empty($worstOverall->headshot))
-            <img src="{{ $worstOverall->headshot }}" class="h-14 w-14 rounded-full object-cover ring-1 ring-white/10" alt="">
-          @else
-            <div class="h-14 w-14 rounded-full bg-white/10"></div>
-          @endif
+          <a
+            href="{{ isset($worstOverall->player_id)
+                      ? route('nba.player.show', $worstOverall->player_id)
+                      : (isset($worstOverall->id) ? route('nba.player.show', $worstOverall->id) : '#') }}"
+            class="shrink-0"
+          >
+            @if(!empty($worstOverall->headshot))
+              <img src="{{ $worstOverall->headshot }}" class="h-14 w-14 rounded-full object-cover ring-1 ring-white/10" alt="">
+            @else
+              <div class="h-14 w-14 rounded-full bg-white/10"></div>
+            @endif
+          </a>
           <div class="text-right">
             <div class="text-xs text-gray-400">Zemākais Overall*</div>
-            <div class="font-semibold">{{ $worstOverall->name }}</div>
+            <a
+              href="{{ isset($worstOverall->player_id)
+                        ? route('nba.player.show', $worstOverall->player_id)
+                        : (isset($worstOverall->id) ? route('nba.player.show', $worstOverall->id) : '#') }}"
+              class="font-semibold hover:text-[#84CC16]"
+            >
+              {{ $worstOverall->name }}
+            </a>
             <div class="text-sm text-gray-400">{{ $worstOverall->team }}</div>
-            <div class="text-[#F97316] font-bold">{{ number_format($worstOverall->overall,1) }}</div>
+            <div class="text-[#F97316] font-bold">{{ number_format($worstOverall->overall, 1) }}</div>
           </div>
         </div>
       </div>
@@ -207,6 +236,8 @@
     </div>
   </section>
 @endif
+
+
 
   </main>
   <script>
