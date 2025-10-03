@@ -19,9 +19,14 @@ use App\Http\Controllers\Lbs\Games\GameController as LbsGameController;
 use App\Http\Controllers\Lbs\Players\PlayerController as LbsPlayerController;
 use App\Http\Controllers\Lbs\Teams\CompareController as LbsTeamsCompare;
 use App\Http\Controllers\Lbs\Players\CompareController as LbsplayersCompare;
+use App\Http\Controllers\CrossLeagueCompareController as CrossLeagueCompareController;
 use App\Services\ApiSyncService;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+
+Route::get('/compare/nba-vs-lbs', [CrossLeagueCompareController::class, 'explorer'])
+    ->name('compare.nba-lbs');
 
 // NBA sections
 Route::prefix('nba')->name('nba.')->group(function () {

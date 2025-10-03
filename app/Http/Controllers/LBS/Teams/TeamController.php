@@ -73,14 +73,14 @@ class TeamController extends Controller
     {
         $team = Team::findOrFail($id);
         $parentLeagues = League::whereNull('parent_id')->get();
-
+    
         $games = Game::where('team1_id', $team->id)
             ->orWhere('team2_id', $team->id)
             ->with(['team1', 'team2'])
             ->get()
             ->map(function ($game) {
                 $game->score1 = $game->score2 = 0;
-
+    
                 if ($game->score) {
                     if (str_contains($game->score, '-')) {
                         $parts = explode('-', $game->score);
@@ -95,16 +95,33 @@ class TeamController extends Controller
                     $game->score1 = ($game->team1_q1 ?? 0) + ($game->team1_q2 ?? 0) + ($game->team1_q3 ?? 0) + ($game->team1_q4 ?? 0);
                     $game->score2 = ($game->team2_q1 ?? 0) + ($game->team2_q2 ?? 0) + ($game->team2_q3 ?? 0) + ($game->team2_q4 ?? 0);
                 }
+    
                 return $game;
             });
-
+    
+        // Split by date
         $upcomingGames = $games->filter(fn($g) => $g->date && $g->date->isFuture())
             ->sortBy('date')->values();
-
+    
         $pastGames = $games->filter(fn($g) => $g->date && ($g->date->isPast() || $g->date->isToday()))
-            ->sortByDesc('date')->values();
-
-        // NEW view path:
+            ->values()
+            // Flag win/loss for this team (use recorded winner_id when present; else derive from score)
+            ->map(function ($g) use ($team) {
+                $winnerId = $g->winner_id;
+                if (!$winnerId && ($g->score1 !== null && $g->score2 !== null)) {
+                    if ($g->score1 > $g->score2) {
+                        $winnerId = $g->team1_id;
+                    } elseif ($g->score2 > $g->score1) {
+                        $winnerId = $g->team2_id;
+                    }
+                }
+                $g->is_win  = $winnerId && ((int)$winnerId === (int)$team->id);
+                $g->is_loss = $winnerId && !$g->is_win;
+                return $g;
+            })
+            ->sortByDesc('date')
+            ->values();
+    
         return view('lbs.teams.games', compact(
             'team',
             'parentLeagues',

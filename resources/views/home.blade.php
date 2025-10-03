@@ -158,6 +158,15 @@
       </a>
     </section>
 
+    <div class="reveal" data-aos data-aos-delay="80">
+  <div class="flex flex-wrap gap-3">
+    <a href="{{ route('compare.nba-lbs') }}"
+       class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a6e23a] transition">
+      🔁 Salīdzināt NBA vs LBS spēlētājus
+    </a>
+  </div>
+</div>
+
     <!-- NEWS GRID -->
     <section id="news" class="py-16 bg-[#111827]">
       <div class="max-w-7xl mx-auto px-4 space-y-12">

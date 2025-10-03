@@ -1,11 +1,11 @@
 <?php
-
 namespace App\Http\Controllers\Lbs;
 
 use App\Http\Controllers\Controller;
 use App\Models\HeroImage;
 use App\Models\League;
 use App\Models\News;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class HomeController extends Controller
@@ -18,14 +18,39 @@ class HomeController extends Controller
             ->latest('created_at')
             ->first();
 
+        // ----- UPCOMING GAMES (all leagues) -----
+        // Select next games with team names & logos
+        $upcomingGames = DB::table('games as g')
+            ->leftJoin('teams as h', 'h.id', '=', 'g.team1_id')
+            ->leftJoin('teams as a', 'a.id', '=', 'g.team2_id')
+            ->whereNotNull('g.date')
+            ->where('g.date', '>', now())     // all future games
+            ->orderBy('g.date')
+            ->limit(24)                       // tweak as you like
+            ->get([
+                'g.id',
+                'g.date as tipoff',
+                'h.name as home_team_name',
+                'h.logo as home_team_logo',
+                'a.name as away_team_name',
+                'a.logo as away_team_logo',
+            ])
+            ->map(function ($row) {
+                // If logos are stored like "teamlogos/foo.png", build full asset URL
+                $toUrl = function ($p) {
+                    if (!$p) return null;
+                    return preg_match('~^https?://~i', $p) ? $p : asset('storage/' . ltrim($p, '/'));
+                };
+                $row->home_team_logo = $toUrl($row->home_team_logo);
+                $row->away_team_logo = $toUrl($row->away_team_logo);
+                return $row;
+            });
+
+        // ----- NEWS SLOTS (unchanged) -----
         $slots = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
         $bySlot = collect($slots)->mapWithKeys(function ($slot) {
-            $item = News::where('position', $slot)
-                ->latest('created_at')
-                ->first();
-
-            if (! $item) return [];
-
+            $item = News::where('position', $slot)->latest('created_at')->first();
+            if (!$item) return [];
             $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
             $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
 
@@ -39,6 +64,6 @@ class HomeController extends Controller
             return [$slot => $item];
         });
 
-        return view('lbs.home', compact('parentLeagues', 'heroImage', 'bySlot'));
+        return view('lbs.home', compact('parentLeagues', 'heroImage', 'bySlot', 'upcomingGames'));
     }
 }
