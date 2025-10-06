@@ -9,7 +9,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,34 +16,23 @@ use Filament\Tables\Table;
 class GameResource extends Resource
 {
     protected static ?string $model = Game::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-trophy';
 
-    /** Calculation logic, reusable */
-    protected static function recalc(Set $set, Get $get): void
-    {
-        $q1_1 = (int) $get('team1_q1');
-        $q2_1 = (int) $get('team1_q2');
-        $q3_1 = (int) $get('team1_q3');
-        $q4_1 = (int) $get('team1_q4');
+    /** pure helper: totals + winner (NO Get/Set here, just plain ints) */
+    private static function computeTotals(
+        int $t11, int $t12, int $t13, int $t14,
+        int $t21, int $t22, int $t23, int $t24,
+        ?int $team1Id, ?int $team2Id
+    ): array {
+        $t1 = $t11 + $t12 + $t13 + $t14;
+        $t2 = $t21 + $t22 + $t23 + $t24;
 
-        $q1_2 = (int) $get('team2_q1');
-        $q2_2 = (int) $get('team2_q2');
-        $q3_2 = (int) $get('team2_q3');
-        $q4_2 = (int) $get('team2_q4');
-
-        $team1Total = $q1_1 + $q2_1 + $q3_1 + $q4_1;
-        $team2Total = $q1_2 + $q2_2 + $q3_2 + $q4_2;
-
-        $set('score', "{$team1Total}-{$team2Total}");
-
-        if ($team1Total > $team2Total) {
-            $set('winner_id', $get('team1_id'));
-        } elseif ($team2Total > $team1Total) {
-            $set('winner_id', $get('team2_id'));
-        } else {
-            $set('winner_id', null); // tie
+        $winnerId = null;
+        if ($team1Id && $team2Id) {
+            if ($t1 > $t2) $winnerId = $team1Id;
+            elseif ($t2 > $t1) $winnerId = $team2Id;
         }
+        return [$t1, $t2, $winnerId];
     }
 
     public static function form(Form $form): Form
@@ -56,32 +44,44 @@ class GameResource extends Resource
 
             Forms\Components\Select::make('team1_id')
                 ->label('Team 1')
-                ->options(Team::pluck('name', 'id'))
+                ->options(fn () => Team::query()->pluck('name', 'id'))
                 ->searchable()
                 ->required()
                 ->reactive()
-                ->afterStateUpdated(fn(Set $set) => $set('team2_id', null)),
+                ->afterStateUpdated(fn (Set $set) => $set('team2_id', null)),
 
             Forms\Components\Select::make('team2_id')
                 ->label('Team 2')
-                ->options(fn(Get $get) => Team::where('id', '!=', $get('team1_id'))->pluck('name', 'id'))
+                ->options(fn (Get $get) => Team::query()
+                    ->when($get('team1_id'), fn ($q) => $q->where('id', '!=', $get('team1_id')))
+                    ->pluck('name', 'id'))
                 ->searchable()
                 ->required(),
-                Forms\Components\TextInput::make('team1_q1')
-                ->label('Team 1 - Q1')
-                ->default(0)
-                ->numeric()
-                ->rules(['required', 'integer', 'min:0']),
 
-                Forms\Components\TextInput::make('team2_q1')->label('Team 2 - Q1')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                Forms\Components\TextInput::make('team1_q2')->label('Team 1 - Q2')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                Forms\Components\TextInput::make('team2_q2')->label('Team 2 - Q2')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                Forms\Components\TextInput::make('team1_q3')->label('Team 1 - Q3')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                Forms\Components\TextInput::make('team2_q3')->label('Team 2 - Q3')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                Forms\Components\TextInput::make('team1_q4')->label('Team 1 - Q4')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                Forms\Components\TextInput::make('team2_q4')->label('Team 2 - Q4')->default(0)->numeric()->rules(['required', 'integer', 'min:0']),
-                
-                
+            Forms\Components\Fieldset::make('Quarters')
+                ->schema([
+                    // YOUR model fields:
+                    Forms\Components\TextInput::make('team11st')->label('Team 1 – Q1')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+                    Forms\Components\TextInput::make('team21st')->label('Team 2 – Q1')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+
+                    Forms\Components\TextInput::make('team12st')->label('Team 1 – Q2')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+                    Forms\Components\TextInput::make('team22st')->label('Team 2 – Q2')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+
+                    Forms\Components\TextInput::make('team13st')->label('Team 1 – Q3')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+                    Forms\Components\TextInput::make('team23st')->label('Team 2 – Q3')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+
+                    Forms\Components\TextInput::make('team14st')->label('Team 1 – Q4')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+                    Forms\Components\TextInput::make('team24st')->label('Team 2 – Q4')
+                        ->default(0)->numeric()->rules(['required','integer','min:0']),
+                ])
+                ->columns(4),
 
             Forms\Components\TextInput::make('score')
                 ->label('Final Score')
@@ -90,7 +90,7 @@ class GameResource extends Resource
 
             Forms\Components\Select::make('winner_id')
                 ->label('Winner')
-                ->options(Team::pluck('name', 'id'))
+                ->options(fn () => Team::query()->pluck('name', 'id'))
                 ->nullable()
                 ->disabled()
                 ->dehydrated(true),
@@ -98,15 +98,32 @@ class GameResource extends Resource
             Forms\Components\Actions::make([
                 Forms\Components\Actions\Action::make('calculateTotals')
                     ->label('Calculate Totals')
+                    ->color('primary')
                     ->action(function (Set $set, Get $get) {
-                        self::recalc($set, $get);
+                        // Read raw values from the form, coerce to ints
+                        $t11 = (int) $get('team11st');
+                        $t12 = (int) $get('team12st');
+                        $t13 = (int) $get('team13st');
+                        $t14 = (int) $get('team14st');
 
-                        Notification::make()
-                            ->title('Totals Calculated')
-                            ->success()
-                            ->send();
-                    })
-                    ->color('primary'),
+                        $t21 = (int) $get('team21st');
+                        $t22 = (int) $get('team22st');
+                        $t23 = (int) $get('team23st');
+                        $t24 = (int) $get('team24st');
+
+                        $team1Id = $get('team1_id');
+                        $team2Id = $get('team2_id');
+
+                        [$t1, $t2, $winnerId] = self::computeTotals(
+                            $t11,$t12,$t13,$t14,
+                            $t21,$t22,$t23,$t24,
+                            $team1Id, $team2Id
+                        );
+
+                        // Write results back to the form
+                        $set('score', "{$t1}-{$t2}");
+                        $set('winner_id', $winnerId);
+                    }),
             ])->columnSpanFull(),
         ]);
     }
@@ -119,7 +136,8 @@ class GameResource extends Resource
             Tables\Columns\TextColumn::make('team1.name')->label('Team 1'),
             Tables\Columns\TextColumn::make('team2.name')->label('Team 2'),
             Tables\Columns\TextColumn::make('score')->label('Final Score')->default('—'),
-            Tables\Columns\TextColumn::make('winner.name')->label('Winner')->default(fn($record) => $record->date < now() ? 'TBD' : 'Upcoming'),
+            Tables\Columns\TextColumn::make('winner.name')->label('Winner')
+                ->default(fn ($record) => $record->date && $record->date->isPast() ? 'TBD' : 'Upcoming'),
         ])
         ->actions([
             Tables\Actions\EditAction::make(),
@@ -138,9 +156,9 @@ class GameResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListGames::route('/'),
+            'index'  => Pages\ListGames::route('/'),
             'create' => Pages\CreateGame::route('/create'),
-            'edit' => Pages\EditGame::route('/{record}/edit'),
+            'edit'   => Pages\EditGame::route('/{record}/edit'),
         ];
     }
 }

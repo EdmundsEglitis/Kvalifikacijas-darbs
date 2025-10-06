@@ -38,6 +38,7 @@ class StandingsController extends Controller
 
         $collection = $q->get();
 
+        // map team_id -> logo url
         $teamIds = $collection->pluck('team_id')->unique()->values();
         $teams   = NbaTeam::whereIn('external_id', $teamIds)->get(['external_id','abbreviation','logo','logo_dark']);
 
@@ -48,7 +49,42 @@ class StandingsController extends Controller
             $logoMap[$t->external_id] = $t->logo ?: $fallback;
         }
 
-        $rows = $collection->map(function (NbaStanding $r) use ($logoMap) {
+        // helper: decode clincher codes → badges
+        $decodeClincher = function (?string $raw) {
+            $raw = strtolower(trim((string)$raw));
+            if ($raw === '') return [];
+
+            $map = [
+                'z'  => ['Best record in conference', 'bg-purple-500/20 text-purple-300 border-purple-500/30'],
+                '*'  => ['Best record in league',     'bg-amber-500/20 text-amber-300 border-amber-500/30'],
+                'y'  => ['Clinched division title',   'bg-teal-500/20 text-teal-300 border-teal-500/30'],
+                'x'  => ['Clinched playoff berth',    'bg-green-500/20 text-green-300 border-green-500/30'],
+                'pb' => ['Clinched Play-In',          'bg-blue-500/20 text-blue-300 border-blue-500/30'],
+                'pi' => ['Play-In eligible',          'bg-blue-500/20 text-blue-300 border-blue-500/30'],
+                'e'  => ['Eliminated from playoffs',  'bg-red-500/20 text-red-300 border-red-500/30'],
+            ];
+
+            $tokens = [];
+
+            // detect 2-letter tokens first
+            foreach (['pb','pi'] as $two) {
+                if (str_contains($raw, $two)) {
+                    $tokens[] = ['code' => $two, 'label' => $map[$two][0], 'cls' => $map[$two][1]];
+                    $raw = str_replace($two, '', $raw);
+                }
+            }
+
+            // then 1-letter tokens
+            foreach (str_split($raw) as $ch) {
+                if (isset($map[$ch])) {
+                    $tokens[] = ['code' => $ch, 'label' => $map[$ch][0], 'cls' => $map[$ch][1]];
+                }
+            }
+
+            return $tokens;
+        };
+
+        $rows = $collection->map(function (NbaStanding $r) use ($logoMap, $decodeClincher) {
             $winPercentDisp = $r->win_percent !== null? (string) round($r->win_percent * 100) . '%': '—';
             $ppgFmt    = $r->avg_points_for      !== null ? number_format($r->avg_points_for, 1)      : '—';
             $oppPpgFmt = $r->avg_points_against  !== null ? number_format($r->avg_points_against, 1)  : '—';
@@ -68,6 +104,10 @@ class StandingsController extends Controller
 
             $teamLogo = $logoMap[$r->team_id] ?? null;
 
+            // decode clincher for table + human text for cards
+            $badges = $decodeClincher($r->clincher);
+            $clincherHuman = implode(', ', array_map(fn($t) => $t['label'], $badges));
+
             $payload = json_encode([
                 'season'      => $r->season,
                 'team'        => $r->team_name,
@@ -86,7 +126,8 @@ class StandingsController extends Controller
                 'road'        => $r->road_record,
                 'l10'         => $r->last_ten,
                 'streak'      => $r->streak,
-                'clincher'    => $r->clincher,
+                'clincher'       => $r->clincher,
+                'clincher_human' => $clincherHuman ?: null,
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             return [
@@ -107,6 +148,8 @@ class StandingsController extends Controller
                 'last_ten'           => $r->last_ten,
                 'streak'             => $r->streak,
                 'clincher'           => $r->clincher,
+                'clincher_badges'    => $badges,
+                'clincher_human'     => $clincherHuman,
                 'data_team'          => strtolower(trim(($r->team_name ?? '') . ' ' . ($r->abbreviation ?? ''))),
                 'win_percent_fmt'    => $winPercentDisp,
                 'ppg_fmt'            => $ppgFmt,
@@ -119,7 +162,6 @@ class StandingsController extends Controller
             ];
         })->values();
 
-        // NEW view path
         return view('nba.teams.compare', [
             'seasons'    => $seasons,
             'from'       => $from,
@@ -137,7 +179,7 @@ class StandingsController extends Controller
                 ['Home/Road',  'Win–loss records at home and away.'],
                 ['L10',        'Record in the last 10 games.'],
                 ['Streak',     'Current win or loss streak.'],
-                ['Clincher',   'Markers like *, z, x for titles/berths.'],
+                ['Clincher',   'Status markers like x, y, z, pb, e.'],
             ],
         ]);
     }

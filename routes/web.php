@@ -28,6 +28,9 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/compare/nba-vs-lbs', [CrossLeagueCompareController::class, 'explorer'])
     ->name('compare.nba-lbs');
 
+    Route::get('/compare/nba-vs-lbs-teams', [CrossLeagueCompareController::class, 'teamsExplorer'])
+    ->name('compare.nba-lbs-teams');
+
 // NBA sections
 Route::prefix('nba')->name('nba.')->group(function () {
     Route::get('/',               [NbaHomeController::class, 'home'])->name('home');

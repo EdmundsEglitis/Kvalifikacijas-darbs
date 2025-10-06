@@ -34,7 +34,7 @@
 
     <div class="sm:col-span-5">
       <button class="mt-1 px-4 py-2 bg-[#84CC16] text-[#111827] rounded font-semibold hover:bg-[#a3e635]">
-        Salīdzināt
+        Meklēt
       </button>
     </div>
   </form>

@@ -29,16 +29,27 @@
           <label class="block text-xs text-gray-400 mb-1">Team (name or abbr.)</label>
           <input name="team" value="{{ $teamQuery }}"
                  placeholder="e.g. BOS or Celtics"
-                 class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none"
-          />
+                 class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none" />
         </div>
 
-
-        <div class="lg:col-span-4 flex flex-wrap items-center gap-3 pt-1">
-          <input id="q" type="text" placeholder="Quick search in table…"
-                 class="flex-1 min-w-[220px] bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none" />
+        {{-- Submit row --}}
+        <div class="lg:col-span-1 sm:col-span-2 flex items-end gap-3">
+          <button type="submit"
+                  class="px-4 py-2 rounded-lg bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a3e635]">
+            Apply filters
+          </button>
+          <a href="{{ url()->current() }}"
+             class="px-4 py-2 rounded-lg bg-white/5 text-white hover:bg-white/10 border border-white/10">
+            Reset
+          </a>
         </div>
       </form>
+
+      {{-- Quick search (client-side only; OUTSIDE the form) --}}
+      <div class="mt-4 lg:mt-6 flex flex-wrap items-center gap-3">
+        <input id="q" type="text" placeholder="Quick search in table…"
+               class="flex-1 min-w-[220px] bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none" />
+      </div>
     </section>
 
     {{-- Compare selection bar --}}
@@ -57,7 +68,7 @@
         </div>
       </div>
 
-      {{-- Compare result (hidden until used) --}}
+      {{-- Compare result --}}
       <div id="compareArea" class="mt-4 hidden">
         <h3 class="text-white font-semibold mb-3">Comparison</h3>
         <div id="compareGrid" class="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]"></div>
@@ -104,7 +115,7 @@
                   <a class="flex items-center gap-2 hover:text-[#84CC16]" href="{{ route('nba.team.show', $r['team_id']) }}">
                     @if(!empty($r['team_logo']))
                       <img src="{{ $r['team_logo'] }}" alt="{{ $r['team_name'] }} logo"
-                          class="h-5 w-5 sm:h-6 sm:w-6 object-contain rounded bg-white p-[2px]" />
+                           class="h-5 w-5 sm:h-6 sm:w-6 object-contain rounded bg-white p-[2px]" />
                     @else
                       <span class="inline-flex items-center justify-center h-5 w-5 sm:h-6 sm:w-6 rounded bg-white/10 text-[10px]">
                         {{ $r['abbreviation'] ?? '—' }}
@@ -129,29 +140,70 @@
                 <td class="px-3 py-2 text-center">{{ $r['road_record'] ?? '—' }}</td>
                 <td class="px-3 py-2 text-center">{{ $r['last_ten'] ?? '—' }}</td>
                 <td class="px-3 py-2 text-center">{{ $r['streak_txt'] }}</td>
-                <td class="px-3 py-2 text-center">{{ $r['clincher'] ?? '—' }}</td>
+
+                {{-- Human-friendly clincher badges --}}
+                <td class="px-3 py-2 text-center">
+                  @if(empty($r['clincher_badges']))
+                    —
+                  @else
+                    <div class="flex flex-wrap gap-1 justify-center">
+                      @foreach($r['clincher_badges'] as $b)
+                        <span class="px-1.5 py-0.5 text-[11px] rounded-full border {{ $b['cls'] }}"
+                              title="{{ $b['label'] }}">
+                          {{ strtoupper($b['code']) }}
+                        </span>
+                      @endforeach
+                    </div>
+                  @endif
+                </td>
               </tr>
             @endforeach
           </tbody>
         </table>
       </div>
 
-      {{-- Mobile hint --}}
       <p class="px-4 pb-4 pt-2 text-xs text-gray-400 sm:hidden">Tip: swipe sideways to see all columns.</p>
     </section>
 
     {{-- Legend --}}
-    <section class="pb-8">
-      <h2 class="text-xl sm:text-2xl font-semibold mb-3">Stat explanations</h2>
-      <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
-        @foreach($legend as $item)
-          <div class="bg-[#1f2937] border border-[#374151] rounded-xl p-3">
-            <div class="text-sm font-semibold text-white mb-1">{{ $item[0] }}</div>
-            <p class="text-xs text-gray-300">{{ $item[1] }}</p>
-          </div>
-        @endforeach
+<section class="pb-8">
+  <h2 class="text-xl sm:text-2xl font-semibold mb-3">Stat explanations</h2>
+  <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+    @foreach($legend as $item)
+      <div class="bg-[#1f2937] border border-[#374151] rounded-xl p-3">
+        <div class="text-sm font-semibold text-white mb-1">{{ $item[0] }}</div>
+        <p class="text-xs text-gray-300">{{ $item[1] }}</p>
       </div>
-    </section>
+    @endforeach
+  </div>
+
+  {{-- Clincher explanations --}}
+  @php
+    // If controller didn't pass $clincherLegend, use sensible defaults here.
+    $clincherLegend = $clincherLegend ?? [
+      ['*',  'Best record in league',     'bg-amber-500/20 text-amber-300 border-amber-500/30'],
+      ['Z',  'Best record in conference', 'bg-purple-500/20 text-purple-300 border-purple-500/30'],
+      ['Y',  'Clinched division title',   'bg-teal-500/20 text-teal-300 border-teal-500/30'],
+      ['X',  'Clinched playoff berth',    'bg-green-500/20 text-green-300 border-green-500/30'],
+      ['PB', 'Clinched Play-In',          'bg-blue-500/20 text-blue-300 border-blue-500/30'],
+      ['PI', 'Play-In eligible',          'bg-blue-500/20 text-blue-300 border-blue-500/30'],
+      ['E',  'Eliminated from playoffs',  'bg-red-500/20 text-red-300 border-red-500/30'],
+    ];
+  @endphp
+
+  <div class="mt-6">
+    <h3 class="text-lg font-semibold mb-2">Clincher codes</h3>
+    <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+      @foreach($clincherLegend as [$code, $label, $cls])
+        <div class="bg-[#1f2937] border border-[#374151] rounded-xl p-3 flex items-center gap-3">
+          <span class="px-2 py-0.5 text-xs rounded-full border {{ $cls }}">{{ $code }}</span>
+          <div class="text-sm text-gray-200">{{ $label }}</div>
+        </div>
+      @endforeach
+    </div>
+  </div>
+</section>
+
 
   </main>
 
@@ -168,7 +220,6 @@
       });
     }
 
-    // Seed quick search from query (?team=)
     (function seedFromQuery() {
       try {
         const params = new URLSearchParams(window.location.search);
@@ -182,7 +233,7 @@
 
     q?.addEventListener('input', applyFilters);
 
-    // ===== Sort only visible rows =====
+    // ===== Sort visible rows only =====
     const headers = document.querySelectorAll('#standingsTable thead th[data-sort]');
     headers.forEach(h => {
       h.addEventListener('click', () => {
@@ -330,7 +381,7 @@
               <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Road: ${p.road ?? '—'}</span>
               <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">L10: ${p.l10 ?? '—'}</span>
               <span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Streak: ${streakTxt}</span>
-              ${p.clincher ? `<span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Clincher: ${p.clincher}</span>` : ''}
+              ${p.clincher_human ? `<span class="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">Clincher: ${p.clincher_human}</span>` : ''}
             </div>
           </article>
         `;

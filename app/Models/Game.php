@@ -23,9 +23,49 @@ class Game extends Model
         'team14st','team24st',
         'winner_id',
     ];
+/* ---- Quarter aliases: model fields -> DB columns ---- */
+// team11st <-> team1_q1
+public function getTeam11stAttribute() { return $this->attributes['team1_q1'] ?? null; }
+public function setTeam11stAttribute($value) { $this->attributes['team1_q1'] = (int) $value; }
+
+// team21st <-> team2_q1
+public function getTeam21stAttribute() { return $this->attributes['team2_q1'] ?? null; }
+public function setTeam21stAttribute($value) { $this->attributes['team2_q1'] = (int) $value; }
+
+// team12st <-> team1_q2
+public function getTeam12stAttribute() { return $this->attributes['team1_q2'] ?? null; }
+public function setTeam12stAttribute($value) { $this->attributes['team1_q2'] = (int) $value; }
+
+// team22st <-> team2_q2
+public function getTeam22stAttribute() { return $this->attributes['team2_q2'] ?? null; }
+public function setTeam22stAttribute($value) { $this->attributes['team2_q2'] = (int) $value; }
+
+// team13st <-> team1_q3
+public function getTeam13stAttribute() { return $this->attributes['team1_q3'] ?? null; }
+public function setTeam13stAttribute($value) { $this->attributes['team1_q3'] = (int) $value; }
+
+// team23st <-> team2_q3
+public function getTeam23stAttribute() { return $this->attributes['team2_q3'] ?? null; }
+public function setTeam23stAttribute($value) { $this->attributes['team2_q3'] = (int) $value; }
+
+// team14st <-> team1_q4
+public function getTeam14stAttribute() { return $this->attributes['team1_q4'] ?? null; }
+public function setTeam14stAttribute($value) { $this->attributes['team1_q4'] = (int) $value; }
+
+// team24st <-> team2_q4
+public function getTeam24stAttribute() { return $this->attributes['team2_q4'] ?? null; }
+public function setTeam24stAttribute($value) { $this->attributes['team2_q4'] = (int) $value; }
 
     protected $casts = [
-        'date' => 'datetime',
+        'date'      => 'datetime',
+        'team1_q1'  => 'integer',
+        'team1_q2'  => 'integer',
+        'team1_q3'  => 'integer',
+        'team1_q4'  => 'integer',
+        'team2_q1'  => 'integer',
+        'team2_q2'  => 'integer',
+        'team2_q3'  => 'integer',
+        'team2_q4'  => 'integer',
     ];
 
     protected $dates = ['date'];
@@ -73,22 +113,19 @@ class Game extends Model
     /* ----------------
      |  Accessors      |
      -----------------*/
-
-    // Sum quarters for Team 1 (null-safe)
-    public function getTeam1TotalAttribute(): ?int
-    {
-        $parts = [$this->team11st, $this->team12st, $this->team13st, $this->team14st];
-        $hasAny = collect($parts)->some(fn($v) => $v !== null);
-        return $hasAny ? collect($parts)->sum(fn($v) => (int)$v) : null;
-    }
-
-    // Sum quarters for Team 2 (null-safe)
-    public function getTeam2TotalAttribute(): ?int
-    {
-        $parts = [$this->team21st, $this->team22st, $this->team23st, $this->team24st];
-        $hasAny = collect($parts)->some(fn($v) => $v !== null);
-        return $hasAny ? collect($parts)->sum(fn($v) => (int)$v) : null;
-    }
+     public function getTeam1TotalAttribute(): ?int
+     {
+         $parts = [$this->team11st, $this->team12st, $this->team13st, $this->team14st];
+         $hasAny = collect($parts)->contains(fn($v) => $v !== null);
+         return $hasAny ? collect($parts)->sum(fn($v) => (int) $v) : null;
+     }
+     
+     public function getTeam2TotalAttribute(): ?int
+     {
+         $parts = [$this->team21st, $this->team22st, $this->team23st, $this->team24st];
+         $hasAny = collect($parts)->contains(fn($v) => $v !== null);
+         return $hasAny ? collect($parts)->sum(fn($v) => (int) $v) : null;
+     }
 
     // Final score string preference:
     // 1) use `score` if present (e.g., "89-76")
