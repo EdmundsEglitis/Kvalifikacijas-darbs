@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $subLeague->name . ' – Statistika')
 
-{{-- Sub-league tabs under the main navbar --}}
 @section('subnav')
   <x-lbs-subnav :subLeague="$subLeague" />
 @endsection
@@ -19,7 +18,6 @@
   </nav>
 
   <div class="max-w-7xl mx-auto px-4 space-y-20 pt-6">
-    {{-- Team Stats --}}
     <section id="teams">
       <div class="flex items-center justify-between mb-6">
         <h1 class="text-3xl font-extrabold text-white">
@@ -42,7 +40,6 @@
       </div>
     </section>
 
-    {{-- Top Players --}}
     <section id="top-players">
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-white">Top spēlētāji</h2>
@@ -67,7 +64,6 @@
       </div>
     </section>
 
-    {{-- All Players --}}
     <section id="all-players">
       <h2 class="text-2xl font-bold text-white mb-6">Visi spēlētāji</h2>
 
@@ -122,7 +118,6 @@
 
 @push('scripts')
 <script>
-  // Sorting
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('[data-sort]').forEach(header => {
       header.addEventListener('click', () => {
@@ -147,7 +142,6 @@
       });
     });
 
-    // Search filter
     const searchInput = document.getElementById('player-search');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {

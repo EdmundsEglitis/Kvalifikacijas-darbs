@@ -165,7 +165,6 @@
 
   <script>
     const STORAGE_BASE = @json(asset('storage'));
-    // Dependent subleague dropdown
     (function () {
       const parentSel = document.getElementById('parentSelect');
       const subSel    = document.getElementById('subSelect');
@@ -174,7 +173,7 @@
       function syncSubOptions() {
         const pid = parentSel.value;
         Array.from(subSel.options).forEach(opt => {
-          if (!opt.value) { opt.hidden = false; return; } // "All"
+          if (!opt.value) { opt.hidden = false; return; } 
           const p = opt.getAttribute('data-parent');
           opt.hidden = !!pid && p !== pid;
         });
@@ -214,10 +213,8 @@
 
     q?.addEventListener('input', applyFilters);
 
-    // Initial filter from query (?league=&sub=)
     document.addEventListener('DOMContentLoaded', applyFilters);
 
-    // Column sorting (only visible rows are sorted)
     const headers = document.querySelectorAll('#standingsTable thead th[data-sort]');
     headers.forEach(h => {
       h.addEventListener('click', () => {
@@ -249,7 +246,6 @@
       });
     });
 
-    // Compare selection + cards
     const selBoxes    = document.querySelectorAll('.rowSel');
     const compareBtn  = document.getElementById('compareBtn');
     const clearSelBtn = document.getElementById('clearSelBtn');
@@ -290,8 +286,8 @@
         if (leader === 0) behindPct = 0;
         else if (higherIsBetter) behindPct = ((leader - v) / Math.abs(leader)) * 100;
         else behindPct = ((v - leader) / Math.abs(leader)) * 100;
-        if (Math.abs(behindPct) < 0.5) return {label:'Līderis', cls:'text-[#84CC16]'}; // leader
-        return {label:`-${Math.round(behindPct)}% sal. ar līderi`, cls:'text-[#F97316]'}; // behind
+        if (Math.abs(behindPct) < 0.5) return {label:'Līderis', cls:'text-[#84CC16]'}; 
+        return {label:`-${Math.round(behindPct)}% sal. ar līderi`, cls:'text-[#F97316]'}; 
       });
     }
     const line = (c) => `<div class="text-xs mt-0.5 ${c.cls}">${c.label}</div>`;
@@ -309,8 +305,7 @@
   const winPct = p.win_percent==null ? '—' : `${(Number(p.win_percent)*100).toFixed(1)}%`;
   const diffTxt= p.diff==null ? '—' : (p.diff>=0?('+'+p.diff):p.diff);
 
-  // If p.logo is a relative path like "teamlogos/foo.png", use the storage base.
-  // If it’s already an absolute URL (http/https), use as-is.
+
   const toUrl = (v) => {
     if (!v) return null;
     const s = String(v);

@@ -42,7 +42,6 @@ class ParentLeagueController extends Controller
                 return $item;
             });
 
-        // NEW view path:
         return view('lbs.leagues.parent', compact('parent', 'subLeagues', 'heroImage', 'news'));
     }
 }

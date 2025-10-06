@@ -63,7 +63,6 @@
     </form>
   </section>
 
-  {{-- Compare selection bar --}}
   <section class="bg-[#1f2937] border border-[#374151] rounded-2xl p-4 sm:p-5">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="text-sm text-gray-300">Atzīmē rindas (līdz 5) un salīdzini.</div>
@@ -83,7 +82,6 @@
     </div>
   </section>
 
-  {{-- Table --}}
   <section class="bg-[#1f2937] border border-[#374151] rounded-2xl overflow-hidden">
     <div class="overflow-x-auto">
       <table id="playersTable" class="min-w-[1100px] w-full text-sm">
@@ -157,7 +155,6 @@
     <p class="px-4 pb-4 pt-2 text-xs text-gray-400 sm:hidden">Padoms: pavelc horizontāli, lai redzētu visas kolonnas.</p>
   </section>
 
-  {{-- Legend --}}
   <section class="pb-8">
     <h2 class="text-xl sm:text-2xl font-semibold mb-3">Statistikas skaidrojumi</h2>
     <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
@@ -175,7 +172,6 @@
 <script>
   const STORAGE_BASE = @json(asset('storage'));
 
-  // Dependent subleague dropdown
   (function () {
     const parentSel = document.getElementById('parentSelect');
     const subSel    = document.getElementById('subSelect');
@@ -184,7 +180,7 @@
     function syncSubOptions() {
       const pid = parentSel.value;
       Array.from(subSel.options).forEach(opt => {
-        if (!opt.value) { opt.hidden = false; return; } // "Visas"
+        if (!opt.value) { opt.hidden = false; return; } 
         const p = opt.getAttribute('data-parent');
         opt.hidden = !!pid && p !== pid;
       });
@@ -224,7 +220,6 @@
   q?.addEventListener('input', applyFilters);
   document.addEventListener('DOMContentLoaded', applyFilters);
 
-  // Sort (client-side) on visible rows
   const headers = document.querySelectorAll('#playersTable thead th[data-sort]');
   headers.forEach(h => {
     h.addEventListener('click', () => {
@@ -257,7 +252,6 @@
     });
   });
 
-  // Compare selection + cards
   const selBoxes    = document.querySelectorAll('.rowSel');
   const compareBtn  = document.getElementById('compareBtn');
   const clearSelBtn = document.getElementById('clearSelBtn');
@@ -304,7 +298,6 @@
   }
   const line = (c) => `<div class="text-xs mt-0.5 ${c.cls}">${c.label}</div>`;
 
-  // Build absolute/relative image URLs for cards
   const toUrl = (v) => {
     if (!v) return null;
     const s = String(v);

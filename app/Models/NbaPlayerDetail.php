@@ -61,7 +61,7 @@ class NbaPlayerDetail extends Model
         return $this->belongsTo(NbaPlayer::class, 'external_id', 'external_id');
     }
 
-    /* 🔹 Clean Accessors for JSON fields */
+
 
     public function getPositionNameAttribute()
     {

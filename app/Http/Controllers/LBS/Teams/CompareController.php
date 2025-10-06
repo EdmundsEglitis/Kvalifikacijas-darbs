@@ -10,42 +10,35 @@ class CompareController extends Controller
 {
     public function explorer(Request $request)
     {
-        // Raw params
-        $leagueParam = $request->integer('league') ?: null; // can be parent OR sub
-        $subParam    = $request->integer('sub') ?: null;    // explicit sub
+        $leagueParam = $request->integer('league') ?: null; 
+        $subParam    = $request->integer('sub') ?: null;    
 
-        // Resolve selected parent/sub
         $selectedParentId = null;
         $selectedSubId    = null;
 
         if ($subParam) {
-            // sub is authoritative; infer parent
             $row = DB::table('leagues')->select('id','parent_id')->where('id', $subParam)->first();
             if ($row) {
                 $selectedSubId    = (int) $row->id;
                 $selectedParentId = $row->parent_id ? (int) $row->parent_id : null;
             }
         } elseif ($leagueParam) {
-            // league may be a parent or a sub
             $row = DB::table('leagues')->select('id','parent_id')->where('id', $leagueParam)->first();
             if ($row) {
                 if ($row->parent_id) {
-                    // It's a SUB → use as sub and infer parent
                     $selectedSubId    = (int) $row->id;
                     $selectedParentId = (int) $row->parent_id;
                 } else {
-                    // It's a PARENT → use as parent; try default sub (first child)
                     $selectedParentId = (int) $row->id;
                     $selectedSubId = DB::table('leagues')
                         ->where('parent_id', $selectedParentId)
                         ->orderBy('name')
-                        ->value('id'); // may be null if no children
+                        ->value('id'); 
                     $selectedSubId = $selectedSubId ? (int) $selectedSubId : null;
                 }
             }
         }
 
-        // Seasons
         $seasons = DB::table('games')
             ->selectRaw('DISTINCT YEAR(date) AS season')
             ->orderByDesc('season')
@@ -59,7 +52,6 @@ class CompareController extends Controller
         $to   = (int) $request->input('to',   $maxSeason);
         if ($from > $to) { [$from, $to] = [$to, $from]; }
 
-        // League lists
         $parents = DB::table('leagues')
             ->select('id','name')
             ->whereNull('parent_id')
@@ -72,19 +64,16 @@ class CompareController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Sub-league model (for subnav)
         $subLeague = $selectedSubId
             ? DB::table('leagues')->select('id','name','parent_id')->where('id', $selectedSubId)->first()
             : null;
 
-        // Points expressions
         $t1_pts = "COALESCE(team1_q1+team1_q2+team1_q3+team1_q4, CAST(SUBSTRING_INDEX(score,'-',1) AS UNSIGNED))";
         $t2_pts = "COALESCE(team2_q1+team2_q2+team2_q3+team2_q4, CAST(SUBSTRING_INDEX(score,'-',-1) AS UNSIGNED))";
 
-        // team1
         $q1 = DB::table('games as g')
             ->join('teams as t', 't.id', '=', 'g.team1_id')
-            ->leftJoin('leagues as ls', 'ls.id', '=', 't.league_id') // sub league row
+            ->leftJoin('leagues as ls', 'ls.id', '=', 't.league_id') 
             ->selectRaw("
                 t.id as team_id,
                 t.name as team_name,
@@ -102,7 +91,6 @@ class CompareController extends Controller
             ->when($to,   fn($q) => $q->whereRaw('YEAR(g.date) <= ?', [$to]))
             ->groupBy('team_id','team_name','team_logo','subleague_id','parent_league_id','season');
 
-        // team2
         $q2 = DB::table('games as g')
             ->join('teams as t', 't.id', '=', 'g.team2_id')
             ->leftJoin('leagues as ls', 'ls.id', '=', 't.league_id')
@@ -123,7 +111,6 @@ class CompareController extends Controller
             ->when($to,   fn($q) => $q->whereRaw('YEAR(g.date) <= ?', [$to]))
             ->groupBy('team_id','team_name','team_logo','subleague_id','parent_league_id','season');
 
-        // Union + aggregate
         $collection = DB::query()
             ->fromSub($q1->unionAll($q2), 'u')
             ->selectRaw("
@@ -154,7 +141,7 @@ class CompareController extends Controller
             return [
                 'team_id'          => (int)$r->team_id,
                 'team_name'        => $r->team_name,
-                'team_logo'        => $r->team_logo, // relative path in storage
+                'team_logo'        => $r->team_logo, 
                 'season'           => (int)$r->season,
                 'wins'             => $wins,
                 'losses'           => $losses,
@@ -166,7 +153,7 @@ class CompareController extends Controller
                 'data_team'        => strtolower($r->team_name ?? ''),
                 'parent_league_id' => $r->parent_league_id ? (int)$r->parent_league_id : '',
                 'subleague_id'     => $r->subleague_id ? (int)$r->subleague_id : '',
-                // raw for compare cards
+ 
                 'win_percent'      => $winPct,
                 'ppg'              => $ppg,
                 'opp_ppg'          => $oppPpg,
@@ -182,7 +169,7 @@ class CompareController extends Controller
             'subs'           => $subs,
             'selectedParent' => $selectedParentId,
             'selectedSub'    => $selectedSubId,
-            'subLeague'      => $subLeague,   // for <x-lbs-subnav :subLeague="$subLeague" />
+            'subLeague'      => $subLeague,   
             'rows'           => $rows,
             'legend'         => [
                 ['Record', 'Wins–Losses (aprēķināts no spēlēm).'],

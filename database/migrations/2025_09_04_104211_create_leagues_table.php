@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('leagues', function (Blueprint $table) {
-            $table->id();       // auto-increment ID
-            $table->string('name'); // league name
+            $table->id();     
+            $table->string('name'); 
             $table->timestamps();
         });
     }

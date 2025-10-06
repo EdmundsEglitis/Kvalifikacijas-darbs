@@ -3,7 +3,6 @@
 
 @push('head')
 <style>
-    /* optional subtle “shine” sweep */
     .shine {
     position: relative;
     overflow: hidden;
@@ -18,7 +17,6 @@
     pointer-events:none;
   }
   .shine:hover::after{ transform: translateX(40%) rotate(12deg); }
-  /* ===== Smooth reveals / stagger ===== */
   .reveal{opacity:0;transform:translateY(18px) scale(.98);filter:saturate(.9);
     transition:opacity .6s cubic-bezier(.22,1,.36,1),transform .6s cubic-bezier(.22,1,.36,1),filter .6s ease;will-change:transform,opacity,filter}
   .reveal.is-visible{opacity:1;transform:translateY(0) scale(1);filter:saturate(1)}
@@ -32,35 +30,28 @@
   [data-stagger].is-visible>*:nth-child(6){animation-delay:.34s}
   @keyframes rise{to{opacity:1;transform:none}}
 
-  /* Accent underline */
   .accent-underline{position:relative;display:inline-block}
   .accent-underline::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:3px;border-radius:9999px;
     background:linear-gradient(90deg,#84CC16,#22d3ee,#a78bfa);filter:drop-shadow(0 2px 6px rgba(132,204,22,.45));
     transform-origin:left;transform:scaleX(0);transition:transform .6s cubic-bezier(.22,1,.36,1)}
   .accent-underline.in-view::after{transform:scaleX(1)}
 
-  /* Card hover motion */
   .tilt{transform:perspective(900px) rotateX(0) rotateY(0) translateY(0);
     transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, filter .2s ease;will-change:transform}
   .tilt:hover{transform:perspective(900px) rotateX(2deg) rotateY(.8deg) translateY(-4px);box-shadow:0 18px 50px rgba(0,0,0,.35);filter:saturate(1.05)}
 
-  /* Parallax (subtle) */
   .parallax{transform:translateY(0);will-change:transform;transition:transform .12s linear}
 
-  /* Logo glow */
   .ring-glow{box-shadow:0 0 0 0 rgba(132,204,22,0);transition:box-shadow .25s ease}
   .ring-glow:hover{box-shadow:0 0 0 6px rgba(132,204,22,.15)}
 
-  /* Anchor offset so #news doesn’t hide under sticky nav */
   :target{scroll-margin-top:96px}
 
   @media (prefers-reduced-motion:reduce){
     .reveal,[data-stagger]>*,.tilt,.parallax,.accent-underline::after{transition:none!important;animation:none!important}
   }
-    /* Hero container sizes */
     .hero-wrap{ height: clamp(48vh, 64vh, 76vh); }
 
-/* Image fill with adjustable focal point */
 .hero-img{
   position:absolute; inset:0; width:100%; height:100%;
   object-fit:cover;
@@ -69,10 +60,8 @@
   will-change: transform;
 }
 
-/* Parallax (subtle) */
 .parallax{ transition: transform .12s linear; will-change: transform; }
 
-/* Overlays for readable text on any image */
 .hero-overlay-top{
   position:absolute; inset:0;
   background: linear-gradient(to bottom, rgba(0,0,0,.60), rgba(0,0,0,.25) 55%, transparent);
@@ -84,18 +73,14 @@
   pointer-events:none;
 }
 
-/* Anchor offset for sticky headers */
 :target{ scroll-margin-top: 96px; }
 </style>
 @endpush
 
 @section('content')
-{{-- ===== HERO (robust for any image) ===== --}}
 @if($heroImage)
   <section class="relative w-full overflow-hidden pt-20 hero-wrap">
-    {{-- the image itself --}}
     <picture>
-      {{-- (optional) place sources for WebP/AVIF if you save them --}}
       <img
         id="heroImgLbs"
         src="{{ Storage::url($heroImage->image_path) }}"
@@ -106,11 +91,9 @@
       />
     </picture>
 
-    {{-- overlays to guarantee contrast on any photo --}}
     <div class="hero-overlay-top"></div>
     <div class="hero-overlay-bottom"></div>
 
-    {{-- content --}}
     <div class="relative z-10 max-w-7xl mx-auto h-full flex items-center px-4">
       <div class="space-y-6 reveal">
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white drop-shadow">
@@ -139,7 +122,6 @@
 
   <div class="max-w-7xl mx-auto px-4 space-y-16 pt-8">
 
-    {{-- ===== QUICK NAV ===== --}}
     <section class="reveal" data-stagger>
       <h2 class="text-2xl font-bold text-white mb-4">
         <span class="accent-underline">Ātrās saites</span>
@@ -175,7 +157,6 @@
       </div>
     </section>
 
-    {{-- ===== UPCOMING GAMES (all leagues) ===== --}}
     @if(!empty($upcomingGames) && $upcomingGames->isNotEmpty())
       <section class="reveal">
         <h2 class="text-2xl font-bold text-white mb-4">
@@ -220,7 +201,6 @@
       </section>
     @endif
 
-    {{-- ===== NEWS ===== --}}
 <section id="news" class="reveal">
   <h2 class="text-2xl sm:text-3xl font-bold text-white text-center mb-8 accent-underline">
     Jaunākās ziņas
@@ -236,7 +216,6 @@
                   shadow-lg hover:shadow-2xl transition-all duration-300 shine
                   hover:-translate-y-1 hover:border-[#84CC16]/60 focus:outline-none focus-visible:ring-2
                   focus-visible:ring-[#84CC16]/50">
-          {{-- media --}}
           <div class="relative w-full h-[260px] bg-[#0b1220]">
             @if (!empty($item->preview_image))
               <img
@@ -254,7 +233,6 @@
                         transition-opacity duration-300 group-hover:opacity-90 pointer-events-none"></div>
           </div>
 
-          {{-- body --}}
           <div class="p-6 flex flex-col flex-1">
             <h3 class="text-2xl font-semibold text-white mb-2
                        transition-colors group-hover:text-[#a7f36c]">
@@ -283,7 +261,6 @@
     @endforeach
   </div>
 </section>
-{{-- ===== SMALL NEWS (3-up) ===== --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" data-stagger>
   @foreach (['slot-1','slot-2','slot-3'] as $slot)
     @if ($bySlot[$slot] ?? false)
@@ -295,7 +272,6 @@
                 hover:-translate-y-1 hover:border-[#84CC16]/60 focus:outline-none
                 focus-visible:ring-2 focus-visible:ring-[#84CC16]/50">
 
-        {{-- media --}}
         <div class="relative w-full h-[200px] bg-[#0b1220]">
           @if (!empty($item->preview_image))
             <img
@@ -309,7 +285,6 @@
                       transition-opacity duration-300 group-hover:opacity-90 pointer-events-none"></div>
         </div>
 
-        {{-- body --}}
         <div class="p-5 flex flex-col">
           <h4 class="text-lg font-semibold text-white mb-1 transition-colors group-hover:text-[#a7f36c]">
             {{ $item->title }}

@@ -6,14 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::table('news', function (Blueprint $table) {
             $table->string('position')
-                  ->default('slot-1')    // your fallback
+                  ->default('slot-1')    
                   ->after('league_id');
         });
     }

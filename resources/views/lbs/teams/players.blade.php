@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $team->name . ' – Spēlētāji')
 
-{{-- Subnav (team tabs) renders under the main navbar, inside the layout’s header wrapper --}}
 @section('subnav')
 <x-teamnav :team="$team" />
 @endsection
@@ -9,7 +8,6 @@
 @section('content')
   <div class="max-w-6xl mx-auto px-4 space-y-12">
 
-    {{-- Team Logo + Name --}}
     <section class="flex flex-col items-center space-y-4">
       @if($team->logo)
         <img
@@ -23,7 +21,6 @@
       </h1>
     </section>
 
-    {{-- Players --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Spēlētāji</h2>
 
@@ -42,7 +39,6 @@
                  class="group p-6 bg-[#1f2937] rounded-2xl border border-[#374151] shadow transition
                         hover:border-[#84CC16] hover:-translate-y-1 hover:shadow-xl flex flex-col items-center text-center">
 
-                {{-- Player Photo --}}
                 @if($hasLocalPhoto)
                   <img
                     src="{{ asset('storage/' . $player->photo) }}"
@@ -61,7 +57,6 @@
                   </div>
                 @endif
 
-                {{-- Player Info --}}
                 <p class="font-semibold text-lg text-white group-hover:text-[#84CC16] transition">
                   {{ $player->name }}
                 </p>

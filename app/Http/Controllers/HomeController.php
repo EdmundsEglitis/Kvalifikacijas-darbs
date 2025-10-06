@@ -59,17 +59,13 @@ $latestDate = \App\Models\NbaPlayerGameLog::query()
     ->whereNotNull('game_date')
     ->max('game_date');
 
-// If nothing yet, keep $nba = null
 $nba = null;
 
 if ($latestDate) {
-    // 2) Pick one representative row from that latest date
-    //    (join to players only for team meta)
     $lastNba = \App\Models\NbaPlayerGameLog::query()
         ->join('nba_players as p', 'p.external_id', '=', 'nba_player_game_logs.player_external_id')
         ->where('nba_player_game_logs.game_date', $latestDate)
         ->whereNotNull('nba_player_game_logs.score')
-        // prefer the newest updated row within that date
         ->orderByDesc('nba_player_game_logs.updated_at')
         ->orderByDesc('nba_player_game_logs.id')
         ->selectRaw('
@@ -83,7 +79,6 @@ if ($latestDate) {
         ->first();
 
     if ($lastNba) {
-        // In case score has spaces or odd formatting
         [$s1, $s2] = $this->splitScore(trim((string)$lastNba->score));
 
         $nba = [

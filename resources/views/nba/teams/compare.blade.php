@@ -4,7 +4,6 @@
 @section('content')
   <main class="max-w-7xl mx-auto px-4 py-6 space-y-8">
 
-    {{-- Filters --}}
     <section class="bg-[#1f2937] border border-[#374151] rounded-xl p-4 sm:p-5">
       <form class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-end" method="GET">
         <div>
@@ -32,7 +31,6 @@
                  class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none" />
         </div>
 
-        {{-- Submit row --}}
         <div class="lg:col-span-1 sm:col-span-2 flex items-end gap-3">
           <button type="submit"
                   class="px-4 py-2 rounded-lg bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a3e635]">
@@ -45,14 +43,12 @@
         </div>
       </form>
 
-      {{-- Quick search (client-side only; OUTSIDE the form) --}}
       <div class="mt-4 lg:mt-6 flex flex-wrap items-center gap-3">
         <input id="q" type="text" placeholder="Quick search in table…"
                class="flex-1 min-w-[220px] bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none" />
       </div>
     </section>
 
-    {{-- Compare selection bar --}}
     <section class="bg-[#1f2937] border border-[#374151] rounded-xl p-4 sm:p-5">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="text-sm text-gray-300">
@@ -68,14 +64,12 @@
         </div>
       </div>
 
-      {{-- Compare result --}}
       <div id="compareArea" class="mt-4 hidden">
         <h3 class="text-white font-semibold mb-3">Comparison</h3>
         <div id="compareGrid" class="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]"></div>
       </div>
     </section>
 
-    {{-- Table --}}
     <section class="bg-[#1f2937] border border-[#374151] rounded-xl overflow-hidden">
       <div class="overflow-x-auto">
         <table id="standingsTable" class="min-w-[1000px] w-full text-sm">
@@ -141,7 +135,6 @@
                 <td class="px-3 py-2 text-center">{{ $r['last_ten'] ?? '—' }}</td>
                 <td class="px-3 py-2 text-center">{{ $r['streak_txt'] }}</td>
 
-                {{-- Human-friendly clincher badges --}}
                 <td class="px-3 py-2 text-center">
                   @if(empty($r['clincher_badges']))
                     —
@@ -165,7 +158,6 @@
       <p class="px-4 pb-4 pt-2 text-xs text-gray-400 sm:hidden">Tip: swipe sideways to see all columns.</p>
     </section>
 
-    {{-- Legend --}}
 <section class="pb-8">
   <h2 class="text-xl sm:text-2xl font-semibold mb-3">Stat explanations</h2>
   <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
@@ -177,7 +169,6 @@
     @endforeach
   </div>
 
-  {{-- Clincher explanations --}}
   @php
     // If controller didn't pass $clincherLegend, use sensible defaults here.
     $clincherLegend = $clincherLegend ?? [
@@ -208,7 +199,6 @@
   </main>
 
   <script>
-    // ===== Fast filter (seeded from ?team=) =====
     const q = document.getElementById('q');
     const tableRows = Array.from(document.querySelectorAll('#standingsTable tbody tr'));
 
@@ -233,7 +223,6 @@
 
     q?.addEventListener('input', applyFilters);
 
-    // ===== Sort visible rows only =====
     const headers = document.querySelectorAll('#standingsTable thead th[data-sort]');
     headers.forEach(h => {
       h.addEventListener('click', () => {
@@ -265,7 +254,6 @@
       });
     });
 
-    // ===== Compare selection & cards =====
     const selBoxes   = document.querySelectorAll('.rowSel');
     const compareBtn = document.getElementById('compareBtn');
     const clearSelBtn= document.getElementById('clearSelBtn');

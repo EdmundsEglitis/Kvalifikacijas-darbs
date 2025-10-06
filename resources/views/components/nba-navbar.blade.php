@@ -62,7 +62,6 @@
 </nav>
 
 <script>
-  // Works for multiple navbars: delegates by data-target
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('[data-mobile-btn]');
     if (!btn) return;

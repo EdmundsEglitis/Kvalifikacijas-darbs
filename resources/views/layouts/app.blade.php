@@ -9,13 +9,10 @@
 </head>
 <body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
-  {{-- One blurred wrapper for BOTH nav rows (no seam) --}}
   <header class="fixed inset-x-0 top-0 z-50">
     <div class="bg-[#111827]/10 backdrop-blur-md">
-      {{-- Row 1: main navbar, rendered transparent inside --}}
       <x-lbs-navbar class="bg-transparent border-0 backdrop-blur-0" :parentLeagues="$parentLeagues ?? []" />
 
-      {{-- Row 2: subnav (optional), also transparent inside --}}
       @hasSection('subnav')
   <div class="border-b border-white/10">
     @yield('subnav')
@@ -24,7 +21,6 @@
     </div>
   </header>
 
-  {{-- Top padding depends on whether the subnav exists --}}
   <main class="@hasSection('subnav') pt-28 @else pt-16 @endif">
     @yield('content')
   </main>
@@ -34,7 +30,6 @@
   @stack('scripts')
 
 <script>
-  // Works for any navbar instance; no hardcoded IDs.
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('[data-mobile-btn]');
     if (!btn) return;

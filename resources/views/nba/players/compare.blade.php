@@ -90,14 +90,12 @@
     </div>
   </section>
 
-  {{-- Pagination (top, dark) --}}
   @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)
     <div class="flex justify-end mt-4">
       {{ $rows->appends(request()->query())->onEachSide(1)->links('vendor.pagination.custom-dark') }}
     </div>
   @endif
 
-  {{-- MOBILE CARDS --}}
   <section class="sm:hidden space-y-3">
     @forelse($rows as $r)
       <article class="bg-[#1f2937] border border-[#374151] rounded-2xl p-4 fade-up hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/20 transition">
@@ -143,7 +141,6 @@
     @endforelse
   </section>
 
-  {{-- DESKTOP TABLE --}}
   <section class="hidden sm:block bg-[#1f2937] border border-[#374151] rounded-2xl overflow-hidden fade-up">
     <div class="overflow-x-auto will-change-transform">
       <table id="playersTable" class="min-w-[1100px] w-full text-sm">
@@ -213,7 +210,6 @@
     </div>
   </section>
 
-  {{-- Pagination (bottom, dark) --}}
   @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)
     <div class="flex justify-end mt-4">
       {{ $rows->appends(request()->query())->onEachSide(1)->links('vendor.pagination.custom-dark') }}

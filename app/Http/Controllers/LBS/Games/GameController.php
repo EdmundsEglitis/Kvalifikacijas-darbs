@@ -32,7 +32,6 @@ class GameController extends Controller
         $playerStats = $game->playerGameStats->groupBy('team_id');
         $parentLeagues = League::whereNull('parent_id')->get();
 
-        // NEW view path:
         return view('lbs.games.show', compact(
             'game',
             'team1Score',

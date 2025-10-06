@@ -2,7 +2,6 @@
 
 @section('title', $team->name . ' — Komandas pārskats')
 
-{{-- Sub tabs under the unified header --}}
 @section('subnav')
   <x-teamnav :team="$team" />
 @endsection
@@ -10,7 +9,6 @@
 @section('content')
   <main class="max-w-6xl mx-auto px-4 space-y-12 pt-6">
 
-    {{-- Team Header --}}
     <section class="bg-[#1f2937] border border-[#374151] rounded-2xl p-6 shadow">
       <div class="flex items-center gap-5">
         <div class="h-24 w-24 rounded-xl bg-[#111827] grid place-items-center overflow-hidden ring-2 ring-[#84CC16]/40">
@@ -29,7 +27,6 @@
         <div class="flex-1">
           <h1 class="text-3xl font-extrabold text-white">{{ $team->name }}</h1>
 
-          {{-- W-L pill --}}
           <div class="mt-3 flex flex-wrap items-center gap-3">
             <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#84CC16]/15 border border-[#84CC16]/30 text-[#84CC16] text-sm font-semibold">
               <span class="h-2 w-2 rounded-full bg-[#84CC16]"></span>
@@ -41,7 +38,6 @@
       </div>
     </section>
 
-    {{-- Team Record (compact cards) --}}
     <section>
       <h2 class="text-2xl font-semibold text-white mb-4">Komandas rezultāts</h2>
 
@@ -57,7 +53,6 @@
       </div>
     </section>
 
-    {{-- Average Team Stats --}}
     <section>
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-semibold text-white">Vidējie komandas rādītāji</h2>
@@ -85,7 +80,6 @@
       @endif
     </section>
 
-    {{-- Best Players --}}
     <section>
       <h2 class="text-2xl font-semibold text-white mb-4">Labākie spēlētāji</h2>
 

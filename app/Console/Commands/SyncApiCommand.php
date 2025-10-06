@@ -28,7 +28,7 @@ class SyncApiCommand extends Command
         $this->info('Starting NBA API sync (ApiSyncService->sync())');
 
         try {
-            // ApiSyncService is Dependency Injected by the container
+            
             $apiSync->sync();
 
             $this->info('NBA API sync finished successfully.');

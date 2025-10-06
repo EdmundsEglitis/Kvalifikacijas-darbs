@@ -5,13 +5,11 @@
   <style>.fade-in-section{transition:opacity .6s ease-out, transform .6s ease-out;}</style>
 @endpush
 
-{{-- Sub-league tabs bar just under the main navbar --}}
 @section('subnav')
   <x-lbs-subnav :subLeague="$subLeague" />
 @endsection
 
 @section('content')
-  {{-- HERO --}}
   @if(!empty($heroImage))
     <section
       id="hero"
@@ -40,14 +38,12 @@
     </section>
   @endif
 
-  {{-- NEWS GRID --}}
   <section id="news" class="py-16 bg-[#111827]">
     <div class="max-w-7xl mx-auto px-4 space-y-12">
       <h2 class="text-3xl font-bold text-white text-center fade-in-section opacity-0 translate-y-6">
         {{ $subLeague->name }} – Jaunākās ziņas
       </h2>
 
-      {{-- Secondary Panels --}}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @foreach(['secondary-1','secondary-2'] as $slot)
           @if(($bySlot[$slot] ?? null) && ($bySlot[$slot]->preview_image ?? null))
@@ -78,7 +74,6 @@
         @endforeach
       </div>
 
-      {{-- Three Small Cards --}}
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
         @foreach(['slot-1','slot-2','slot-3'] as $slot)
           @if(($bySlot[$slot] ?? null) && ($bySlot[$slot]->preview_image ?? null))
@@ -116,7 +111,6 @@
     </div>
   </section>
 
-  {{-- FOOTER --}}
   <footer class="py-8 bg-[#111827] text-[#F3F4F6]/70 text-center text-sm fade-in-section opacity-0 translate-y-6">
     &copy; {{ date('Y') }} LBS. Visas tiesības aizsargātas.
   </footer>
@@ -124,7 +118,6 @@
 
 @push('scripts')
 <script>
-  // Fade-in on scroll
   document.addEventListener('DOMContentLoaded', () => {
     const els = document.querySelectorAll('.fade-in-section');
     if (!('IntersectionObserver' in window)) {

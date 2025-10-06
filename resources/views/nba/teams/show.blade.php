@@ -5,7 +5,6 @@
 @section('content')
   <main class="pt-24 max-w-7xl mx-auto px-4 space-y-10">
 
-    {{-- TEAM HEADER --}}
     <section class="bg-[#1f2937] rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
       <div class="flex items-center gap-4">
         @if($team->logo)
@@ -32,11 +31,9 @@
       @endif
     </section>
 
-    {{-- ROSTER --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Roster</h2>
 
-      {{-- Auto-fit grid for perfect responsiveness --}}
       <div class="grid gap-4 sm:gap-5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
         @forelse($players as $player)
           <a href="{{ route('nba.player.show', $player->external_id) }}"
@@ -57,7 +54,6 @@
       </div>
     </section>
 
-    {{-- UPCOMING GAMES --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Upcoming Games</h2>
       <div class="overflow-x-auto bg-[#1f2937] rounded-xl border border-[#374151]">
@@ -107,7 +103,6 @@
       <p class="mt-2 text-xs text-gray-400 sm:hidden">Tip: you can scroll this table sideways on mobile.</p>
     </section>
 
-    {{-- SEASON CARDS (2021 → now) --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Seasons (2021 →)</h2>
 
@@ -163,7 +158,6 @@
                 @endif
               </div>
 
-              {{-- Record row --}}
               <div class="flex items-end justify-between mb-4 gap-3">
                 <div>
                   <div class="text-xs text-[#F3F4F6]/70">Record</div>
@@ -177,7 +171,6 @@
                 </div>
               </div>
 
-              {{-- Stat grid --}}
               <dl class="grid grid-cols-3 gap-3">
                 <div class="rounded-xl bg-[#0f172a]/40 border border-[#374151] p-3 text-center">
                   <dt class="text-[11px] text-[#F3F4F6]/60">PPG</dt>
@@ -193,7 +186,6 @@
                 </div>
               </dl>
 
-              {{-- Footer chips --}}
               <div class="mt-4 flex flex-wrap gap-2 text-[11px] sm:text-xs">
                 <span class="px-2.5 py-1 rounded-full bg-white/5 text-[#F3F4F6]/80 border border-white/10">Home: {{ $home }}</span>
                 <span class="px-2.5 py-1 rounded-full bg-white/5 text-[#F3F4F6]/80 border border-white/10">Road: {{ $road }}</span>
@@ -205,11 +197,9 @@
       @endif
     </section>
 
-    {{-- STAT EXPLANATIONS (legend) --}}
     <section class="pb-10">
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Stat explanations</h2>
 
-      {{-- Grid of small “legend” cards, responsive auto-fit --}}
       <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         <div class="bg-[#1f2937] border border-[#374151] rounded-xl p-3">
           <div class="text-sm font-semibold text-white mb-1">Record</div>

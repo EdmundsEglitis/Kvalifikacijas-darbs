@@ -16,7 +16,6 @@
   $t2LogoOk = $game->team2?->logo && Storage::disk('public')->exists($game->team2->logo);
 @endphp
 
-{{-- Subnav (only if we have a sub-league) --}}
 @section('subnav')
   @if($subLeague)
     <x-lbs-subnav :subLeague="$subLeague" />
@@ -37,7 +36,6 @@
       </button>
     </div>
 
-    {{-- Game header --}}
     <section class="bg-[#1f2937] rounded-xl shadow p-6 border border-[#374151]">
       <div class="flex items-center justify-center gap-10">
         {{-- Team 1 --}}
@@ -54,12 +52,10 @@
           </a>
         </div>
 
-        {{-- Score --}}
         <div class="text-4xl font-extrabold text-white tabular-nums">
           {{ ($s1 !== null ? $s1 : '—') }} : {{ ($s2 !== null ? $s2 : '—') }}
         </div>
 
-        {{-- Team 2 --}}
         <div class="flex flex-col items-center">
           <a href="{{ route('lbs.team.show', $game->team2->id) }}" class="group">
             <div class="h-20 w-20 rounded bg-white grid place-items-center overflow-hidden mb-2">
@@ -80,12 +76,10 @@
       </div>
     </section>
 
-    {{-- Player stats per team --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Spēlētāju statistika</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {{-- Team 1 stats --}}
         <div>
           <h3 class="text-xl font-semibold mb-3">{{ $game->team1->name }}</h3>
           <div class="overflow-x-auto">
@@ -120,7 +114,6 @@
           </div>
         </div>
 
-        {{-- Team 2 stats --}}
         <div>
           <h3 class="text-xl font-semibold mb-3">{{ $game->team2->name }}</h3>
           <div class="overflow-x-auto">

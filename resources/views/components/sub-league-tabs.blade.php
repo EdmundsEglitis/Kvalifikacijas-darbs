@@ -1,4 +1,3 @@
-{{-- LBS Main Navbar --}}
 <nav id="lbs-nav" class="fixed inset-x-0 top-0 z-50 bg-transparent backdrop-blur-md transition-colors duration-300">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between h-16 items-center">
@@ -14,7 +13,6 @@
         </a>
       </div>
 
-      {{-- Desktop Nav --}}
       <div class="hidden md:flex items-center gap-6">
         @isset($parentLeagues)
           @foreach($parentLeagues as $league)
@@ -29,7 +27,6 @@
         @endisset
       </div>
 
-      {{-- Mobile Menu Button --}}
       <button id="menu-btn"
               class="md:hidden inline-flex items-center justify-center rounded p-1 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/60"
               aria-expanded="false" aria-controls="mobile-menu" aria-label="Toggle menu">
@@ -38,7 +35,6 @@
     </div>
   </div>
 
-  {{-- Mobile Nav --}}
   <div id="mobile-menu" class="hidden md:hidden bg-[#111827]/95 backdrop-blur-lg border-t border-[#374151]">
     <div class="px-4 py-3 space-y-2">
       @isset($parentLeagues)
@@ -54,8 +50,6 @@
   </div>
 </nav>
 
-{{-- Sub-League Tabs (only if a sub-league context exists) --}}
-{{-- Sub-League Tabs (transparent -> solid on scroll) --}}
 @isset($subLeague)
   <nav id="lbs-subnav"
        class="fixed top-16 inset-x-0 z-40 bg-transparent backdrop-blur-md border-b border-transparent transition-colors duration-300">
@@ -81,11 +75,10 @@
   </nav>
 @endisset
 
-{{-- Scroll behavior for BOTH navbars --}}
 <script>
   (function () {
-    const main = document.getElementById('lbs-nav');       // main navbar (keep your existing id)
-    const sub  = document.getElementById('lbs-subnav');    // secondary tabs bar
+    const main = document.getElementById('lbs-nav');       
+    const sub  = document.getElementById('lbs-subnav');   
 
     function setSolid(el, solid) {
       if (!el) return;
@@ -100,7 +93,6 @@
 
     function onScroll() {
       const y = window.scrollY || 0;
-      // threshold where both bars become solid
       const threshold = 10;
       setSolid(main, y > threshold);
       setSolid(sub,  y > threshold);
@@ -109,7 +101,6 @@
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
 
-    // Mobile toggle (unchanged)
     const btn  = document.getElementById('menu-btn');
     const menu = document.getElementById('mobile-menu');
     if (btn && menu) {

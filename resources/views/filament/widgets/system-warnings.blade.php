@@ -8,7 +8,6 @@
             </div>
         @endif
 
-        {{-- Late games --}}
         @if(!empty($warnings['lateGames']))
             <div class="p-3 bg-red-100 text-red-800 rounded-lg mb-4">
                 <h3 class="font-semibold mb-1">⚠ Past-due Upcoming Games</h3>
@@ -24,7 +23,6 @@
             </div>
         @endif
 
-        {{-- Missing stats --}}
         @if(!empty($warnings['missingStats']))
             <div class="p-3 bg-yellow-100 text-yellow-800 rounded-lg">
                 <h3 class="font-semibold mb-1">⚠ Completed Games Missing Player Stats</h3>

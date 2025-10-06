@@ -1,4 +1,3 @@
-{{-- resources/views/nba/games/upcoming.blade.php --}}
 @extends('layouts.nba')
 @section('title','Upcoming games')
 

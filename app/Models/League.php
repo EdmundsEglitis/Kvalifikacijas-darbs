@@ -9,7 +9,7 @@ class League extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'parent_id']; // allow mass assignment
+    protected $fillable = ['name', 'parent_id']; 
 public function teams()
 {
     return $this->hasMany(Team::class);

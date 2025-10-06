@@ -34,7 +34,7 @@ class PlayerController extends Controller
             'eff'    => round($totals['eff'] / $totals['games'], 1),
         ] : [];
 
-        // NEW view path:
+        
         return view('lbs.players.show', compact('player', 'parentLeagues', 'totals', 'averages'));
     }
 }

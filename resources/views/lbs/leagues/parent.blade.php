@@ -8,7 +8,6 @@
 @endpush
 
 @section('content')
-  {{-- HERO --}}
   @if($heroImage)
     <section
       id="hero"
@@ -32,7 +31,6 @@
     </section>
   @endif
 
-  {{-- SUB-LEAGUE LIST --}}
   <section class="py-16 max-w-7xl mx-auto px-4">
     <h2 class="text-4xl font-extrabold text-white tracking-tight">{{ $parent->name }}</h2>
     <p class="mt-3 text-lg text-[#F3F4F6]/80">Izvēlieties apakšlīgu:</p>
@@ -56,7 +54,6 @@
     @endif
   </section>
 
-  {{-- NEWS GRID --}}
   @if($news->isNotEmpty())
     <section id="news" class="py-12 max-w-7xl mx-auto px-4">
       <h2 class="text-3xl font-bold text-white mb-6">Jaunumi no {{ $parent->name }}</h2>
@@ -100,7 +97,6 @@
     </section>
   @endif
 
-  {{-- FOOTER --}}
   <footer class="py-8 bg-[#111827] text-[#F3F4F6]/70 text-center text-sm fade-in-section opacity-0 translate-y-6">
     &copy; {{ date('Y') }} LBS. Visas tiesības aizsargātas.
   </footer>
@@ -108,7 +104,6 @@
 
 @push('scripts')
 <script>
-  // Fade-in on scroll (no navbar JS needed — layout uses JS-free navbar)
   document.addEventListener("DOMContentLoaded", function () {
     const els = document.querySelectorAll('.fade-in-section');
     if (!('IntersectionObserver' in window)) {

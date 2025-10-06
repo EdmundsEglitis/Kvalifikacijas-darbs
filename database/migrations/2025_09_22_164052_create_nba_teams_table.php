@@ -8,13 +8,13 @@ return new class extends Migration {
     {
         Schema::create('nba_teams', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('external_id')->unique(); // API team ID
+            $table->unsignedBigInteger('external_id')->unique(); 
             $table->string('name');
             $table->string('short_name')->nullable();
             $table->string('abbreviation')->nullable();
             $table->string('logo')->nullable();
             $table->string('logo_dark')->nullable();
-            $table->string('url')->nullable(); // for the href field
+            $table->string('url')->nullable();
             $table->timestamps();
         });
     }

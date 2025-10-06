@@ -11,7 +11,7 @@ class PlayerGameStatFactory extends Factory
 {
     public function definition(): array
     {
-        // Random attempts
+
         $fga2 = $this->faker->numberBetween(0, 10);
         $fgm2 = $this->faker->numberBetween(0, $fga2);
 
@@ -21,22 +21,21 @@ class PlayerGameStatFactory extends Factory
         $fta  = $this->faker->numberBetween(0, 6);
         $ftm  = $this->faker->numberBetween(0, $fta);
 
-        // Points = 2s + 3s + FTs
+
         $points = $fgm2 * 2 + $fgm3 * 3 + $ftm;
 
-        // Rebounds
+
         $oreb = $this->faker->numberBetween(0, 5);
         $dreb = $this->faker->numberBetween(0, 8);
         $reb = $oreb + $dreb;
 
-        // Other stats
+
         $ast = $this->faker->numberBetween(0, 10);
         $tov = $this->faker->numberBetween(0, 6);
         $stl = $this->faker->numberBetween(0, 4);
         $blk = $this->faker->numberBetween(0, 3);
         $pf  = $this->faker->numberBetween(0, 5);
 
-        // Efficiency (simplified)
         $eff = $points + $reb + $ast + $stl + $blk - ($fga2 - $fgm2) - ($fga3 - $fgm3) - ($fta - $ftm) - $tov;
 
         return [

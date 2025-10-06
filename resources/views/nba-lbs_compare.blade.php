@@ -4,7 +4,6 @@
 @section('content')
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 <br>
-  {{-- ===== Controls (seasons, per-page, search) ===== --}}
   <form method="GET" class="mb-2 grid gap-3 sm:grid-cols-5">
     <select name="from" class="bg-[#0f172a] border border-[#374151] rounded px-3 py-2">
       @foreach($seasons as $s)
@@ -28,7 +27,6 @@
       @endforeach
     </select>
 
-    {{-- Global search across ALL pages (server-side filter) --}}
     <input name="q" value="{{ $q }}" placeholder="Meklēt (vārds vai komanda)"
            class="bg-[#0f172a] border border-[#374151] rounded px-3 py-2 sm:col-span-1 sm:col-start-5" />
 
@@ -39,7 +37,6 @@
     </div>
   </form>
 
-  {{-- Compare tray --}}
   <section class="bg-[#111827] border border-[#1f2937] rounded-2xl p-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="text-sm text-gray-300">
@@ -61,7 +58,6 @@
   </section>
 
   <div class="grid gap-6 lg:grid-cols-2">
-    {{-- ========== NBA TABLE PANEL ========== --}}
     <section id="nbaPanel" class="panel bg-[#111827] border border-[#1f2937] rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-[#1f2937]">
         <h2 class="font-semibold select-none">NBA spēlētāji</h2>
@@ -121,7 +117,6 @@
         </table>
       </div>
 
-      {{-- NBA pagination (custom, server-side filter aware) --}}
       <div class="p-4 flex flex-wrap items-center gap-2 justify-between text-sm">
         <div class="text-gray-400">
           Lapa {{ $nbaMeta['page'] }} no {{ $nbaMeta['last'] }} • {{ $nbaMeta['total'] }} ieraksti
@@ -142,7 +137,6 @@
       </div>
     </section>
 
-    {{-- ========== LBS TABLE PANEL ========== --}}
     <section id="lbsPanel" class="panel bg-[#111827] border border-[#1f2937] rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-[#1f2937]">
         <h2 class="font-semibold select-none">LBS spēlētāji</h2>
@@ -202,7 +196,6 @@
         </table>
       </div>
 
-      {{-- LBS pagination --}}
       <div class="p-4 flex flex-wrap items-center gap-2 justify-between text-sm">
         <div class="text-gray-400">
           Lapa {{ $lbsMeta['page'] }} no {{ $lbsMeta['last'] }} • {{ $lbsMeta['total'] }} ieraksti
@@ -224,7 +217,6 @@
 </main>
 
 <style>
-  /* overlay + backdrop */
   #panelOverlay {
     display: none;
     position: fixed; inset: 0;
@@ -238,7 +230,6 @@
     backdrop-filter: blur(2px);
   }
 
-  /* centered modal drawer */
   #panelDrawer {
     position: absolute;
     top: 50%; left: 50%;
@@ -260,7 +251,6 @@
     pointer-events: auto;
   }
 
-  /* header inside the modal */
   #panelDrawer .modal-header {
     background: #0b1220;
     border-bottom: 1px solid #1f2937;
@@ -268,10 +258,8 @@
     border-top-right-radius: 16px;
   }
 
-  /* content area scrolls */
   #panelHost { flex: 1; overflow: auto; }
 
-  /* mobile: still centered, just a tad smaller paddings */
   @media (max-width: 768px) {
     #panelDrawer {
       width: 95vw;
@@ -295,35 +283,28 @@
 
 @push('scripts')
 <script>
-/* ========= Maximize by CLONING the panel; original never moves ========= */
 (function(){
   const overlay  = document.getElementById('panelOverlay');
   const host     = document.getElementById('panelHost');
   const closeBtn = document.getElementById('panelClose');
   const backdrop = document.getElementById('panelBackdrop');
 
-  let currentClone = null;   // the clone inside the drawer
-  let sourcePanel  = null;   // the original panel we cloned
+  let currentClone = null;   
+  let sourcePanel  = null;   
 
   function makeClone(panel){
-    // deep clone
     const clone = panel.cloneNode(true);
     clone.dataset.cloned = 'true';
 
-    // prevent accidental interactions in the clone (so state stays controlled by original)
     clone.querySelectorAll('input,select,textarea,button').forEach(el => {
-      // disable checkboxes etc. in the clone
       el.setAttribute('disabled', 'disabled');
-      // also mark as not-expand so its table clicks don't re-trigger open
       el.classList.add('not-expand');
     });
 
-    // in the clone, remove any click-to-open handlers by stopping propagation at table
     clone.querySelectorAll('.clickable-body').forEach(tbl => {
       tbl.addEventListener('click', (e)=> e.stopPropagation());
     });
 
-    // optional: tweak header button text to avoid confusion
     const hdrBtn = clone.querySelector('.panel-expand');
     if (hdrBtn) {
       hdrBtn.textContent = '—';
@@ -336,16 +317,14 @@
 
   function openPanel(panel){
     if (!panel) return;
-    // if already open for this panel, ignore
     if (sourcePanel === panel && currentClone) return;
 
-    // if another clone is open, close it first
     if (currentClone) closePanel();
 
     sourcePanel = panel;
     currentClone = makeClone(panel);
-    host.innerHTML = '';             // ensure clean host
-    host.appendChild(currentClone);  // show clone in drawer
+    host.innerHTML = '';             
+    host.appendChild(currentClone);  
 
     overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -353,7 +332,6 @@
 
   function closePanel(){
     if (!currentClone) return;
-    // just remove the clone; original stayed put in the grid
     currentClone.remove();
     currentClone = null;
     sourcePanel  = null;
@@ -362,7 +340,6 @@
     document.body.style.overflow = '';
   }
 
-  // Buttons
   document.querySelectorAll('.panel-expand').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.stopPropagation();
@@ -371,7 +348,6 @@
     });
   });
 
-  // Click anywhere in table (not on controls) to open its panel
   document.querySelectorAll('.clickable-body').forEach(tbl=>{
     tbl.addEventListener('click', (e)=>{
       const isInteractive = e.target.closest('.not-expand, a, button, input, select, label, textarea');
@@ -389,7 +365,6 @@
 
 
 <script>
-/* ========= Compare selection + build cards (with persistence) ========= */
 (function(){
   const STORAGE_KEY  = 'cross_compare_sel_v1';
   const STORAGE_BASE = @json(asset('storage'));
@@ -398,7 +373,7 @@
   const compareArea  = document.getElementById('compareArea');
   const compareGrid  = document.getElementById('compareGrid');
 
-  const selNba = new Map(); // key -> payload
+  const selNba = new Map(); 
   const selLbs = new Map();
 
   function parsePayload(el){

@@ -22,7 +22,6 @@ class NewsResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            // The slot picker drives visibility
             Select::make('position')
                 ->label('Layout Slot')
                 ->options([
@@ -36,7 +35,6 @@ class NewsResource extends Resource
                 ->reactive()
                 ->required(),
     
-            // Hero‐only image
             FileUpload::make('hero_image')
                 ->label('Hero Image')
                 ->image()
@@ -47,7 +45,6 @@ class NewsResource extends Resource
                 ->hidden(fn (callable $get)   => $get('position') !== 'hero')
                 ->dehydrated(fn (callable $get) => $get('position') === 'hero'),
     
-            // Title
             TextInput::make('title')
                 ->label('Title')
                 ->maxLength(255)
@@ -55,14 +52,12 @@ class NewsResource extends Resource
                 ->hidden(fn (callable $get)   => $get('position') === 'hero')
                 ->dehydrated(fn (callable $get) => $get('position') !== 'hero'),
     
-            // Content
             RichEditor::make('content')
                 ->label('Content')
                 ->required(fn (callable $get) => $get('position') !== 'hero')
                 ->hidden(fn (callable $get)   => $get('position') === 'hero')
                 ->dehydrated(fn (callable $get) => $get('position') !== 'hero'),
     
-            // League
             Select::make('league_id')
                 ->label('League')
                 ->options(League::pluck('name', 'id'))
@@ -89,7 +84,6 @@ class NewsResource extends Resource
                     ->label('League')
                     ->sortable(),
 
-                // Rebuilt slot column—no enum() call
                 Tables\Columns\BadgeColumn::make('position')
                     ->label('Slot')
                     ->formatStateUsing(fn (string $state): string => match ($state) {

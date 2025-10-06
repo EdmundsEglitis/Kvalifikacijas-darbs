@@ -22,7 +22,6 @@ class HeroImageResource extends Resource
 {
     protected static ?string $model = HeroImage::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    // NO navigationIcon property at all → avoids missing-SVG errors
 
     public static function form(Form $form): Form
     {

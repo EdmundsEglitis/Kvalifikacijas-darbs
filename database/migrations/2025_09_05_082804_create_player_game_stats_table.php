@@ -17,26 +17,26 @@ return new class extends Migration
             $table->string('minutes')->nullable();
             $table->integer('points')->default(0);
 
-            $table->integer('fgm2')->default(0); // 2PT made
-            $table->integer('fga2')->default(0); // 2PT attempted
+            $table->integer('fgm2')->default(0); 
+            $table->integer('fga2')->default(0); 
 
-            $table->integer('fgm3')->default(0); // 3PT made
-            $table->integer('fga3')->default(0); // 3PT attempted
+            $table->integer('fgm3')->default(0);
+            $table->integer('fga3')->default(0); 
 
-            $table->integer('ftm')->default(0);  // Free throws made
-            $table->integer('fta')->default(0);  // Free throws attempted
+            $table->integer('ftm')->default(0);  
+            $table->integer('fta')->default(0);  
 
-            $table->integer('oreb')->default(0); // Offensive rebounds
-            $table->integer('dreb')->default(0); // Defensive rebounds
-            $table->integer('reb')->default(0);  // Total rebounds
+            $table->integer('oreb')->default(0); 
+            $table->integer('dreb')->default(0); 
+            $table->integer('reb')->default(0); 
 
-            $table->integer('ast')->default(0);  // Assists
-            $table->integer('tov')->default(0);  // Turnovers
-            $table->integer('stl')->default(0);  // Steals
-            $table->integer('blk')->default(0);  // Blocks
-            $table->integer('pf')->default(0);   // Fouls
+            $table->integer('ast')->default(0);  
+            $table->integer('tov')->default(0);
+            $table->integer('stl')->default(0); 
+            $table->integer('blk')->default(0);  
+            $table->integer('pf')->default(0);  
 
-            $table->integer('eff')->default(0);  // Efficiency
+            $table->integer('eff')->default(0); 
             $table->integer('plus_minus')->default(0);
 
             $table->enum('status', ['played', 'dnp'])->default('played');

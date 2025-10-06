@@ -6,25 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
+
     public function up(): void
     {
         Schema::create('hero_images', function (Blueprint $table) {
             $table->id();
-            $table->string('title')->nullable(); // optional overlay text
+            $table->string('title')->nullable(); 
             $table->string('image_path');
             $table->enum('location', ['home', 'league', 'subleague']);
-            $table->unsignedBigInteger('league_id')->nullable(); // for league/subleague
+            $table->unsignedBigInteger('league_id')->nullable(); 
             $table->timestamps();
         });
         
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('hero_images');

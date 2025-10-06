@@ -4,7 +4,6 @@
 @section('content')
 <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
   <br>
-  {{-- ===== Controls (seasons, per-page, search) ===== --}}
   <form method="GET" class="mb-2 grid gap-3 sm:grid-cols-5">
     <select name="from" class="bg-[#0f172a] border border-[#374151] rounded px-3 py-2">
       @foreach($seasons as $s)
@@ -35,7 +34,6 @@
     </div>
   </form>
 
-  {{-- Compare tray --}}
   <section class="bg-[#111827] border border-[#1f2937] rounded-2xl p-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="text-sm text-gray-300">
@@ -57,7 +55,6 @@
   </section>
 
   <div class="grid gap-6 lg:grid-cols-2">
-    {{-- ========== NBA TEAMS PANEL ========== --}}
     <section id="nbaPanel" class="panel bg-[#111827] border border-[#1f2937] rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-[#1f2937]">
         <h2 class="font-semibold select-none">NBA komandas</h2>
@@ -117,7 +114,6 @@
         </table>
       </div>
 
-      {{-- NBA pagination --}}
       <div class="p-4 flex flex-wrap items-center gap-2 justify-between text-sm">
         <div class="text-gray-400">Lapa {{ $nbaMeta['page'] }} no {{ $nbaMeta['last'] }} • {{ $nbaMeta['total'] }} ieraksti</div>
         <div class="flex gap-2">
@@ -130,7 +126,6 @@
       </div>
     </section>
 
-    {{-- ========== LBS TEAMS PANEL ========== --}}
     <section id="lbsPanel" class="panel bg-[#111827] border border-[#1f2937] rounded-2xl overflow-hidden">
       <div class="flex items-center justify-between px-4 py-3 bg-[#0f172a] border-b border-[#1f2937]">
         <h2 class="font-semibold select-none">LBS komandas</h2>
@@ -192,7 +187,6 @@
         </table>
       </div>
 
-      {{-- LBS pagination --}}
       <div class="p-4 flex flex-wrap items-center gap-2 justify-between text-sm">
         <div class="text-gray-400">Lapa {{ $lbsMeta['page'] }} no {{ $lbsMeta['last'] }} • {{ $lbsMeta['total'] }} ieraksti</div>
         <div class="flex gap-2">
@@ -207,7 +201,6 @@
   </div>
 </main>
 
-{{-- ================= Centered overlay (same as your working players view) ================= --}}
 <style>
   #panelOverlay { display:none; position:fixed; inset:0; z-index:999; }
   #panelOverlay.active { display:block; }
@@ -239,7 +232,6 @@
 
 @push('scripts')
 <script>
-/* ========= Maximize by CLONING the panel; original never moves ========= */
 (function(){
   const overlay  = document.getElementById('panelOverlay');
   const host     = document.getElementById('panelHost');
@@ -317,7 +309,6 @@
 </script>
 
 <script>
-/* ========= Compare selection + build cards (with persistence) ========= */
 (function(){
   const STORAGE_KEY  = 'compare_teams_nba_lbs_v1';
   const compareBtn   = document.getElementById('compareBtn');

@@ -16,43 +16,42 @@ class Game extends Model
         'team1_id',
         'team2_id',
         'score',
-        // custom quarter columns you already use:
+
         'team11st','team21st',
         'team12st','team22st',
         'team13st','team23st',
         'team14st','team24st',
         'winner_id',
     ];
-/* ---- Quarter aliases: model fields -> DB columns ---- */
-// team11st <-> team1_q1
+
 public function getTeam11stAttribute() { return $this->attributes['team1_q1'] ?? null; }
 public function setTeam11stAttribute($value) { $this->attributes['team1_q1'] = (int) $value; }
 
-// team21st <-> team2_q1
+
 public function getTeam21stAttribute() { return $this->attributes['team2_q1'] ?? null; }
 public function setTeam21stAttribute($value) { $this->attributes['team2_q1'] = (int) $value; }
 
-// team12st <-> team1_q2
+
 public function getTeam12stAttribute() { return $this->attributes['team1_q2'] ?? null; }
 public function setTeam12stAttribute($value) { $this->attributes['team1_q2'] = (int) $value; }
 
-// team22st <-> team2_q2
+
 public function getTeam22stAttribute() { return $this->attributes['team2_q2'] ?? null; }
 public function setTeam22stAttribute($value) { $this->attributes['team2_q2'] = (int) $value; }
 
-// team13st <-> team1_q3
+
 public function getTeam13stAttribute() { return $this->attributes['team1_q3'] ?? null; }
 public function setTeam13stAttribute($value) { $this->attributes['team1_q3'] = (int) $value; }
 
-// team23st <-> team2_q3
+
 public function getTeam23stAttribute() { return $this->attributes['team2_q3'] ?? null; }
 public function setTeam23stAttribute($value) { $this->attributes['team2_q3'] = (int) $value; }
 
-// team14st <-> team1_q4
+
 public function getTeam14stAttribute() { return $this->attributes['team1_q4'] ?? null; }
 public function setTeam14stAttribute($value) { $this->attributes['team1_q4'] = (int) $value; }
 
-// team24st <-> team2_q4
+
 public function getTeam24stAttribute() { return $this->attributes['team2_q4'] ?? null; }
 public function setTeam24stAttribute($value) { $this->attributes['team2_q4'] = (int) $value; }
 
@@ -70,14 +69,12 @@ public function setTeam24stAttribute($value) { $this->attributes['team2_q4'] = (
 
     protected $dates = ['date'];
 
-    // Optional: expose computed attrs on JSON/array
+
     protected $appends = [
         'team1_total', 'team2_total', 'final_score', 'is_completed',
     ];
 
-    /* ----------------
-     |  Relationships  |
-     -----------------*/
+
     public function team1() { return $this->belongsTo(Team::class, 'team1_id'); }
     public function team2() { return $this->belongsTo(Team::class, 'team2_id'); }
     public function winner(){ return $this->belongsTo(Team::class, 'winner_id'); }
@@ -110,9 +107,7 @@ public function setTeam24stAttribute($value) { $this->attributes['team2_q4'] = (
         return $this->hasMany(PlayerGameStat::class);
     }
 
-    /* ----------------
-     |  Accessors      |
-     -----------------*/
+
      public function getTeam1TotalAttribute(): ?int
      {
          $parts = [$this->team11st, $this->team12st, $this->team13st, $this->team14st];
@@ -127,9 +122,7 @@ public function setTeam24stAttribute($value) { $this->attributes['team2_q4'] = (
          return $hasAny ? collect($parts)->sum(fn($v) => (int) $v) : null;
      }
 
-    // Final score string preference:
-    // 1) use `score` if present (e.g., "89-76")
-    // 2) else use summed quarters if both totals available
+
     public function getFinalScoreAttribute(): ?string
     {
         if (!empty($this->score)) {
@@ -141,7 +134,7 @@ public function setTeam24stAttribute($value) { $this->attributes['team2_q4'] = (
         return null;
     }
 
-    // Completed if we know a winner or if we can compute a final score
+
     public function getIsCompletedAttribute(): bool
     {
         return !is_null($this->winner_id) || !is_null($this->final_score);

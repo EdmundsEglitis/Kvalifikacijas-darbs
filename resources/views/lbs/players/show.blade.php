@@ -17,7 +17,6 @@
 <br>
   <div class="max-w-6xl mx-auto px-4 space-y-12 sm:space-y-16">
 
-    {{-- Player Info --}}
     <section class="grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 md:gap-8">
       <div class="flex md:block justify-center">
         @if(!empty($player->photo))
@@ -64,7 +63,6 @@
       </div>
     </section>
 
-    {{-- Season Totals / Averages --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Sezonas kopsavilkums</h2>
 
@@ -91,11 +89,9 @@
       @endif
     </section>
 
-    {{-- Per Game Stats --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Spēļu statistika</h2>
 
-      {{-- Mobile cards --}}
       <div class="space-y-3 sm:space-y-4 md:hidden">
         @foreach($player->playerGameStats as $stat)
           @php
@@ -146,7 +142,6 @@
         @endforeach
       </div>
 
-      {{-- Desktop table --}}
       <div class="hidden md:block overflow-x-auto rounded-xl shadow-lg border border-[#374151]">
         <table class="min-w-full divide-y divide-[#374151]">
           <thead class="bg-[#0f172a] sticky top-0 z-10">

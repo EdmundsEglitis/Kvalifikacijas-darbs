@@ -29,7 +29,6 @@
         @endforeach
       </div>
 
-      {{-- Mobile menu button --}}
       <button
         type="button"
         data-mobile-btn
@@ -42,7 +41,6 @@
     </div>
   </div>
 
-  {{-- Mobile drawer --}}
   <div id="{{ $menuId }}" class="hidden md:hidden bg-transparent">
     <div class="px-4 py-3 space-y-2">
       @foreach($parentLeagues as $league)

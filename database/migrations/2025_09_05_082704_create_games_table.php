@@ -10,14 +10,14 @@ return new class extends Migration
     {
         Schema::create('games', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('date'); // when game takes place
+            $table->dateTime('date'); 
 
             $table->foreignId('team1_id')->constrained('teams')->onDelete('cascade');
             $table->foreignId('team2_id')->constrained('teams')->onDelete('cascade');
 
-            $table->string('score')->nullable(); // e.g. "89-76"
+            $table->string('score')->nullable(); 
 
-            // Quarter scores
+
             $table->integer('team1_q1')->nullable();
             $table->integer('team2_q1')->nullable();
 
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->integer('team1_q4')->nullable();
             $table->integer('team2_q4')->nullable();
 
-            // Winner will be known after completion
+
             $table->foreignId('winner_id')->nullable()->constrained('teams')->nullOnDelete();
 
             $table->timestamps();

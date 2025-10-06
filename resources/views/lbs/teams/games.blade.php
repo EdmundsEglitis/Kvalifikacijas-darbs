@@ -8,7 +8,6 @@
 @section('content')
   <div class="max-w-6xl mx-auto px-4 space-y-12 pt-6">
 
-    {{-- Team Record --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-4">Komandas rezultāts</h2>
       @php
@@ -16,7 +15,6 @@
         $losses = $games->count() - $wins;
       @endphp
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-        {{-- WIN BUTTON --}}
         <button id="filterWins"
                 type="button"
                 class="min-h-[96px] p-4 bg-[#1f2937] border border-[#374151] rounded-xl text-center shadow hover:border-[#84CC16] transition focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40">
@@ -24,7 +22,6 @@
           <p class="text-xs text-[#F3F4F6]/70 mt-1">Uzvaras</p>
         </button>
 
-        {{-- LOSS BUTTON --}}
         <button id="filterLosses"
                 type="button"
                 class="min-h-[96px] p-4 bg-[#1f2937] border border-[#374151] rounded-xl text-center shadow hover:border-[#F97316] transition focus:outline-none focus:ring-2 focus:ring-[#F97316]/40">
@@ -32,7 +29,6 @@
           <p class="text-xs text-[#F3F4F6]/70 mt-1">Zaudējumi</p>
         </button>
 
-        {{-- SHOW ALL --}}
         <button id="filterAll"
                 type="button"
                 class="hidden sm:block min-h-[96px] p-4 bg-[#1f2937] border border-[#374151] rounded-xl text-center shadow hover:border-white/40 transition focus:outline-none focus:ring-2 focus:ring-white/30">
@@ -42,7 +38,6 @@
       </div>
     </section>
 
-    {{-- Games --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-4">Spēles</h2>
 
@@ -51,7 +46,6 @@
       @else
         <div class="space-y-10">
 
-          {{-- Upcoming --}}
           @if($upcomingGames->isNotEmpty())
             <div>
               <h3 class="text-xl font-semibold text-[#84CC16] mb-4">Gaidāmās spēles</h3>
@@ -63,7 +57,6 @@
                     </span>
 
                     <div class="flex-1 flex items-center justify-center gap-6">
-                      {{-- Team 1 --}}
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team1?->logo)
@@ -78,7 +71,6 @@
 
                       <div class="text-[#F3F4F6]/60 font-semibold">vs</div>
 
-                      {{-- Team 2 --}}
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team2?->logo)
@@ -106,7 +98,6 @@
             </div>
           @endif
 
-          {{-- Past (each card tagged as win/loss) --}}
           @if($pastGames->isNotEmpty())
             <div>
               <div class="flex items-center justify-between">
@@ -124,7 +115,6 @@
                     data-result="{{ $game->is_win ? 'win' : ($game->is_loss ? 'loss' : 'na') }}"
                   >
                     <div class="flex-1 flex items-center justify-center gap-6">
-                      {{-- Team 1 --}}
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team1?->logo)
@@ -137,7 +127,6 @@
                         <span class="text-sm font-semibold">{{ $game->team1->name }}</span>
                       </div>
 
-                      {{-- Score --}}
                       <div class="text-center">
                         <div class="text-1xl font-extrabold text-white tabular-nums">
                           {{ $game->score1 }} : {{ $game->score2 }}
@@ -147,7 +136,6 @@
                         </div>
                       </div>
 
-                      {{-- Team 2 --}}
                       <div class="flex flex-col items-center gap-2 w-28">
                         <div class="h-16 w-16 bg-[#111827] rounded-xl grid place-items-center overflow-hidden">
                           @if($game->team2?->logo)
@@ -181,7 +169,6 @@
 
   </div>
 
-  {{-- Filter JS --}}
   <script>
     (function () {
       const winsBtn   = document.getElementById('filterWins');
@@ -204,7 +191,7 @@
 
       function filter(type) {
         cards.forEach(c => {
-          const r = c.getAttribute('data-result'); // win | loss | na
+          const r = c.getAttribute('data-result'); 
           let show = true;
           if (type === 'win')  show = (r === 'win');
           if (type === 'loss') show = (r === 'loss');

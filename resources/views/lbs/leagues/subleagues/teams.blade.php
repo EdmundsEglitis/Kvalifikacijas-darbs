@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $subLeague->name . ' – Komandas')
 
-{{-- Sub-league tabs under the main navbar --}}
 @section('subnav')
   <x-lbs-subnav :subLeague="$subLeague" />
 @endsection

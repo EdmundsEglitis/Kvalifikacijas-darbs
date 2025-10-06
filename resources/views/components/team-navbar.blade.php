@@ -44,7 +44,6 @@
   </div>
 </nav>
 
-<!-- Team Tabs Navbar -->
 <nav class="bg-[#0f172a]/80 backdrop-blur border-b border-white/10 fixed top-16 w-full z-40">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex space-x-6 py-3 text-sm sm:text-base">

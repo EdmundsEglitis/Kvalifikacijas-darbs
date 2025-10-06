@@ -16,7 +16,6 @@ class NewsController extends Controller
         $cleanContent = preg_replace('/<figcaption.*?<\/figcaption>/is', '', $news->content);
         $news->clean_content = $cleanContent;
 
-        // NEW view path:
         return view('lbs.news.show', compact('news', 'parentLeagues'));
     }
 }

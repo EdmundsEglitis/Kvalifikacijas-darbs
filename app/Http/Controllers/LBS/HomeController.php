@@ -18,15 +18,13 @@ class HomeController extends Controller
             ->latest('created_at')
             ->first();
 
-        // ----- UPCOMING GAMES (all leagues) -----
-        // Select next games with team names & logos
         $upcomingGames = DB::table('games as g')
             ->leftJoin('teams as h', 'h.id', '=', 'g.team1_id')
             ->leftJoin('teams as a', 'a.id', '=', 'g.team2_id')
             ->whereNotNull('g.date')
-            ->where('g.date', '>', now())     // all future games
+            ->where('g.date', '>', now())     
             ->orderBy('g.date')
-            ->limit(24)                       // tweak as you like
+            ->limit(24)                       
             ->get([
                 'g.id',
                 'g.date as tipoff',
@@ -36,7 +34,6 @@ class HomeController extends Controller
                 'a.logo as away_team_logo',
             ])
             ->map(function ($row) {
-                // If logos are stored like "teamlogos/foo.png", build full asset URL
                 $toUrl = function ($p) {
                     if (!$p) return null;
                     return preg_match('~^https?://~i', $p) ? $p : asset('storage/' . ltrim($p, '/'));
@@ -46,7 +43,6 @@ class HomeController extends Controller
                 return $row;
             });
 
-        // ----- NEWS SLOTS (unchanged) -----
         $slots = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
         $bySlot = collect($slots)->mapWithKeys(function ($slot) {
             $item = News::where('position', $slot)->latest('created_at')->first();

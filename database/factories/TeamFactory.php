@@ -14,7 +14,6 @@ class TeamFactory extends Factory
     {
         return [
             'name' => $this->faker->unique()->word(),
-            // We will assign league_id in the seeder explicitly to a sub-league
             'league_id' => null,
         ];
     }

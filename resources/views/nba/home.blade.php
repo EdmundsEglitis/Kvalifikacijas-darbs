@@ -3,7 +3,6 @@
 
 @push('head')
 <style>
-  /* ===== Loader ===== */
   #pageLoader {
     backdrop-filter: blur(3px);
   }
@@ -20,7 +19,6 @@
   }
   @keyframes loadbar { 0%{transform:translateX(-60%)} 100%{transform:translateX(160%)} }
 
-  /* ===== Modern reveals (scale + elevate + slide) ===== */
   .reveal {
     opacity: 0; transform: translateY(18px) scale(.98);
     filter: saturate(.9);
@@ -34,7 +32,6 @@
     opacity: 1; transform: translateY(0) scale(1);
     filter: saturate(1);
   }
-  /* Stagger helper */
   [data-stagger] > * { opacity: 0; transform: translateY(24px) scale(.98); }
   [data-stagger].is-visible > * {
     animation: rise .7s cubic-bezier(.22,1,.36,1) forwards;
@@ -47,7 +44,6 @@
   [data-stagger].is-visible > *:nth-child(6){ animation-delay:.34s }
   @keyframes rise { to { opacity:1; transform: none; } }
 
-  /* Section heading accent underline */
   .accent-underline {
     position: relative; display:inline-block;
   }
@@ -61,7 +57,6 @@
   }
   .accent-underline.in-view::after { transform: scaleX(1); }
 
-  /* Card hover motion (tilt + lift) */
   .tilt {
     transform: perspective(900px) rotateX(0) rotateY(0) translateY(0);
     transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, filter .2s ease;
@@ -73,18 +68,15 @@
     filter: saturate(1.05);
   }
 
-  /* Hero parallax layer */
   .parallax {
     transform: translateY(0);
     will-change: transform;
     transition: transform .12s linear;
   }
 
-  /* Glow ring on logos */
   .ring-glow { box-shadow: 0 0 0 0 rgba(132,204,22,.0); transition: box-shadow .25s ease; }
   .ring-glow:hover { box-shadow: 0 0 0 6px rgba(132,204,22,.15); }
 
-  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .reveal, [data-stagger] > *, .tilt, .parallax, .accent-underline::after { transition: none !important; animation: none !important; }
   }
@@ -124,7 +116,6 @@
   </script>
   <noscript><style>#pageLoader{display:none!important}</style></noscript>
 
-  {{-- ===== HERO with parallax ===== --}}
   <section class="relative -mt-16 w-full h-[64vh] sm:h-[70vh] overflow-hidden">
     <div class="absolute inset-0 parallax"
          id="heroLayer"
@@ -160,7 +151,6 @@
 
   <div class="max-w-7xl mx-auto px-4 space-y-16 pt-10">
 
-    {{-- ===== QUICK NAV CARDS (staggered) ===== --}}
     <section class="reveal" data-stagger>
       <h2 class="text-2xl font-bold text-white mb-4">
         <span class="accent-underline">Quick Navigation</span>
@@ -200,7 +190,6 @@
       </div>
     </section>
 
-    {{-- ===== UPCOMING GAMES ===== --}}
     @if($upcomingGames->isNotEmpty())
       <section class="reveal">
         <h2 class="text-2xl font-bold text-white mb-4">
@@ -245,7 +234,6 @@
       </section>
     @endif
 
-    {{-- ===== TOP SCORERS ===== --}}
     @if($topPpg->isNotEmpty())
       <section class="reveal">
         <h2 class="text-2xl font-bold text-white mb-4">
@@ -266,7 +254,6 @@
                 </div>
                 <div>
                   <span class="block font-semibold text-white transition-colors group-hover:text-[#84CC16]">
-                    {{ $row->player_name ?? 'Unknown player' }}
                   </span>
                   <div class="text-xs text-[#9CA3AF]">{{ $row->g }} games</div>
                 </div>
@@ -284,7 +271,6 @@
       </section>
     @endif
 
-    {{-- ===== STANDINGS SNAPSHOT ===== --}}
     @if($standings->isNotEmpty())
       <section class="reveal">
         <div class="flex items-center justify-between mb-4">
@@ -348,7 +334,6 @@
       </section>
     @endif
 
-    {{-- ===== FEATURED TEAMS ===== --}}
     @if($teams->isNotEmpty())
       <section class="reveal">
         <div class="flex items-center justify-between mb-4">
@@ -387,7 +372,6 @@
 
 @push('scripts')
 <script>
-  // Row click + keyboard nav
   document.querySelectorAll('tr[data-href]').forEach(row => {
     row.addEventListener('click', () => {
       const href = row.getAttribute('data-href');
@@ -402,14 +386,12 @@
     });
   });
 
-  // Parallax hero (tiny, safe)
   (function(){
     const layer = document.getElementById('heroLayer');
     if (!layer) return;
     let lastY = window.scrollY;
     const onScroll = () => {
       const y = window.scrollY;
-      // move at ~5% of scroll
       const t = Math.min(60, Math.max(-60, (y * 0.05)));
       layer.style.transform = `translateY(${t}px)`;
       lastY = y;
@@ -418,7 +400,6 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   })();
 
-  // Reveal on scroll + stagger + underline activation
   (function(){
     const reveals = document.querySelectorAll('.reveal, [data-stagger]');
     const headings = document.querySelectorAll('.accent-underline');

@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 
 class StandingsController extends Controller
 {
-    // /nba/standings/explorer
     public function explorer(Request $request)
     {
         $seasons = NbaStanding::query()
@@ -38,7 +37,6 @@ class StandingsController extends Controller
 
         $collection = $q->get();
 
-        // map team_id -> logo url
         $teamIds = $collection->pluck('team_id')->unique()->values();
         $teams   = NbaTeam::whereIn('external_id', $teamIds)->get(['external_id','abbreviation','logo','logo_dark']);
 
@@ -49,7 +47,6 @@ class StandingsController extends Controller
             $logoMap[$t->external_id] = $t->logo ?: $fallback;
         }
 
-        // helper: decode clincher codes → badges
         $decodeClincher = function (?string $raw) {
             $raw = strtolower(trim((string)$raw));
             if ($raw === '') return [];
@@ -66,7 +63,6 @@ class StandingsController extends Controller
 
             $tokens = [];
 
-            // detect 2-letter tokens first
             foreach (['pb','pi'] as $two) {
                 if (str_contains($raw, $two)) {
                     $tokens[] = ['code' => $two, 'label' => $map[$two][0], 'cls' => $map[$two][1]];
@@ -74,7 +70,6 @@ class StandingsController extends Controller
                 }
             }
 
-            // then 1-letter tokens
             foreach (str_split($raw) as $ch) {
                 if (isset($map[$ch])) {
                     $tokens[] = ['code' => $ch, 'label' => $map[$ch][0], 'cls' => $map[$ch][1]];
@@ -104,7 +99,6 @@ class StandingsController extends Controller
 
             $teamLogo = $logoMap[$r->team_id] ?? null;
 
-            // decode clincher for table + human text for cards
             $badges = $decodeClincher($r->clincher);
             $clincherHuman = implode(', ', array_map(fn($t) => $t['label'], $badges));
 

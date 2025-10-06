@@ -31,7 +31,7 @@ class TeamResource extends Resource
                 Forms\Components\Select::make('league_id')
                     ->label('League')
                     ->options(
-                        League::whereNotNull('parent_id')->pluck('name', 'id') // ✅ only sub-leagues
+                        League::whereNotNull('parent_id')->pluck('name', 'id') 
                     )
                     ->searchable()
                     ->required(),
@@ -60,7 +60,7 @@ public static function table(Table $table): Table
 
                 ImageColumn::make('logo')
                 ->label('Team Logo')
-                ->disk('public')  // 👈 ensures it uses the correct storage disk
+                ->disk('public')  
                 ->square()
                 ->height(50),
             

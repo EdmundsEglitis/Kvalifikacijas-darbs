@@ -6,7 +6,6 @@
     <main class="pt-20 max-w-7xl mx-auto px-4">
         <h1 class="text-3xl font-bold text-white mb-6">NBA Spēlētāji</h1>
 
-        {{-- Controls: search + per page --}}
         <form method="GET"
               class="mb-6 flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0 bg-[#1f2937] p-4 rounded-lg shadow">
             <div class="flex-1">
@@ -29,7 +28,6 @@
                 </select>
             </div>
 
-            {{-- Preserve sort/dir on search submit --}}
             <input type="hidden" name="sort" value="{{ request('sort','name') }}">
             <input type="hidden" name="dir" value="{{ request('dir','asc') }}">
 
@@ -122,7 +120,6 @@
                 </table>
             </div>
 
-            {{-- Pagination --}}
             <div class="mt-6 flex justify-center">
                 {{ $players->appends(request()->query())->links('vendor.pagination.custom-dark') }}
             </div>

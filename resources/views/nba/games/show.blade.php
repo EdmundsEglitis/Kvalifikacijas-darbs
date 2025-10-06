@@ -1,4 +1,3 @@
-
 @extends('layouts.nba')
 @section('title','Show game')
 

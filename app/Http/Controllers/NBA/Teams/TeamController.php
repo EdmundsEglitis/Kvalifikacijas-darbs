@@ -11,7 +11,6 @@ use Illuminate\Http\Request;
 
 class TeamController extends Controller
 {
-    // /nba/teams (index)
     public function index(Request $request)
     {
         $q = trim((string) $request->query('q', ''));
@@ -28,11 +27,9 @@ class TeamController extends Controller
             ->paginate(31)
             ->withQueryString();
 
-        // NEW view path
         return view('nba.teams.index', compact('teams', 'q'));
     }
 
-    // /nba/teams/{external_id}
     public function show($external_id)
     {
         $team = NbaTeam::where('external_id', $external_id)->firstOrFail();

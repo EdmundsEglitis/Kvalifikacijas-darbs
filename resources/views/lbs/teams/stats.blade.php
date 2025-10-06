@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $team->name . ' – Komandas statistika')
 
-{{-- Subnav (team tabs) under the main navbar --}}
 @section('subnav')
 <x-teamnav :team="$team" />
 @endsection
@@ -9,7 +8,6 @@
 @section('content')
   <div class="max-w-7xl mx-auto px-4 space-y-16">
 
-    {{-- Team Logo + Name --}}
     <section class="flex flex-col items-center space-y-4 text-center">
       @php
         $hasLogo = $team->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($team->logo);
@@ -25,7 +23,6 @@
       <p class="text-[#F3F4F6]/70 text-sm">Komandas pārskats & statistika</p>
     </section>
 
-    {{-- Team Record --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Komandas rezultāti</h2>
       <div class="flex justify-center gap-6">
@@ -40,7 +37,6 @@
       </div>
     </section>
 
-    {{-- Average Team Stats --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Vidējie rādītāji vidējā spēlē</h2>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
@@ -53,7 +49,6 @@
       </div>
     </section>
 
-    {{-- Player Stats Table --}}
     <section>
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-2xl font-bold text-white">Spēlētāju statistika</h2>

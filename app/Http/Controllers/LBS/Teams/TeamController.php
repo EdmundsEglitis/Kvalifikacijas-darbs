@@ -9,7 +9,6 @@ use App\Models\Team;
 
 class TeamController extends Controller
 {
-    // Team detail (overview-like)
     public function show($id)
     {
         $team = Team::with(['players.games'])->findOrFail($id);
@@ -65,7 +64,6 @@ class TeamController extends Controller
         $wins = $games->where('winner_id', $team->id)->count();
         $losses = $games->count() - $wins;
 
-        // NEW view path:
         return view('lbs.teams.show', compact('team', 'averageStats', 'bestPlayers', 'wins', 'losses'));
     }
 
@@ -99,13 +97,11 @@ class TeamController extends Controller
                 return $game;
             });
     
-        // Split by date
         $upcomingGames = $games->filter(fn($g) => $g->date && $g->date->isFuture())
             ->sortBy('date')->values();
     
         $pastGames = $games->filter(fn($g) => $g->date && ($g->date->isPast() || $g->date->isToday()))
             ->values()
-            // Flag win/loss for this team (use recorded winner_id when present; else derive from score)
             ->map(function ($g) use ($team) {
                 $winnerId = $g->winner_id;
                 if (!$winnerId && ($g->score1 !== null && $g->score2 !== null)) {
@@ -134,7 +130,6 @@ class TeamController extends Controller
     public function players($id)
     {
         $team = Team::with('players')->findOrFail($id);
-        // NEW view path:
         return view('lbs.teams.players', compact('team'));
     }
 
@@ -187,7 +182,6 @@ class TeamController extends Controller
             ];
         });
 
-        // NEW view path:
         return view('lbs.teams.stats', compact(
             'team',
             'games',

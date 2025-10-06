@@ -7,11 +7,10 @@ use App\Models\NbaPlayer;
 use App\Models\NbaTeam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\NbaPlayerGamelog; // <- use your existing model name
+use App\Models\NbaPlayerGamelog; 
 
 class PlayerController extends Controller
 {
-    // /nba/players (index)
     public function index(Request $request)
     {
         $page    = max((int) $request->query('page', 1), 1);
@@ -40,11 +39,9 @@ class PlayerController extends Controller
 
         $players = $query->paginate($perPage, ['*'], 'page', $page);
 
-        // NEW view path
         return view('nba.players.index', ['players' => $players]);
     }
 
-    // /nba/players/{external_id}
     public function show(Request $request, $external_id)
     {
         $player = NbaPlayer::with([
@@ -56,7 +53,6 @@ class PlayerController extends Controller
 
         $details = $player->details;
 
-        // header team
         $headerTeam = null;
         if ($details && ($details->team_id ?? null)) {
             $headerTeam = NbaTeam::where('external_id', $details->team_id)->first();
@@ -71,7 +67,6 @@ class PlayerController extends Controller
                 ->first();
         }
 
-        // opponent mapping for gamelogs
         $teams = NbaTeam::select('external_id','name','short_name','abbreviation','logo')->get();
         $norm = fn (?string $s) => Str::of((string)$s)->lower()
             ->replace(['.', ',', '-', '–', '—', '\''], ' ')
@@ -107,7 +102,6 @@ class PlayerController extends Controller
             $cleanStatus = $details->active ? 'Active' : 'Inactive';
         }
 
-        // averages
         $career = $player->gamelogs()
             ->selectRaw('COUNT(*) as games, AVG(points) as pts, AVG(rebounds) as reb, AVG(assists) as ast, AVG(steals) as stl, AVG(blocks) as blk, AVG(minutes) as min')
             ->first();
@@ -118,7 +112,6 @@ class PlayerController extends Controller
             ->selectRaw('COUNT(*) as games, AVG(points) as pts, AVG(rebounds) as reb, AVG(assists) as ast, AVG(steals) as stl, AVG(blocks) as blk, AVG(minutes) as min')
             ->first();
 
-        // NEW view path
         return view('nba.players.show', [
             'player'        => $player,
             'details'       => $details,
@@ -130,10 +123,8 @@ class PlayerController extends Controller
         ]);
     }
 
-// /nba/compare/players
 public function compare(Request $request)
 {
-    // seasons for filters
     $seasonRows = NbaPlayerGamelog::query()
         ->selectRaw('DISTINCT YEAR(game_date) AS season')
         ->orderByDesc('season')
@@ -150,7 +141,6 @@ public function compare(Request $request)
     $teamQuery   = trim((string) $request->input('team', ''));
     $playerQuery = trim((string) $request->input('player', ''));
 
-    // safe per-page bounds
     $perPage = (int) $request->input('per_page', 50);
     $perPage = max(10, min($perPage, 100));
 
@@ -196,17 +186,14 @@ public function compare(Request $request)
         ->orderByDesc('season')
         ->orderBy('player_name');
 
-    // DB-level pagination
     $paginator = $agg->paginate($perPage)->withQueryString();
 
-    // percentage formatter
     $percentFmt = function ($v) {
         if ($v === null) return '—';
         $n = (float)$v;
         return $n <= 1 ? number_format($n * 100, 1) . '%' : number_format($n, 1) . '%';
     };
 
-    // map only current page items, then put them back on the paginator
     $mapped = $paginator->getCollection()->map(function ($r) use ($percentFmt) {
         $one  = fn($v) => $v !== null ? number_format($v, 1) : '—';
         $logo = $r->p_logo ?: $r->t_logo;
@@ -257,7 +244,7 @@ public function compare(Request $request)
 
     $paginator->setCollection($mapped);
 
-    return view('nba.players.compare', [ // uses your layout-based view
+    return view('nba.players.compare', [ 
         'seasons'     => array_values($seasonRows),
         'from'        => $from,
         'to'          => $to,

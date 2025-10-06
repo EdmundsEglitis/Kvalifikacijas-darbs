@@ -10,7 +10,7 @@ class CrossLeagueCompareController extends Controller
 {
     public function explorer(Request $request)
     {
-        // ---------- Query params ----------
+ 
         $q        = trim((string) $request->query('q', ''));
         $from     = (int) $request->query('from', 0);
         $to       = (int) $request->query('to', 0);
@@ -19,7 +19,7 @@ class CrossLeagueCompareController extends Controller
         $nbaPage  = max((int) $request->query('nba_page', 1), 1);
         $lbsPage  = max((int) $request->query('lbs_page', 1), 1);
 
-        // ---------- Seasons (union across sources) ----------
+
         $nbaSeasons = DB::table('nba_player_game_logs')
             ->whereNotNull('game_date')
             ->selectRaw('DISTINCT YEAR(game_date) AS y')
@@ -38,9 +38,7 @@ class CrossLeagueCompareController extends Controller
         if (!$to)   $to   = $latest;
         if ($from > $to) { [$from, $to] = [$to, $from]; }
 
-        // =========================================================
-        // NBA: per-season aggregates per player + SEARCH + PAGING
-        // =========================================================
+
         $nbaBase = DB::table('nba_player_game_logs as l')
             ->join('nba_players as p', 'p.external_id', '=', 'l.player_external_id')
             ->whereNotNull('l.game_date')
@@ -124,15 +122,13 @@ class CrossLeagueCompareController extends Controller
                 'tp_pct'      => $fmt($tp_pct,true),
                 'ft_pct'      => $fmt($ft_pct,true),
 
-                // raw values for payload
+                
                 '_raw_ppg' => $ppg, '_raw_rpg'=>$rpg, '_raw_apg'=>$apg, '_raw_spg'=>$spg,
                 '_raw_bpg' => $bpg, '_raw_tpg'=>$tpg, '_raw_fg'=>$fg_pct, '_raw_tp'=>$tp_pct, '_raw_ft'=>$ft_pct
             ];
         });
 
-        // =========================================================
-        // LBS: per-season aggregates per player + SEARCH + PAGING
-        // =========================================================
+
         $lbsBase = DB::table('player_game_stats as pgs')
             ->join('games as g', 'g.id', '=', 'pgs.game_id')
             ->join('players as p', 'p.id', '=', 'pgs.player_id')
@@ -211,13 +207,12 @@ class CrossLeagueCompareController extends Controller
                 'tp_pct'      => $fmt($tp_pct,true),
                 'ft_pct'      => $fmt($ft_pct,true),
 
-                // raw values for payload
+             
                 '_raw_ppg' => $ppg, '_raw_rpg'=>$rpg, '_raw_apg'=>$apg, '_raw_spg'=>$spg,
                 '_raw_bpg' => $bpg, '_raw_tpg'=>$tpg, '_raw_fg'=>$fg_pct, '_raw_tp'=>$tp_pct, '_raw_ft'=>$ft_pct
             ];
         });
 
-        // Build paginator-like meta for both
         $nbaMeta = [
             'total' => $nbaTotal,
             'per'   => $nbaPer,
@@ -251,7 +246,6 @@ class CrossLeagueCompareController extends Controller
 
     public function teamsExplorer(Request $request)
     {
-        // -------- Seasons (union of NBA standings + LBS games) --------
         $nbaSeasons = NbaStanding::query()
             ->select('season')->distinct()->pluck('season')->toArray();
 
@@ -270,9 +264,7 @@ class CrossLeagueCompareController extends Controller
 
         $teamQuery = trim((string) $request->input('q', ''));
 
-        // --------------------------------------------------------------
-        // NBA TEAMS: pull from nba_standings (same way as your explorer)
-        // --------------------------------------------------------------
+
         $nbaQ = NbaStanding::query()
             ->when($from, fn($q)=>$q->where('season','>=',$from))
             ->when($to,   fn($q)=>$q->where('season','<=',$to))
@@ -285,7 +277,6 @@ class CrossLeagueCompareController extends Controller
             ->orderBy('season','desc')->orderBy('team_name')
             ->get();
 
-        // map logos by team external_id
         $teamIds = $nbaQ->pluck('team_id')->unique()->values();
         $teams   = NbaTeam::whereIn('external_id', $teamIds)->get(['external_id','abbreviation','logo']);
         $logoMap = [];
@@ -313,21 +304,17 @@ class CrossLeagueCompareController extends Controller
                 'opp_ppg'     => $oppPpg,
                 'diff'        => $diff,
 
-                // formatted for table
                 'win_percent_fmt' => $winPct !== null ? number_format($winPct * 100, 1) . '%' : '—',
                 'ppg_fmt'         => $ppg    !== null ? number_format($ppg, 1)    : '—',
                 'opp_ppg_fmt'     => $oppPpg !== null ? number_format($oppPpg, 1) : '—',
                 'diff_txt'        => $diff !== null ? (($diff >= 0 ? '+' : '') . $diff) : '—',
                 'diff_class'      => $diff !== null ? ($diff >= 0 ? 'text-[#84CC16]' : 'text-[#F97316]') : 'text-gray-300',
 
-                // for compare payload
                 '_key' => "NBA:T:{$r->team_id}:{$r->season}",
             ];
         });
 
-        // --------------------------------------------------------------
-        // LBS TEAMS: union team1/team2 from games (your exact approach)
-        // --------------------------------------------------------------
+
         $t1_pts = "COALESCE(team1_q1+team1_q2+team1_q3+team1_q4, CAST(SUBSTRING_INDEX(score,'-',1) AS UNSIGNED))";
         $t2_pts = "COALESCE(team2_q1+team2_q2+team2_q3+team2_q4, CAST(SUBSTRING_INDEX(score,'-',-1) AS UNSIGNED))";
 
@@ -410,7 +397,6 @@ class CrossLeagueCompareController extends Controller
             ];
         });
 
-        // simple paginator-like meta (client already custom)
         $nbaPer = min(max((int)$request->query('nba_per', 25), 10), 200);
         $lbsPer = min(max((int)$request->query('lbs_per', 25), 10), 200);
         $nbaPage= max((int)$request->query('nba_page', 1), 1);

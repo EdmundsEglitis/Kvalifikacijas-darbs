@@ -22,7 +22,6 @@
       <p class="mt-6 text-[#F3F4F6]/70">Nav pieejamu spēļu.</p>
     @else
 
-      {{-- UPCOMING --}}
       @if($upcomingGames->isNotEmpty())
         <section class="mb-12">
           <div class="flex items-center justify-between mb-4">
@@ -40,7 +39,6 @@
                 </div>
 
                 <div class="flex-1 flex items-center justify-center gap-6">
-                  {{-- Team 1 --}}
                   <div class="flex flex-col items-center gap-2 w-28 text-center">
                     <div class="h-16 w-16 rounded-xl bg-[#111827] grid place-items-center overflow-hidden">
                       @if(optional($game->team1)->logo)
@@ -57,7 +55,6 @@
 
                   <div class="text-[#F3F4F6]/60 font-semibold">vs</div>
 
-                  {{-- Team 2 --}}
                   <div class="flex flex-col items-center gap-2 w-28 text-center">
                     <div class="h-16 w-16 rounded-xl bg-[#111827] grid place-items-center overflow-hidden">
                       @if(optional($game->team2)->logo)
@@ -92,7 +89,6 @@
         </section>
       @endif
 
-      {{-- COMPLETED --}}
       @if($pastGames->isNotEmpty())
         <section>
           <div class="flex items-center justify-between mb-4">
@@ -116,7 +112,6 @@
 
               <article class="group bg-[#1f2937] border border-[#374151] rounded-2xl shadow transition hover:-translate-y-0.5 hover:shadow-xl min-h-[260px] p-5 flex flex-col">
                 <div class="flex-1 flex items-center justify-center gap-6">
-                  {{-- Team 1 --}}
                   <div class="flex flex-col items-center gap-2 w-28 text-center">
                     <div class="h-16 w-16 rounded-xl bg-[#111827] grid place-items-center overflow-hidden {{ $isWinner1 ? 'ring-2 ring-[#84CC16]' : '' }}">
                       @if(optional($game->team1)->logo)
@@ -131,7 +126,6 @@
                     </a>
                   </div>
 
-                  {{-- Score --}}
                   <div class="text-center">
                     <div class="text-1xl font-extrabold text-white tracking-wide">
                       {{ ($s1 !== null && $s2 !== null) ? ($s1.' : '.$s2) : '—' }}
@@ -139,7 +133,6 @@
                     <div class="text-xs mt-1 text-[#F3F4F6]/60">Galarezultāts</div>
                   </div>
 
-                  {{-- Team 2 --}}
                   <div class="flex flex-col items-center gap-2 w-28 text-center">
                     <div class="h-16 w-16 rounded-xl bg-[#111827] grid place-items-center overflow-hidden {{ $isWinner2 ? 'ring-2 ring-[#84CC16]' : '' }}">
                       @if(optional($game->team2)->logo)

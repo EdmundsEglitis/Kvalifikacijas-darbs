@@ -15,26 +15,21 @@ use Illuminate\Support\Str;
 
 class SubleagueController extends Controller
 {
-    // Overview page
     public function show($id)
     {
         $subLeague = League::findOrFail($id);
-        // NEW view path:
         return view('lbs.leagues.subleagues.show', compact('subLeague'));
     }
 
-    // Teams tab
     public function teams($id)
     {
         $subLeague = League::with('teams')->findOrFail($id);
-        // NEW view path:
         return view('lbs.leagues.subleagues.teams', [
             'subLeague' => $subLeague,
             'teams' => $subLeague->teams,
         ]);
     }
 
-    // News tab
     public function news($id)
     {
         $subLeague = League::findOrFail($id);
@@ -69,7 +64,6 @@ class SubleagueController extends Controller
             return [$slot => $item];
         });
 
-        // NEW view path:
         return view('lbs.leagues.subleagues.news', compact(
             'subLeague',
             'parentLeagues',
@@ -78,7 +72,6 @@ class SubleagueController extends Controller
         ));
     }
 
-    // Calendar tab
     public function calendar($id)
     {
         $subLeague = League::with('teams')->findOrFail($id);
@@ -95,7 +88,6 @@ class SubleagueController extends Controller
         $upcomingGames = $games->filter(fn($g) => $g->date->isFuture());
         $pastGames     = $games->filter(fn($g) => $g->date->isPast());
 
-        // NEW view path:
         return view('lbs.leagues.subleagues.calendar', compact(
             'subLeague',
             'parentLeagues',
@@ -105,7 +97,6 @@ class SubleagueController extends Controller
         ));
     }
 
-    // Stats tab
     public function stats($id)
     {
         $subLeague = League::with('teams')->findOrFail($id);
@@ -197,7 +188,6 @@ class SubleagueController extends Controller
 
         $teamsStats = $teamsStats->sortByDesc(fn($t) => $t['wins'])->values();
 
-        // NEW view path:
         return view('lbs.leagues.subleagues.stats', [
             'subLeague' => $subLeague,
             'parentLeagues' => $parentLeagues,

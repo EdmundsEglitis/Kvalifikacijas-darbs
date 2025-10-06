@@ -5,7 +5,6 @@
 @section('content')
 
     <main class="pt-24 max-w-7xl mx-auto px-4 space-y-10">
-        <!-- HEADER -->
         <div class="bg-[#1f2937] rounded-xl p-6 flex items-center space-x-6">
             <img src="{{ $player->image ?? $details->headshot_href ?? 'https://via.placeholder.com/120' }}"
                  class="h-28 w-28 rounded-full ring-4 ring-[#84CC16] object-cover">
@@ -25,7 +24,6 @@
             </div>
         </div>
 
-        <!-- BIO -->
         <div class="bg-[#1f2937] rounded-xl p-6">
             <h2 class="text-2xl font-semibold mb-4">Bio</h2>
             <ul class="grid grid-cols-2 gap-4 text-sm">
@@ -40,7 +38,6 @@
             </ul>
         </div>
 
-        <!-- CAREER AVERAGES -->
         <div class="bg-[#1f2937] rounded-xl p-6">
             <h2 class="text-2xl font-semibold mb-4">Career Averages</h2>
             @if($career && $career->games > 0)
@@ -57,7 +54,6 @@
             @endif
         </div>
 
-        <!-- SEASON AVERAGES -->
         <div class="bg-[#1f2937] rounded-xl p-6">
             <h2 class="text-2xl font-semibold mb-4">{{ now()->year }} Season Averages</h2>
             @if($season && $season->games > 0)
@@ -74,7 +70,6 @@
             @endif
         </div>
 
-        <!-- GAME LOGS -->
         <div class="bg-[#1f2937] rounded-xl p-6">
             <h2 class="text-2xl font-semibold mb-4">Game Logs</h2>
             <div class="overflow-x-auto">

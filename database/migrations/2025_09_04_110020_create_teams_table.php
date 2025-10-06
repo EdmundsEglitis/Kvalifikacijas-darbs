@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('teams', function (Blueprint $table) {
-            $table->id(); // auto-increment ID
-            $table->string('name'); // team name
-            $table->foreignId('league_id')->constrained('leagues')->onDelete('cascade'); // league foreign key
+            $table->id(); 
+            $table->string('name');
+            $table->foreignId('league_id')->constrained('leagues')->onDelete('cascade'); 
             $table->timestamps();
         });
     }

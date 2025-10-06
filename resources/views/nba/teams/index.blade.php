@@ -46,7 +46,6 @@
                 @endforeach
             </div>
 
-            {{-- Pagination --}}
             <div class="mt-6 flex justify-between items-center text-sm text-gray-300">
                 <div>
                     @php

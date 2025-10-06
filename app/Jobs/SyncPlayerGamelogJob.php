@@ -19,27 +19,19 @@ class SyncPlayerGamelogJob implements ShouldQueue
     /** @var array<int> */
     public array $playerIds;
 
-    /**
-     * Timeout for queue workers (in seconds)
-     */
+
     public int $timeout = 120;
 
-    /**
-     * Max attempts per job before failing
-     */
+
     public int $tries = 3;
 
-    /**
-     * Create a new job instance.
-     */
+
     public function __construct(array $playerIds)
     {
         $this->playerIds = $playerIds;
     }
 
-    /**
-     * Execute the job.
-     */
+
     public function handle(NbaService $nbaService): void
     {
         set_time_limit(0);
@@ -55,9 +47,7 @@ class SyncPlayerGamelogJob implements ShouldQueue
         }
     }
 
-    /**
-     * Process one player's gamelog and bulk upsert to DB
-     */
+
     protected function processPlayer(NbaService $nbaService, int $playerId): void
     {
         $gamelog = $nbaService->playerGameLog($playerId);
@@ -86,7 +76,7 @@ class SyncPlayerGamelogJob implements ShouldQueue
                         continue;
                     }
 
-                    // Pair labels with values
+
                     $columns = [];
                     foreach ($labels as $i => $label) {
                         $columns[$label] = $stats[$i] ?? null;
@@ -129,8 +119,8 @@ class SyncPlayerGamelogJob implements ShouldQueue
         if (!empty($rows)) {
             NbaPlayerGamelog::upsert(
                 $rows,
-                ['player_external_id', 'event_id'], // unique keys
-                array_keys($rows[0]) // update all columns
+                ['player_external_id', 'event_id'],
+                array_keys($rows[0]) 
             );
         }
     }

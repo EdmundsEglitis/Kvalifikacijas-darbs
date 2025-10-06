@@ -10,11 +10,9 @@ class CompareController extends Controller
 {
     public function explorer(Request $request)
     {
-        // Raw params: ?league= may be parent or sub; ?sub= explicit sub
         $leagueParam = $request->integer('league') ?: null;
         $subParam    = $request->integer('sub') ?: null;
 
-        // Resolve selected parent/sub similar to Teams compare
         $selectedParentId = null;
         $selectedSubId    = null;
 
@@ -41,7 +39,6 @@ class CompareController extends Controller
             }
         }
 
-        // Seasons from games table (YEAR(date))
         $seasons = DB::table('games')
             ->selectRaw('DISTINCT YEAR(date) AS season')
             ->orderByDesc('season')
@@ -55,7 +52,6 @@ class CompareController extends Controller
         $to   = (int) $request->input('to',   $maxSeason);
         if ($from > $to) { [$from, $to] = [$to, $from]; }
 
-        // League lists (parents / subs) – one table model
         $parents = DB::table('leagues')
             ->select('id','name')
             ->whereNull('parent_id')
@@ -68,21 +64,15 @@ class CompareController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Sub-league row (for subnav component)
         $subLeague = $selectedSubId
             ? DB::table('leagues')->select('id','name','parent_id')->where('id', $selectedSubId)->first()
             : null;
 
-        /**
-         * Build season aggregates per player from player_game_stats.
-         * - Group by player, season (and playing team/league context)
-         * - Derive per-game stats and percentages
-         */
         $base = DB::table('player_game_stats as pgs')
             ->join('games as g', 'g.id', '=', 'pgs.game_id')
             ->join('players as p', 'p.id', '=', 'pgs.player_id')
-            ->join('teams as t', 't.id', '=', 'pgs.team_id')     // team used in that game
-            ->leftJoin('leagues as ls', 'ls.id', '=', 't.league_id') // sub league row
+            ->join('teams as t', 't.id', '=', 'pgs.team_id')     
+            ->leftJoin('leagues as ls', 'ls.id', '=', 't.league_id') 
             ->selectRaw("
                 p.id  as player_id,
                 p.name as player_name,
@@ -121,7 +111,6 @@ class CompareController extends Controller
 
         $collection = $base->get();
 
-        // Map to rows for the blade
         $rows = $collection->map(function ($r) {
             $g = max((int)$r->games, 0);
             $ppg = $g > 0 ? (float)$r->pts / $g : null;
@@ -137,14 +126,13 @@ class CompareController extends Controller
 
             $wl_text = is_numeric($r->wins) && is_numeric($r->losses) ? "{$r->wins}–{$r->losses}" : '—';
 
-            // Build payload (used by compare cards)
             $payload = json_encode([
                 'season'   => (int)$r->season,
                 'player'   => $r->player_name,
                 'team'     => $r->team_name,
                 'abbr'     => null,
-                'logo'     => $r->team_logo,   // relative path like "teamlogos/foo.png"
-                'headshot' => $r->player_photo, // could be relative or absolute
+                'logo'     => $r->team_logo,   
+                'headshot' => $r->player_photo, 
                 'ppg'      => $ppg,
                 'rpg'      => $rpg,
                 'apg'      => $apg,
@@ -200,7 +188,7 @@ class CompareController extends Controller
             'subs'           => $subs,
             'selectedParent' => $selectedParentId,
             'selectedSub'    => $selectedSubId,
-            'subLeague'      => $subLeague, // for <x-lbs-subnav>
+            'subLeague'      => $subLeague, 
             'rows'           => $rows,
             'legend'         => [
                 ['G',     'Spēļu skaits.'],

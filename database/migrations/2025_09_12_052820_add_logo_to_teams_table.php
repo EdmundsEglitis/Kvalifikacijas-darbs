@@ -10,7 +10,6 @@ return new class extends Migration
     {
         Schema::table('teams', function (Blueprint $table) {
             $table->string('logo')->nullable()->after('name'); 
-            // nullable so not all teams need a logo immediately
         });
     }
 

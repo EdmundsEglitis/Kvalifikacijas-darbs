@@ -4,7 +4,6 @@
 
 @push('head')
 <style>
-  /* ===== Reveal (scale + slide) ===== */
   .reveal {
     opacity: 0;
     transform: translateY(16px) scale(.985);
@@ -17,7 +16,6 @@
     transform: none;
   }
 
-  /* ===== Accent underline on headings ===== */
   .accent-underline { position: relative; display:inline-block; }
   .accent-underline::after{
     content:""; position:absolute; left:0; right:0; bottom:-8px; height:3px; border-radius:9999px;
@@ -27,7 +25,6 @@
   }
   .accent-underline.in-view::after { transform: scaleX(1); }
 
-  /* ===== Reading progress bar ===== */
   #readProgress {
     position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 50;
     background: linear-gradient(90deg, #84CC16, #22d3ee, #a78bfa);
@@ -35,7 +32,6 @@
     transition: transform .08s linear;
   }
 
-  /* ===== Prose polish ===== */
   .prose :where(img){ border-radius: .75rem; border: 1px solid rgba(255,255,255,.06); }
   .prose :where(blockquote){
     border-left: 4px solid rgba(132,204,22,.6);
@@ -50,7 +46,6 @@
     background: transparent; padding: 0; border-radius: 0;
   }
 
-  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .reveal, .accent-underline::after, #readProgress { transition: none !important; animation: none !important; }
   }
@@ -58,10 +53,8 @@
 @endpush
 
 @section('content')
-  {{-- Reading progress bar --}}
   <div id="readProgress"></div>
 
-  {{-- Optional cover / hero --}}
   @if(!empty($news->preview_image ?? null))
     <section class="relative h-[36vh] sm:h-[44vh] overflow-hidden">
       <div class="absolute inset-0"
@@ -98,7 +91,6 @@
   @endif
 
   <article class="max-w-5xl mx-auto px-4 pt-8 pb-16 space-y-8">
-    {{-- Title (if no cover) --}}
     @if(empty($news->preview_image ?? null))
       <header class="space-y-3 reveal">
         <h1 class="text-4xl font-extrabold text-white accent-underline">{{ $news->title }}</h1>
@@ -119,7 +111,6 @@
       </header>
     @endif
 
-    {{-- Share / actions --}}
     <div class="reveal">
       <div class="flex flex-wrap items-center gap-3 text-sm">
         <button
@@ -135,12 +126,10 @@
       </div>
     </div>
 
-    {{-- Article body --}}
     <div id="articleBody" class="prose prose-invert max-w-none reveal">
       {!! $news->clean_content !!}
     </div>
 
-    {{-- Bottom actions --}}
     <footer class="reveal">
       <div class="pt-6 border-t border-white/10 flex flex-wrap gap-3">
         <button
@@ -160,7 +149,6 @@
 
 @push('scripts')
 <script>
-  // Back behavior
   function handleBack() {
     if (document.referrer && document.referrer !== window.location.href) {
       window.history.back();
@@ -169,13 +157,11 @@
     }
   }
 
-  // Copy link
   function copyLink(){
     const url = window.location.href;
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(url).then(() => toast('Saite nokopēta!'));
     } else {
-      // fallback
       const ta = document.createElement('textarea');
       ta.value = url; document.body.appendChild(ta);
       ta.select(); document.execCommand('copy'); ta.remove();
@@ -183,7 +169,6 @@
     }
   }
 
-  // Tiny toast
   function toast(msg){
     const t = document.createElement('div');
     t.textContent = msg;
@@ -193,7 +178,6 @@
     setTimeout(()=> t.remove(), 1850);
   }
 
-  // Reveal on scroll + heading underline activation
   (function(){
     const reveals = document.querySelectorAll('.reveal');
     const headings = document.querySelectorAll('.accent-underline');
@@ -218,7 +202,6 @@
     headings.forEach(h => obs.observe(h));
   })();
 
-  // Reading progress + reading time
   (function(){
     const bar = document.getElementById('readProgress');
     const article = document.getElementById('articleBody');
@@ -236,7 +219,6 @@
     window.addEventListener('scroll', calc, { passive: true });
     window.addEventListener('resize', calc);
 
-    // Estimate reading time from text content (~200 wpm)
     const text = article.innerText || '';
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     const mins = Math.max(1, Math.round(words / 200));

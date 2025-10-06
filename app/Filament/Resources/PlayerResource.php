@@ -48,16 +48,15 @@ class PlayerResource extends Resource
                     ->label('Upload Photo')
                     ->image()
                     ->directory('players')
-                    ->disk('public')             // 👈 ensures Filament saves in public disk
-                    ->visibility('public')       // 👈 makes it accessible
+                    ->disk('public')             
+                    ->visibility('public')       
                     ->nullable()
-                    ->imagePreviewHeight('150')  // 👈 shows preview in edit form
+                    ->imagePreviewHeight('150')  
                     ->openable()
                     ->downloadable()
                     ->columnSpanFull(),
                 
 
-                // Step 1: Parent League
                 Forms\Components\Select::make('parent_league_id')
                     ->label('Parent League')
                     ->options(League::whereNull('parent_id')->pluck('name', 'id'))
@@ -69,7 +68,6 @@ class PlayerResource extends Resource
                     ])
                     ->required(),
 
-                // Step 2: Child League (filtered by parent)
                 Forms\Components\Select::make('league_id')
                     ->label('Sub-League')
                     ->options(fn (Get $get) => $get('parent_league_id')
@@ -80,7 +78,6 @@ class PlayerResource extends Resource
                     ->afterStateUpdated(fn (callable $set) => $set('team_id', null))
                     ->required(),
 
-                // Step 3: Team (filtered by child league)
                 Forms\Components\Select::make('team_id')
                     ->label('Team')
                     ->options(fn (Get $get) => $get('league_id')
@@ -116,7 +113,7 @@ class PlayerResource extends Resource
                 ->disk('public')
                 ->height(50)
                 ->width(50)
-                ->rounded(), // circular thumbnail
+                ->rounded(), 
 
                 Tables\Columns\TextColumn::make('league.parent.name')->label('Parent League'),
                 Tables\Columns\TextColumn::make('league.name')->label('Sub-League'),

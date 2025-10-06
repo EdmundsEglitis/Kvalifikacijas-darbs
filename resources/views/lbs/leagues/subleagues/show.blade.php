@@ -8,16 +8,15 @@
   <style>
     .fade-in-section{transition:opacity .6s ease-out,transform .6s ease-out}
     .nav-transparent{background-color:transparent}
-    .nav-solid{background-color:rgba(17,24,39,.85)} /* #111827 @ 85% */
+    .nav-solid{background-color:rgba(17,24,39,.85)} 
   </style>
 </head>
 <body class="antialiased text-[#F3F4F6] bg-[#111827]">
 
 
 
-  <main class="pt-32"><!-- room for fixed navs -->
+  <main class="pt-32">
 
-    {{-- HERO (under nav, no top bar) --}}
     @if($heroImage)
       <section id="hero"
                class="relative -mt-16 w-full h-64 sm:h-80 lg:h-[60vh] bg-cover bg-center"
@@ -37,7 +36,6 @@
       </section>
     @endif
 
-    {{-- NEWS GRID --}}
     <section id="news" class="py-12 max-w-7xl mx-auto px-4 space-y-10">
 
       {{-- Secondary (2 cols) with fixed image area + object-contain --}}
@@ -81,7 +79,6 @@
         @endif
       </div>
 
-      {{-- Small Cards (3 cols) with fixed image area + object-contain --}}
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach(['slot-1','slot-2','slot-3'] as $slot)
           @if($item = $bySlot[$slot] ?? null)
@@ -107,7 +104,6 @@
 
     </section>
 
-    {{-- Fallback Page Content --}}
     @unless(isset($bySlot['secondary-1']))
       <section class="max-w-7xl mx-auto px-4 pb-16">
         <h1 class="text-3xl font-bold text-white">{{ $subLeague->name }}</h1>
@@ -122,12 +118,10 @@
   </footer>
 
   <script>
-    // Mobile menu
     document.getElementById('menu-btn').addEventListener('click', () =>
       document.getElementById('mobile-menu').classList.toggle('hidden')
     );
 
-    // Fade-in on scroll
     (function(){
       const obs = new IntersectionObserver((entries)=>{
         entries.forEach(e=>{
@@ -141,7 +135,6 @@
       document.querySelectorAll('.fade-in-section').forEach(el=>obs.observe(el));
     })();
 
-    // Transparent -> solid navbar
     (function(){
       const nav = document.getElementById('site-nav');
       const update = () => {

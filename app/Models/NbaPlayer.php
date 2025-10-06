@@ -22,7 +22,7 @@ class NbaPlayer extends Model
         'team_logo',
     ];
 
-// In App\Models\NbaPlayer.php
+
 public function gamelogs()
 {
     return $this->hasMany(NbaPlayerGameLog::class, 'player_external_id', 'external_id');
@@ -30,7 +30,7 @@ public function gamelogs()
 
 public function getRouteKeyName()
 {
-    return 'external_id'; // <-- important
+    return 'external_id'; 
 }
 public function team()
 {

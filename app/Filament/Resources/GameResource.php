@@ -18,7 +18,6 @@ class GameResource extends Resource
     protected static ?string $model = Game::class;
     protected static ?string $navigationIcon = 'heroicon-o-trophy';
 
-    /** pure helper: totals + winner (NO Get/Set here, just plain ints) */
     private static function computeTotals(
         int $t11, int $t12, int $t13, int $t14,
         int $t21, int $t22, int $t23, int $t24,
@@ -60,7 +59,6 @@ class GameResource extends Resource
 
             Forms\Components\Fieldset::make('Quarters')
                 ->schema([
-                    // YOUR model fields:
                     Forms\Components\TextInput::make('team11st')->label('Team 1 – Q1')
                         ->default(0)->numeric()->rules(['required','integer','min:0']),
                     Forms\Components\TextInput::make('team21st')->label('Team 2 – Q1')
@@ -100,7 +98,6 @@ class GameResource extends Resource
                     ->label('Calculate Totals')
                     ->color('primary')
                     ->action(function (Set $set, Get $get) {
-                        // Read raw values from the form, coerce to ints
                         $t11 = (int) $get('team11st');
                         $t12 = (int) $get('team12st');
                         $t13 = (int) $get('team13st');
@@ -120,7 +117,6 @@ class GameResource extends Resource
                             $team1Id, $team2Id
                         );
 
-                        // Write results back to the form
                         $set('score', "{$t1}-{$t2}");
                         $set('winner_id', $winnerId);
                     }),

@@ -7,10 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <style>
-    /* ------- Core transitions ------- */
     :root { --ease: cubic-bezier(.22,.9,.26,1); }
 
-    /* Page loader */
     .loader-enter { opacity: 1; }
     .loader-exit  { opacity: 0; transition: opacity .45s var(--ease); pointer-events:none; }
 
@@ -19,15 +17,12 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Fade-up on mount (for above-the-fold) */
     .fade-up { opacity: 0; transform: translateY(10px); animation: fadeup .45s var(--ease) forwards; }
     @keyframes fadeup { to { opacity: 1; transform: none; } }
 
-    /* Scroll reveal (AOS-lite) */
     .reveal { opacity: 0; transform: translateY(12px); transition: opacity .5s var(--ease), transform .5s var(--ease); will-change: transform, opacity; }
     .reveal.aos-in { opacity: 1; transform: none; }
 
-    /* Stagger helper */
     .stagger > * { opacity: 0; transform: translateY(10px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
     .stagger.aos-in > * { opacity: 1; transform: none; }
     .stagger.aos-in > *:nth-child(1)  { transition-delay: .04s; }
@@ -37,11 +32,9 @@
     .stagger.aos-in > *:nth-child(5)  { transition-delay: .20s; }
     .stagger.aos-in > *:nth-child(6)  { transition-delay: .24s; }
 
-    /* Image fade-in */
     .img-fade { opacity: 0; transition: opacity .35s var(--ease); }
     .img-fade.loaded { opacity: 1; }
 
-    /* Shimmer (optional skeletons) */
     .shimmer {
       background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.12) 37%, rgba(255,255,255,0.05) 63%);
       background-size: 400% 100%;
@@ -49,7 +42,6 @@
     }
     @keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
 
-    /* Reduced motion safety */
     @media (prefers-reduced-motion: reduce) {
       .fade-up, .reveal, .stagger > *, .img-fade { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
       .spin { animation: none !important; }
@@ -58,7 +50,6 @@
 </head>
 <body class="bg-[#0B1220] text-[#F3F4F6] min-h-screen">
 
-  <!-- ===== Page Loader ===== -->
   <div id="pageLoader" class="fixed inset-0 z-50 grid place-items-center bg-[#0B1220] loader-enter">
     <div class="flex items-center gap-3">
       <div class="h-8 w-8 rounded-full border-2 border-white/20 border-t-white spin"></div>
@@ -73,9 +64,7 @@
       <p class="text-sm text-gray-400">Ātrā piekļuve NBA un LBS, jaunākās ziņas un šodienas formā spēlētāji.</p>
     </header>
 
-    {{-- League cards --}}
     <section class="grid grid-cols-1 sm:grid-cols-2 gap-5 reveal" data-aos data-aos-delay="100">
-      {{-- NBA card --}}
       <a href="{{ route('nba.home') }}"
          class="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition block">
         <div class="flex items-center gap-4">
@@ -114,7 +103,6 @@
         @endif
       </a>
 
-      {{-- LBS card --}}
       <a href="{{ route('lbs.home') }}"
          class="bg-white/5 border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition block">
         <div class="flex items-center gap-4">
@@ -176,7 +164,6 @@
   </div>
 </div>
 
-    <!-- NEWS GRID -->
     <section id="news" class="py-16 bg-[#111827]">
       <div class="max-w-7xl mx-auto px-4 space-y-12">
         <h2 class="text-3xl font-bold text-white text-center reveal" data-aos>
@@ -189,7 +176,6 @@
               @php($item = $bySlot[$slot])
               <article
                 class="group bg-[#0f172a] rounded-2xl overflow-hidden shadow-lg border border-[#1f2937]/60 flex flex-col hover:shadow-2xl transition">
-                <!-- fixed image area with object-contain -->
                 <div class="relative w-full h-[260px] bg-[#0b1220]">
                   @if(!empty($item->preview_image))
                     <img
@@ -264,7 +250,6 @@
               <span class="px-3 py-1 rounded-full bg-white/10 border border-white/10 text-sm">VS</span>
             </div>
 
-            {{-- Worst overall --}}
             <div class="flex items-center gap-4 sm:justify-end">
               <a
                 href="{{ isset($worstOverall->player_id)
@@ -301,7 +286,6 @@
   </main>
 
   <script>
-    // ===== Page loader =====
     window.addEventListener('load', () => {
       const el = document.getElementById('pageLoader');
       if (!el) return;
@@ -309,13 +293,11 @@
       el.addEventListener('transitionend', () => el.remove(), { once: true });
     });
 
-    // ===== Scroll reveal (AOS-lite) =====
     (function () {
       const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const $reveal = document.querySelectorAll('[data-aos], .reveal, .stagger');
 
       if (prefersReduced || !('IntersectionObserver' in window)) {
-        // Just show everything
         $reveal.forEach(el => el.classList.add('aos-in'));
         return;
       }
@@ -330,14 +312,12 @@
       }, { rootMargin: '0px 0px -10% 0px', threshold: 0.12 });
 
       $reveal.forEach(el => {
-        // optional per-element delay via data attribute
         const d = el.getAttribute('data-aos-delay');
         if (d) el.style.transitionDelay = `${parseInt(d, 10)}ms`;
         obs.observe(el);
       });
     })();
 
-    // ===== Ensure all lazy images fade in on load =====
     document.querySelectorAll('img[loading="lazy"], .img-fade').forEach(img => {
       if (img.complete) img.classList.add('loaded');
       else img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
