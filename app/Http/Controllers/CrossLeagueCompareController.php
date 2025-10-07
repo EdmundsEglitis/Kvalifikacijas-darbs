@@ -6,150 +6,161 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\NbaStanding;
 use App\Models\NbaTeam;
+
 class CrossLeagueCompareController extends Controller
 {
     public function explorer(Request $request)
     {
- 
-        $q        = trim((string) $request->query('q', ''));
-        $from     = (int) $request->query('from', 0);
-        $to       = (int) $request->query('to', 0);
-        $nbaPer   = min(max((int) $request->query('nba_per', 25), 10), 200);
-        $lbsPer   = min(max((int) $request->query('lbs_per', 25), 10), 200);
-        $nbaPage  = max((int) $request->query('nba_page', 1), 1);
-        $lbsPage  = max((int) $request->query('lbs_page', 1), 1);
+        // Request params
+        $searchTerm       = trim((string) $request->query('q', ''));
+        $seasonFrom       = (int) $request->query('from', 0);
+        $seasonTo         = (int) $request->query('to', 0);
+        $nbaPerPage       = min(max((int) $request->query('nba_per', 25), 10), 200);
+        $lbsPerPage       = min(max((int) $request->query('lbs_per', 25), 10), 200);
+        $nbaCurrentPage   = max((int) $request->query('nba_page', 1), 1);
+        $lbsCurrentPage   = max((int) $request->query('lbs_page', 1), 1);
 
-
-        $nbaSeasons = DB::table('nba_player_game_logs')
+        // Season lists
+        $nbaSeasonYears = DB::table('nba_player_game_logs')
             ->whereNotNull('game_date')
-            ->selectRaw('DISTINCT YEAR(game_date) AS y')
-            ->pluck('y')->toArray();
+            ->selectRaw('DISTINCT YEAR(game_date) AS year_val')
+            ->pluck('year_val')->toArray();
 
-        $lbsSeasons = DB::table('games')
+        $lbsSeasonYears = DB::table('games')
             ->whereNotNull('date')
-            ->selectRaw('DISTINCT YEAR(date) AS y')
-            ->pluck('y')->toArray();
+            ->selectRaw('DISTINCT YEAR(date) AS year_val')
+            ->pluck('year_val')->toArray();
 
-        $seasons = collect(array_unique(array_merge($nbaSeasons, $lbsSeasons)))
+        $allSeasons = collect(array_unique(array_merge($nbaSeasonYears, $lbsSeasonYears)))
             ->sortDesc()->values();
 
-        $latest = (int) ($seasons->first() ?? date('Y'));
-        if (!$from) $from = $latest;
-        if (!$to)   $to   = $latest;
-        if ($from > $to) { [$from, $to] = [$to, $from]; }
+        $latestSeason = (int) ($allSeasons->first() ?? date('Y'));
+        if (!$seasonFrom) $seasonFrom = $latestSeason;
+        if (!$seasonTo)   $seasonTo   = $latestSeason;
+        if ($seasonFrom > $seasonTo) { [$seasonFrom, $seasonTo] = [$seasonTo, $seasonFrom]; }
 
+        // NBA query (logs -> aggregated per player/season)
+        $nbaLogsQuery = DB::table('nba_player_game_logs as logs')
+            ->join('nba_players as players', 'players.external_id', '=', 'logs.player_external_id')
+            ->whereNotNull('logs.game_date')
+            ->whereBetween(DB::raw('YEAR(logs.game_date)'), [$seasonFrom, $seasonTo]);
 
-        $nbaBase = DB::table('nba_player_game_logs as l')
-            ->join('nba_players as p', 'p.external_id', '=', 'l.player_external_id')
-            ->whereNotNull('l.game_date')
-            ->whereBetween(DB::raw('YEAR(l.game_date)'), [$from, $to]);
-
-        if ($q !== '') {
-            $qLike = '%' . strtolower($q) . '%';
-            $nbaBase->where(function ($w) use ($qLike) {
-                $w->whereRaw('LOWER(CONCAT(p.first_name," ",p.last_name)) LIKE ?', [$qLike])
-                  ->orWhereRaw('LOWER(p.team_name) LIKE ?', [$qLike]);
+        if ($searchTerm !== '') {
+            $searchLike = '%' . strtolower($searchTerm) . '%';
+            $nbaLogsQuery->where(function ($query) use ($searchLike) {
+                $query->whereRaw('LOWER(CONCAT(players.first_name," ",players.last_name)) LIKE ?', [$searchLike])
+                      ->orWhereRaw('LOWER(players.team_name) LIKE ?', [$searchLike]);
             });
         }
 
-        $nbaAgg = $nbaBase
+        $nbaAggregatedQuery = $nbaLogsQuery
             ->selectRaw("
-                p.external_id                        AS player_id,
-                CONCAT(p.first_name,' ',p.last_name) AS player_name,
-                p.image                              AS player_photo,
-                p.team_id                            AS team_id,
-                p.team_name                          AS team_name,
-                p.team_logo                          AS team_logo,
-                YEAR(l.game_date)                    AS season,
+                players.external_id                        AS player_id,
+                CONCAT(players.first_name,' ',players.last_name) AS player_name,
+                players.image                              AS player_photo,
+                players.team_id                            AS team_id,
+                players.team_name                          AS team_name,
+                players.team_logo                          AS team_logo,
+                YEAR(logs.game_date)                       AS season,
 
-                COUNT(*)                             AS g,
-                SUM(CASE WHEN l.result='W' THEN 1 ELSE 0 END) AS wins,
+                COUNT(*)                                   AS g,
+                SUM(CASE WHEN logs.result='W' THEN 1 ELSE 0 END) AS wins,
 
-                SUM(COALESCE(l.points,0))    AS pts,
-                SUM(COALESCE(l.rebounds,0))  AS reb,
-                SUM(COALESCE(l.assists,0))   AS ast,
-                SUM(COALESCE(l.steals,0))    AS stl,
-                SUM(COALESCE(l.blocks,0))    AS blk,
-                SUM(COALESCE(l.turnovers,0)) AS tov,
+                SUM(COALESCE(logs.points,0))    AS pts,
+                SUM(COALESCE(logs.rebounds,0))  AS reb,
+                SUM(COALESCE(logs.assists,0))   AS ast,
+                SUM(COALESCE(logs.steals,0))    AS stl,
+                SUM(COALESCE(logs.blocks,0))    AS blk,
+                SUM(COALESCE(logs.turnovers,0)) AS tov,
 
-                /* from 'x-y' strings */
-                SUM(CAST(SUBSTRING_INDEX(COALESCE(l.fg,'0-0'), '-', 1) AS UNSIGNED))  AS fgm,
-                SUM(CAST(SUBSTRING_INDEX(COALESCE(l.fg,'0-0'), '-', -1) AS UNSIGNED)) AS fga,
-                SUM(CAST(SUBSTRING_INDEX(COALESCE(l.three_pt,'0-0'), '-', 1) AS UNSIGNED))  AS tpm,
-                SUM(CAST(SUBSTRING_INDEX(COALESCE(l.three_pt,'0-0'), '-', -1) AS UNSIGNED)) AS tpa,
-                SUM(CAST(SUBSTRING_INDEX(COALESCE(l.ft,'0-0'), '-', 1) AS UNSIGNED))  AS ftm,
-                SUM(CAST(SUBSTRING_INDEX(COALESCE(l.ft,'0-0'), '-', -1) AS UNSIGNED)) AS fta
+                /* parsed from 'x-y' strings */
+                SUM(CAST(SUBSTRING_INDEX(COALESCE(logs.fg,'0-0'), '-', 1) AS UNSIGNED))  AS fgm,
+                SUM(CAST(SUBSTRING_INDEX(COALESCE(logs.fg,'0-0'), '-', -1) AS UNSIGNED)) AS fga,
+                SUM(CAST(SUBSTRING_INDEX(COALESCE(logs.three_pt,'0-0'), '-', 1) AS UNSIGNED))  AS tpm,
+                SUM(CAST(SUBSTRING_INDEX(COALESCE(logs.three_pt,'0-0'), '-', -1) AS UNSIGNED)) AS tpa,
+                SUM(CAST(SUBSTRING_INDEX(COALESCE(logs.ft,'0-0'), '-', 1) AS UNSIGNED))  AS ftm,
+                SUM(CAST(SUBSTRING_INDEX(COALESCE(logs.ft,'0-0'), '-', -1) AS UNSIGNED)) AS fta
             ")
             ->groupBy('player_id','player_name','player_photo','team_id','team_name','team_logo','season')
             ->orderByDesc('season')->orderBy('player_name');
 
-        $nbaAll   = $nbaAgg->get();
-        $nbaTotal = $nbaAll->count();
-        $nbaSlice = $nbaAll->slice(($nbaPage-1)*$nbaPer, $nbaPer)->values();
+        $nbaAggregatedRows   = $nbaAggregatedQuery->get();
+        $nbaTotalCount       = $nbaAggregatedRows->count();
+        $nbaPaginatedSegment = $nbaAggregatedRows
+            ->slice(($nbaCurrentPage-1)*$nbaPerPage, $nbaPerPage)
+            ->values();
 
-        $nba = $nbaSlice->map(function ($r) {
-            $g = max((int)$r->g, 0);
-            $ppg = $g ? $r->pts / $g : null;
-            $rpg = $g ? $r->reb / $g : null;
-            $apg = $g ? $r->ast / $g : null;
-            $spg = $g ? $r->stl / $g : null;
-            $bpg = $g ? $r->blk / $g : null;
-            $tpg = $g ? $r->tov / $g : null;
+        $nbaMappedRows = $nbaPaginatedSegment->map(function ($row) {
+            $gamesPlayed = max((int)$row->g, 0);
 
-            $fg_pct = ($r->fga ?? 0) > 0 ? $r->fgm / $r->fga : null;
-            $tp_pct = ($r->tpa ?? 0) > 0 ? $r->tpm / $r->tpa : null;
-            $ft_pct = ($r->fta ?? 0) > 0 ? $r->ftm / $r->fta : null;
+            $pointsPerGame   = $gamesPlayed ? $row->pts / $gamesPlayed : null;
+            $reboundsPerGame = $gamesPlayed ? $row->reb / $gamesPlayed : null;
+            $assistsPerGame  = $gamesPlayed ? $row->ast / $gamesPlayed : null;
+            $stealsPerGame   = $gamesPlayed ? $row->stl / $gamesPlayed : null;
+            $blocksPerGame   = $gamesPlayed ? $row->blk / $gamesPlayed : null;
+            $turnoversPerGame= $gamesPlayed ? $row->tov / $gamesPlayed : null;
 
-            $fmt = fn($v,$p=false)=>$v===null?'—':($p?number_format($v*100,1).'%' : number_format($v,1));
+            $fgPct = ($row->fga ?? 0) > 0 ? $row->fgm / $row->fga : null;
+            $tpPct = ($row->tpa ?? 0) > 0 ? $row->tpm / $row->tpa : null;
+            $ftPct = ($row->fta ?? 0) > 0 ? $row->ftm / $row->fta : null;
+
+            $formatStat = fn($value, $isPercent=false)
+                => $value===null ? '—' : ($isPercent ? number_format($value*100,1).'%' : number_format($value,1));
 
             return (object)[
-                'season'      => (int)$r->season,
-                'player_id'   => (int)$r->player_id,
-                'team_id'     => (int)$r->team_id,
-                'player_name' => $r->player_name,
-                'headshot'    => $r->player_photo,
-                'team_name'   => $r->team_name,
-                'team_logo'   => $r->team_logo,
-                'g'           => (int)$r->g,
-                'wins'        => (int)$r->wins,
-                'ppg'         => $fmt($ppg),
-                'rpg'         => $fmt($rpg),
-                'apg'         => $fmt($apg),
-                'spg'         => $fmt($spg),
-                'bpg'         => $fmt($bpg),
-                'tpg'         => $fmt($tpg),
-                'fg_pct'      => $fmt($fg_pct,true),
-                'tp_pct'      => $fmt($tp_pct,true),
-                'ft_pct'      => $fmt($ft_pct,true),
+                'season'      => (int)$row->season,
+                'player_id'   => (int)$row->player_id,
+                'team_id'     => (int)$row->team_id,
+                'player_name' => $row->player_name,
+                'headshot'    => $row->player_photo,
+                'team_name'   => $row->team_name,
+                'team_logo'   => $row->team_logo,
+                'g'           => (int)$row->g,
+                'wins'        => (int)$row->wins,
+                'ppg'         => $formatStat($pointsPerGame),
+                'rpg'         => $formatStat($reboundsPerGame),
+                'apg'         => $formatStat($assistsPerGame),
+                'spg'         => $formatStat($stealsPerGame),
+                'bpg'         => $formatStat($blocksPerGame),
+                'tpg'         => $formatStat($turnoversPerGame),
+                'fg_pct'      => $formatStat($fgPct,true),
+                'tp_pct'      => $formatStat($tpPct,true),
+                'ft_pct'      => $formatStat($ftPct,true),
 
-                
-                '_raw_ppg' => $ppg, '_raw_rpg'=>$rpg, '_raw_apg'=>$apg, '_raw_spg'=>$spg,
-                '_raw_bpg' => $bpg, '_raw_tpg'=>$tpg, '_raw_fg'=>$fg_pct, '_raw_tp'=>$tp_pct, '_raw_ft'=>$ft_pct
+                '_raw_ppg' => $pointsPerGame,
+                '_raw_rpg' => $reboundsPerGame,
+                '_raw_apg' => $assistsPerGame,
+                '_raw_spg' => $stealsPerGame,
+                '_raw_bpg' => $blocksPerGame,
+                '_raw_tpg' => $turnoversPerGame,
+                '_raw_fg'  => $fgPct,
+                '_raw_tp'  => $tpPct,
+                '_raw_ft'  => $ftPct,
             ];
         });
 
+        // LBS query (stats -> aggregated per player/season)
+        $lbsStatsQuery = DB::table('player_game_stats as pgs')
+            ->join('games as games', 'games.id', '=', 'pgs.game_id')
+            ->join('players as players', 'players.id', '=', 'pgs.player_id')
+            ->join('teams as teams', 'teams.id', '=', 'pgs.team_id')
+            ->whereBetween(DB::raw('YEAR(games.date)'), [$seasonFrom, $seasonTo]);
 
-        $lbsBase = DB::table('player_game_stats as pgs')
-            ->join('games as g', 'g.id', '=', 'pgs.game_id')
-            ->join('players as p', 'p.id', '=', 'pgs.player_id')
-            ->join('teams as t', 't.id', '=', 'pgs.team_id')
-            ->whereBetween(DB::raw('YEAR(g.date)'), [$from, $to]);
-
-        if ($q !== '') {
-            $qLike = '%' . strtolower($q) . '%';
-            $lbsBase->where(function ($w) use ($qLike) {
-                $w->whereRaw('LOWER(p.name) LIKE ?', [$qLike])
-                  ->orWhereRaw('LOWER(t.name) LIKE ?', [$qLike]);
+        if ($searchTerm !== '') {
+            $searchLike = '%' . strtolower($searchTerm) . '%';
+            $lbsStatsQuery->where(function ($query) use ($searchLike) {
+                $query->whereRaw('LOWER(players.name) LIKE ?', [$searchLike])
+                      ->orWhereRaw('LOWER(teams.name) LIKE ?', [$searchLike]);
             });
         }
 
-        $lbsAgg = $lbsBase
+        $lbsAggregatedQuery = $lbsStatsQuery
             ->selectRaw("
-                p.id AS player_id, p.name AS player_name, p.photo AS player_photo,
-                t.id AS team_id, t.name AS team_name, t.logo AS team_logo,
-                YEAR(g.date) AS season,
+                players.id AS player_id, players.name AS player_name, players.photo AS player_photo,
+                teams.id AS team_id, teams.name AS team_name, teams.logo AS team_logo,
+                YEAR(games.date) AS season,
                 COUNT(*) AS g,
-                SUM(CASE WHEN g.winner_id = pgs.team_id THEN 1 ELSE 0 END) AS wins,
+                SUM(CASE WHEN games.winner_id = pgs.team_id THEN 1 ELSE 0 END) AS wins,
 
                 SUM(pgs.points) AS pts,
                 SUM(pgs.reb)    AS reb,
@@ -168,137 +179,143 @@ class CrossLeagueCompareController extends Controller
             ->groupBy('player_id','player_name','player_photo','team_id','team_name','team_logo','season')
             ->orderByDesc('season')->orderBy('player_name');
 
-        $lbsAll   = $lbsAgg->get();
-        $lbsTotal = $lbsAll->count();
-        $lbsSlice = $lbsAll->slice(($lbsPage-1)*$lbsPer, $lbsPer)->values();
+        $lbsAggregatedRows   = $lbsAggregatedQuery->get();
+        $lbsTotalCount       = $lbsAggregatedRows->count();
+        $lbsPaginatedSegment = $lbsAggregatedRows
+            ->slice(($lbsCurrentPage-1)*$lbsPerPage, $lbsPerPage)
+            ->values();
 
-        $lbs = $lbsSlice->map(function ($r) {
-            $g = max((int)$r->g, 0);
-            $ppg = $g ? $r->pts / $g : null;
-            $rpg = $g ? $r->reb / $g : null;
-            $apg = $g ? $r->ast / $g : null;
-            $spg = $g ? $r->stl / $g : null;
-            $bpg = $g ? $r->blk / $g : null;
-            $tpg = $g ? $r->tov / $g : null;
+        $lbsMappedRows = $lbsPaginatedSegment->map(function ($row) {
+            $gamesPlayed = max((int)$row->g, 0);
 
-            $fg_pct = ($r->fga ?? 0) > 0 ? $r->fgm / $r->fga : null;
-            $tp_pct = ($r->tpa ?? 0) > 0 ? $r->tpm / $r->tpa : null;
-            $ft_pct = ($r->fta ?? 0) > 0 ? $r->ftm / $r->fta : null;
+            $pointsPerGame   = $gamesPlayed ? $row->pts / $gamesPlayed : null;
+            $reboundsPerGame = $gamesPlayed ? $row->reb / $gamesPlayed : null;
+            $assistsPerGame  = $gamesPlayed ? $row->ast / $gamesPlayed : null;
+            $stealsPerGame   = $gamesPlayed ? $row->stl / $gamesPlayed : null;
+            $blocksPerGame   = $gamesPlayed ? $row->blk / $gamesPlayed : null;
+            $turnoversPerGame= $gamesPlayed ? $row->tov / $gamesPlayed : null;
 
-            $fmt = fn($v,$p=false)=>$v===null?'—':($p?number_format($v*100,1).'%' : number_format($v,1));
+            $fgPct = ($row->fga ?? 0) > 0 ? $row->fgm / $row->fga : null;
+            $tpPct = ($row->tpa ?? 0) > 0 ? $row->tpm / $row->tpa : null;
+            $ftPct = ($row->fta ?? 0) > 0 ? $row->ftm / $row->fta : null;
+
+            $formatStat = fn($value, $isPercent=false)
+                => $value===null ? '—' : ($isPercent ? number_format($value*100,1).'%' : number_format($value,1));
 
             return (object)[
-                'season'      => (int)$r->season,
-                'player_id'   => (int)$r->player_id,
-                'team_id'     => (int)$r->team_id,
-                'player_name' => $r->player_name,
-                'headshot'    => $r->player_photo,
-                'team_name'   => $r->team_name,
-                'team_logo'   => $r->team_logo,
-                'g'           => (int)$r->g,
-                'wins'        => (int)$r->wins,
-                'ppg'         => $fmt($ppg),
-                'rpg'         => $fmt($rpg),
-                'apg'         => $fmt($apg),
-                'spg'         => $fmt($spg),
-                'bpg'         => $fmt($bpg),
-                'tpg'         => $fmt($tpg),
-                'fg_pct'      => $fmt($fg_pct,true),
-                'tp_pct'      => $fmt($tp_pct,true),
-                'ft_pct'      => $fmt($ft_pct,true),
+                'season'      => (int)$row->season,
+                'player_id'   => (int)$row->player_id,
+                'team_id'     => (int)$row->team_id,
+                'player_name' => $row->player_name,
+                'headshot'    => $row->player_photo,
+                'team_name'   => $row->team_name,
+                'team_logo'   => $row->team_logo,
+                'g'           => (int)$row->g,
+                'wins'        => (int)$row->wins,
+                'ppg'         => $formatStat($pointsPerGame),
+                'rpg'         => $formatStat($reboundsPerGame),
+                'apg'         => $formatStat($assistsPerGame),
+                'spg'         => $formatStat($stealsPerGame),
+                'bpg'         => $formatStat($blocksPerGame),
+                'tpg'         => $formatStat($turnoversPerGame),
+                'fg_pct'      => $formatStat($fgPct,true),
+                'tp_pct'      => $formatStat($tpPct,true),
+                'ft_pct'      => $formatStat($ftPct,true),
 
-             
-                '_raw_ppg' => $ppg, '_raw_rpg'=>$rpg, '_raw_apg'=>$apg, '_raw_spg'=>$spg,
-                '_raw_bpg' => $bpg, '_raw_tpg'=>$tpg, '_raw_fg'=>$fg_pct, '_raw_tp'=>$tp_pct, '_raw_ft'=>$ft_pct
+                '_raw_ppg' => $pointsPerGame,
+                '_raw_rpg' => $reboundsPerGame,
+                '_raw_apg' => $assistsPerGame,
+                '_raw_spg' => $stealsPerGame,
+                '_raw_bpg' => $blocksPerGame,
+                '_raw_tpg' => $turnoversPerGame,
+                '_raw_fg'  => $fgPct,
+                '_raw_tp'  => $tpPct,
+                '_raw_ft'  => $ftPct,
             ];
         });
 
-        $nbaMeta = [
-            'total' => $nbaTotal,
-            'per'   => $nbaPer,
-            'page'  => $nbaPage,
-            'last'  => max((int)ceil($nbaTotal / $nbaPer), 1),
+        $nbaPaginationMeta = [
+            'total' => $nbaTotalCount,
+            'per'   => $nbaPerPage,
+            'page'  => $nbaCurrentPage,
+            'last'  => max((int)ceil($nbaTotalCount / $nbaPerPage), 1),
         ];
-        $lbsMeta = [
-            'total' => $lbsTotal,
-            'per'   => $lbsPer,
-            'page'  => $lbsPage,
-            'last'  => max((int)ceil($lbsTotal / $lbsPer), 1),
+        $lbsPaginationMeta = [
+            'total' => $lbsTotalCount,
+            'per'   => $lbsPerPage,
+            'page'  => $lbsCurrentPage,
+            'last'  => max((int)ceil($lbsTotalCount / $lbsPerPage), 1),
         ];
 
         return view('nba-lbs_compare', [
-            'seasons' => $seasons,
-            'from'    => $from,
-            'to'      => $to,
-            'q'       => $q,
-            'nba'     => $nba,
-            'lbs'     => $lbs,
-            'nbaMeta' => $nbaMeta,
-            'lbsMeta' => $lbsMeta,
+            'seasons' => $allSeasons,
+            'from'    => $seasonFrom,
+            'to'      => $seasonTo,
+            'q'       => $searchTerm,
+            'nba'     => $nbaMappedRows,
+            'lbs'     => $lbsMappedRows,
+            'nbaMeta' => $nbaPaginationMeta,
+            'lbsMeta' => $lbsPaginationMeta,
         ]);
     }
 
-
-
-
-
-
-
     public function teamsExplorer(Request $request)
     {
-        $nbaSeasons = NbaStanding::query()
+        // Seasons
+        $nbaSeasonValues = NbaStanding::query()
             ->select('season')->distinct()->pluck('season')->toArray();
 
-        $lbsSeasons = DB::table('games')
-            ->selectRaw('DISTINCT YEAR(date) as y')->pluck('y')->toArray();
+        $lbsSeasonValues = DB::table('games')
+            ->selectRaw('DISTINCT YEAR(date) as year_val')->pluck('year_val')->toArray();
 
-        $seasons = collect(array_unique(array_merge($nbaSeasons, $lbsSeasons)))
+        $allSeasons = collect(array_unique(array_merge($nbaSeasonValues, $lbsSeasonValues)))
             ->filter()->sortDesc()->values();
 
-        $minSeason = $seasons->isNotEmpty() ? $seasons->min() : (int)date('Y');
-        $maxSeason = $seasons->isNotEmpty() ? $seasons->max() : (int)date('Y');
+        $minSeason = $allSeasons->isNotEmpty() ? $allSeasons->min() : (int)date('Y');
+        $maxSeason = $allSeasons->isNotEmpty() ? $allSeasons->max() : (int)date('Y');
 
-        $from = (int) $request->input('from', $minSeason);
-        $to   = (int) $request->input('to',   $maxSeason);
-        if ($from > $to) { [$from, $to] = [$to, $from]; }
+        $seasonFrom = (int) $request->input('from', $minSeason);
+        $seasonTo   = (int) $request->input('to',   $maxSeason);
+        if ($seasonFrom > $seasonTo) { [$seasonFrom, $seasonTo] = [$seasonTo, $seasonFrom]; }
 
-        $teamQuery = trim((string) $request->input('q', ''));
+        $teamSearchTerm = trim((string) $request->input('q', ''));
 
-
-        $nbaQ = NbaStanding::query()
-            ->when($from, fn($q)=>$q->where('season','>=',$from))
-            ->when($to,   fn($q)=>$q->where('season','<=',$to))
-            ->when($teamQuery !== '', function ($qq) use ($teamQuery) {
-                $qq->where(function ($sub) use ($teamQuery) {
-                    $sub->where('team_name', 'like', "%{$teamQuery}%")
-                        ->orWhere('abbreviation', 'like', "%{$teamQuery}%");
+        // NBA standings block
+        $nbaStandings = NbaStanding::query()
+            ->when($seasonFrom, fn($query)=>$query->where('season','>=',$seasonFrom))
+            ->when($seasonTo,   fn($query)=>$query->where('season','<=',$seasonTo))
+            ->when($teamSearchTerm !== '', function ($query) use ($teamSearchTerm) {
+                $query->where(function ($subQuery) use ($teamSearchTerm) {
+                    $subQuery->where('team_name', 'like', "%{$teamSearchTerm}%")
+                             ->orWhere('abbreviation', 'like', "%{$teamSearchTerm}%");
                 });
             })
             ->orderBy('season','desc')->orderBy('team_name')
             ->get();
 
-        $teamIds = $nbaQ->pluck('team_id')->unique()->values();
-        $teams   = NbaTeam::whereIn('external_id', $teamIds)->get(['external_id','abbreviation','logo']);
-        $logoMap = [];
-        foreach ($teams as $t) {
-            $abbr = strtolower($t->abbreviation ?? '');
+        $standingTeamIds = $nbaStandings->pluck('team_id')->unique()->values();
+        $standingTeams   = NbaTeam::whereIn('external_id', $standingTeamIds)->get(['external_id','abbreviation','logo']);
+
+        $teamLogoByExternalId = [];
+        foreach ($standingTeams as $team) {
+            $abbr = strtolower($team->abbreviation ?? '');
             $fallback = $abbr ? "https://a.espncdn.com/i/teamlogos/nba/500/{$abbr}.png" : null;
-            $logoMap[$t->external_id] = $t->logo ?: $fallback;
+            $teamLogoByExternalId[$team->external_id] = $team->logo ?: $fallback;
         }
 
-        $nba = $nbaQ->map(function ($r) use ($logoMap) {
-            $winPct = $r->win_percent;
-            $ppg    = $r->avg_points_for;
-            $oppPpg = $r->avg_points_against;
-            $diff   = $r->point_differential;
+        $nbaTeamsMapped = $nbaStandings->map(function ($standing) use ($teamLogoByExternalId) {
+            $winPct = $standing->win_percent;
+            $ppg    = $standing->avg_points_for;
+            $oppPpg = $standing->avg_points_against;
+            $diff   = $standing->point_differential;
 
             return (object)[
-                'season'      => (int)$r->season,
-                'team_id'     => (int)$r->team_id,
-                'team_name'   => $r->team_name,
-                'team_logo'   => $logoMap[$r->team_id] ?? null,
-                'wins'        => (int)$r->wins,
-                'losses'      => (int)$r->losses,
+                'season'      => (int)$standing->season,
+                'team_id'     => (int)$standing->team_id,
+                'team_name'   => $standing->team_name,
+                'team_logo'   => $teamLogoByExternalId[$standing->team_id] ?? null,
+                'wins'        => (int)$standing->wins,
+                'losses'      => (int)$standing->losses,
                 'win_percent' => $winPct,
                 'ppg'         => $ppg,
                 'opp_ppg'     => $oppPpg,
@@ -310,45 +327,45 @@ class CrossLeagueCompareController extends Controller
                 'diff_txt'        => $diff !== null ? (($diff >= 0 ? '+' : '') . $diff) : '—',
                 'diff_class'      => $diff !== null ? ($diff >= 0 ? 'text-[#84CC16]' : 'text-[#F97316]') : 'text-gray-300',
 
-                '_key' => "NBA:T:{$r->team_id}:{$r->season}",
+                '_key' => "NBA:T:{$standing->team_id}:{$standing->season}",
             ];
         });
 
+        // LBS union (team1/team2 perspective)
+        $team1PointsExpr = "COALESCE(team1_q1+team1_q2+team1_q3+team1_q4, CAST(SUBSTRING_INDEX(score,'-',1) AS UNSIGNED))";
+        $team2PointsExpr = "COALESCE(team2_q1+team2_q2+team2_q3+team2_q4, CAST(SUBSTRING_INDEX(score,'-',-1) AS UNSIGNED))";
 
-        $t1_pts = "COALESCE(team1_q1+team1_q2+team1_q3+team1_q4, CAST(SUBSTRING_INDEX(score,'-',1) AS UNSIGNED))";
-        $t2_pts = "COALESCE(team2_q1+team2_q2+team2_q3+team2_q4, CAST(SUBSTRING_INDEX(score,'-',-1) AS UNSIGNED))";
-
-        $q1 = DB::table('games as g')
-            ->join('teams as t', 't.id', '=', 'g.team1_id')
+        $team1PerspectiveQuery = DB::table('games as games')
+            ->join('teams as teams', 'teams.id', '=', 'games.team1_id')
             ->selectRaw("
-                t.id as team_id, t.name as team_name, t.logo as team_logo,
-                YEAR(g.date) as season,
+                teams.id as team_id, teams.name as team_name, teams.logo as team_logo,
+                YEAR(games.date) as season,
                 COUNT(*) as games,
-                SUM(CASE WHEN g.winner_id = t.id THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN g.winner_id IS NOT NULL AND g.winner_id <> t.id THEN 1 ELSE 0 END) as losses,
-                SUM($t1_pts) as points_for,
-                SUM($t2_pts) as points_against
+                SUM(CASE WHEN games.winner_id = teams.id THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN games.winner_id IS NOT NULL AND games.winner_id <> teams.id THEN 1 ELSE 0 END) as losses,
+                SUM($team1PointsExpr) as points_for,
+                SUM($team2PointsExpr) as points_against
             ")
-            ->when($from, fn($q)=>$q->whereRaw('YEAR(g.date) >= ?',[$from]))
-            ->when($to,   fn($q)=>$q->whereRaw('YEAR(g.date) <= ?',[$to]))
+            ->when($seasonFrom, fn($query)=>$query->whereRaw('YEAR(games.date) >= ?',[$seasonFrom]))
+            ->when($seasonTo,   fn($query)=>$query->whereRaw('YEAR(games.date) <= ?',[$seasonTo]))
             ->groupBy('team_id','team_name','team_logo','season');
 
-        $q2 = DB::table('games as g')
-            ->join('teams as t', 't.id', '=', 'g.team2_id')
+        $team2PerspectiveQuery = DB::table('games as games')
+            ->join('teams as teams', 'teams.id', '=', 'games.team2_id')
             ->selectRaw("
-                t.id as team_id, t.name as team_name, t.logo as team_logo,
-                YEAR(g.date) as season,
+                teams.id as team_id, teams.name as team_name, teams.logo as team_logo,
+                YEAR(games.date) as season,
                 COUNT(*) as games,
-                SUM(CASE WHEN g.winner_id = t.id THEN 1 ELSE 0 END) as wins,
-                SUM(CASE WHEN g.winner_id IS NOT NULL AND g.winner_id <> t.id THEN 1 ELSE 0 END) as losses,
-                SUM($t2_pts) as points_for,
-                SUM($t1_pts) as points_against
+                SUM(CASE WHEN games.winner_id = teams.id THEN 1 ELSE 0 END) as wins,
+                SUM(CASE WHEN games.winner_id IS NOT NULL AND games.winner_id <> teams.id THEN 1 ELSE 0 END) as losses,
+                SUM($team2PointsExpr) as points_for,
+                SUM($team1PointsExpr) as points_against
             ")
-            ->when($from, fn($q)=>$q->whereRaw('YEAR(g.date) >= ?',[$from]))
-            ->when($to,   fn($q)=>$q->whereRaw('YEAR(g.date) <= ?',[$to]))
+            ->when($seasonFrom, fn($query)=>$query->whereRaw('YEAR(games.date) >= ?',[$seasonFrom]))
+            ->when($seasonTo,   fn($query)=>$query->whereRaw('YEAR(games.date) <= ?',[$seasonTo]))
             ->groupBy('team_id','team_name','team_logo','season');
 
-        $lbsUnion = DB::query()->fromSub($q1->unionAll($q2), 'u')
+        $lbsUnionAgg = DB::query()->fromSub($team1PerspectiveQuery->unionAll($team2PerspectiveQuery), 'u')
             ->selectRaw("
                 team_id, team_name, team_logo, season,
                 SUM(games) as games, SUM(wins) as wins, SUM(losses) as losses,
@@ -356,67 +373,81 @@ class CrossLeagueCompareController extends Controller
             ")
             ->groupBy('team_id','team_name','team_logo','season');
 
-        if ($teamQuery !== '') {
-            $like = '%'.strtolower($teamQuery).'%';
-            $lbsUnion->whereRaw('LOWER(team_name) LIKE ?', [$like]);
+        if ($teamSearchTerm !== '') {
+            $like = '%'.strtolower($teamSearchTerm).'%';
+            $lbsUnionAgg->whereRaw('LOWER(team_name) LIKE ?', [$like]);
         }
 
-        $lbsRaw = $lbsUnion->orderByDesc('season')->orderBy('team_name')->get();
+        $lbsTeamRows = $lbsUnionAgg->orderByDesc('season')->orderBy('team_name')->get();
 
-        $lbs = $lbsRaw->map(function ($r) {
-            $games  = max((int)$r->games,0);
-            $wins   = (int)$r->wins;
-            $losses = (int)$r->losses;
-            $pf     = (int)$r->points_for;
-            $pa     = (int)$r->points_against;
+        $lbsTeamsMapped = $lbsTeamRows->map(function ($row) {
+            $games   = max((int)$row->games,0);
+            $wins    = (int)$row->wins;
+            $losses  = (int)$row->losses;
+            $pointsF = (int)$row->points_for;
+            $pointsA = (int)$row->points_against;
 
-            $wp     = ($wins+$losses)>0 ? $wins/($wins+$losses) : null;
-            $ppg    = $games>0 ? $pf/$games : null;
-            $oppPpg = $games>0 ? $pa/$games : null;
-            $diff   = ($wins+$losses)>0 ? ($pf - $pa) : null;
+            $winPct  = ($wins+$losses)>0 ? $wins/($wins+$losses) : null;
+            $ppg     = $games>0 ? $pointsF/$games : null;
+            $oppPpg  = $games>0 ? $pointsA/$games : null;
+            $diff    = ($wins+$losses)>0 ? ($pointsF - $pointsA) : null;
 
             return (object)[
-                'season'      => (int)$r->season,
-                'team_id'     => (int)$r->team_id,
-                'team_name'   => $r->team_name,
-                'team_logo'   => $r->team_logo,
+                'season'      => (int)$row->season,
+                'team_id'     => (int)$row->team_id,
+                'team_name'   => $row->team_name,
+                'team_logo'   => $row->team_logo,
                 'wins'        => $wins,
                 'losses'      => $losses,
-                'win_percent' => $wp,
+                'win_percent' => $winPct,
                 'ppg'         => $ppg,
                 'opp_ppg'     => $oppPpg,
                 'diff'        => $diff,
 
-                'win_percent_fmt' => $wp   !== null ? number_format($wp*100,1).'%' : '—',
-                'ppg_fmt'         => $ppg  !== null ? number_format($ppg,1)       : '—',
+                'win_percent_fmt' => $winPct !== null ? number_format($winPct*100,1).'%' : '—',
+                'ppg_fmt'         => $ppg   !== null ? number_format($ppg,1)       : '—',
                 'opp_ppg_fmt'     => $oppPpg!== null ? number_format($oppPpg,1)    : '—',
-                'diff_txt'        => $diff !== null ? (($diff>=0?'+':'').$diff)    : '—',
-                'diff_class'      => $diff !== null ? ($diff>=0?'text-[#84CC16]':'text-[#F97316]') : 'text-gray-300',
+                'diff_txt'        => $diff  !== null ? (($diff>=0?'+':'').$diff)   : '—',
+                'diff_class'      => $diff  !== null ? ($diff>=0?'text-[#84CC16]':'text-[#F97316]') : 'text-gray-300',
 
-                '_key' => "LBS:T:{$r->team_id}:{$r->season}",
+                '_key' => "LBS:T:{$row->team_id}:{$row->season}",
             ];
         });
 
-        $nbaPer = min(max((int)$request->query('nba_per', 25), 10), 200);
-        $lbsPer = min(max((int)$request->query('lbs_per', 25), 10), 200);
-        $nbaPage= max((int)$request->query('nba_page', 1), 1);
-        $lbsPage= max((int)$request->query('lbs_page', 1), 1);
+        // Pagination (manual, same as your original)
+        $nbaPerPage       = min(max((int)$request->query('nba_per', 25), 10), 200);
+        $lbsPerPage       = min(max((int)$request->query('lbs_per', 25), 10), 200);
+        $nbaCurrentPage   = max((int)$request->query('nba_page', 1), 1);
+        $lbsCurrentPage   = max((int)$request->query('lbs_page', 1), 1);
 
-        $nbaTotal = $nba->count();
-        $lbsTotal = $lbs->count();
-        $nba = $nba->slice(($nbaPage-1)*$nbaPer, $nbaPer)->values();
-        $lbs = $lbs->slice(($lbsPage-1)*$lbsPer, $lbsPer)->values();
+        $nbaTotalCount = $nbaTeamsMapped->count();
+        $lbsTotalCount = $lbsTeamsMapped->count();
 
-        $nbaMeta = ['total'=>$nbaTotal,'per'=>$nbaPer,'page'=>$nbaPage,'last'=>max((int)ceil($nbaTotal/$nbaPer),1)];
-        $lbsMeta = ['total'=>$lbsTotal,'per'=>$lbsPer,'page'=>$lbsPage,'last'=>max((int)ceil($lbsTotal/$lbsPer),1)];
+        $nbaTeamsPage = $nbaTeamsMapped->slice(($nbaCurrentPage-1)*$nbaPerPage, $nbaPerPage)->values();
+        $lbsTeamsPage = $lbsTeamsMapped->slice(($lbsCurrentPage-1)*$lbsPerPage, $lbsPerPage)->values();
+
+        $nbaPaginationMeta = [
+            'total' => $nbaTotalCount,
+            'per'   => $nbaPerPage,
+            'page'  => $nbaCurrentPage,
+            'last'  => max((int)ceil($nbaTotalCount/$nbaPerPage),1)
+        ];
+        $lbsPaginationMeta = [
+            'total' => $lbsTotalCount,
+            'per'   => $lbsPerPage,
+            'page'  => $lbsCurrentPage,
+            'last'  => max((int)ceil($lbsTotalCount/$lbsPerPage),1)
+        ];
 
         return view('nba-lbs_teams_compare', [
-            'seasons'=>$seasons,
-            'from'=>$from,'to'=>$to,'q'=>$teamQuery,
-            'nba'=>$nba,'lbs'=>$lbs,
-            'nbaMeta'=>$nbaMeta,'lbsMeta'=>$lbsMeta,
+            'seasons' => $allSeasons,
+            'from'    => $seasonFrom,
+            'to'      => $seasonTo,
+            'q'       => $teamSearchTerm,
+            'nba'     => $nbaTeamsPage,
+            'lbs'     => $lbsTeamsPage,
+            'nbaMeta' => $nbaPaginationMeta,
+            'lbsMeta' => $lbsPaginationMeta,
         ]);
     }
-
-    
 }
