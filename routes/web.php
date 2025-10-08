@@ -7,6 +7,7 @@ use App\Http\Controllers\Nba\HomeController as NbaHomeController;
 use App\Http\Controllers\Nba\Players\PlayerController as NbaPlayerController;
 use App\Http\Controllers\Nba\Teams\TeamController as NbaTeamController;
 use App\Http\Controllers\Nba\Games\GameController as NbaGameController;
+use App\Http\Controllers\Nba\Games\GameShowController as NbaGameShowController;
 use App\Http\Controllers\Nba\Standings\StandingsController as NbaStandingsController;
 
 
@@ -20,6 +21,7 @@ use App\Http\Controllers\Lbs\Players\PlayerController as LbsPlayerController;
 use App\Http\Controllers\Lbs\Teams\CompareController as LbsTeamsCompare;
 use App\Http\Controllers\Lbs\Players\CompareController as LbsplayersCompare;
 use App\Http\Controllers\CrossLeagueCompareController as CrossLeagueCompareController;
+
 use App\Services\ApiSyncService;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -47,8 +49,8 @@ Route::prefix('nba')->name('nba.')->group(function () {
     // Games
     Route::get('/games',          [NbaGameController::class, 'upcoming'])->name('games.upcoming');
     Route::get('/all-games',      [NbaGameController::class, 'all'])->name('games.all');
-    Route::get('/games/{id}',     [NbaGameController::class, 'show'])->name('games.show');
-
+    Route::get('/games/{eventId}', [NbaGameShowController::class, 'show'])->name('games.show');
+    
     // Standings
     Route::get('/standings/explorer', [NbaStandingsController::class, 'explorer'])->name('standings.explorer');
 

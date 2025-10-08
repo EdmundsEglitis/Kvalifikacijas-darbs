@@ -98,38 +98,61 @@
                     </thead>
                     <tbody class="divide-y divide-[#374151]">
                         @forelse($gamelogs as $log)
-                            <tr class="odd:bg-[#1f2937] even:bg-[#111827] hover:bg-[#374151]">
-                                <td class="px-4 py-2">
-                                    {{ $log->game_date ? \Carbon\Carbon::parse($log->game_date)->format('M d, Y') : '-' }}
-                                </td>
-                                <td class="px-4 py-2 flex items-center space-x-2">
-                                    @if($log->opponent_team_id ?? false)
-                                        <a href="{{ route('nba.team.show', $log->opponent_team_id) }}"
-                                           class="flex items-center space-x-2 hover:text-[#84CC16]">
-                                            <img src="{{ $log->opponent_team_logo }}" class="h-6 w-6 rounded-full">
-                                            <span>{{ $log->opponent_team_name }}</span>
-                                        </a>
-                                    @else
-                                        {{ $log->opponent_name ?? '-' }}
-                                    @endif
-                                </td>
-                                <td class="px-4 py-2">{{ $log->result ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->score ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->minutes ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->fg ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->fg_pct ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->three_pt ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->three_pt_pct ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->ft ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->ft_pct ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->rebounds ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->assists ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->steals ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->blocks ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->turnovers ?? '-' }}</td>
-                                <td class="px-4 py-2">{{ $log->fouls ?? '-' }}</td>
-                                <td class="px-4 py-2 font-bold text-[#84CC16]">{{ $log->points ?? '-' }}</td>
-                            </tr>
+                        <tr class="odd:bg-[#1f2937] even:bg-[#111827] hover:bg-[#374151]">
+  {{-- Date (link to game) --}}
+  <td class="px-4 py-2">
+    @if(!empty($log->event_id))
+      <a href="{{ route('nba.games.show', $log->event_id) }}"
+         class="hover:text-[#84CC16] underline underline-offset-2">
+        {{ $log->game_date ? \Carbon\Carbon::parse($log->game_date)->format('M d, Y') : '-' }}
+      </a>
+    @else
+      {{ $log->game_date ? \Carbon\Carbon::parse($log->game_date)->format('M d, Y') : '-' }}
+    @endif
+  </td>
+
+  {{-- Opponent (unchanged) --}}
+  <td class="px-4 py-2 flex items-center space-x-2">
+    @if($log->opponent_team_id ?? false)
+      <a href="{{ route('nba.team.show', $log->opponent_team_id) }}"
+         class="flex items-center space-x-2 hover:text-[#84CC16]">
+        <img src="{{ $log->opponent_team_logo }}" class="h-6 w-6 rounded-full">
+        <span>{{ $log->opponent_team_name }}</span>
+      </a>
+    @else
+      {{ $log->opponent_name ?? '-' }}
+    @endif
+  </td>
+
+  <td class="px-4 py-2">{{ $log->result ?? '-' }}</td>
+
+  {{-- Score (also link to game) --}}
+  <td class="px-4 py-2">
+    @if(!empty($log->event_id) && !empty($log->score))
+      <a href="{{ route('nba.games.show', $log->event_id) }}"
+         class="hover:text-[#84CC16] underline underline-offset-2">
+        {{ $log->score }}
+      </a>
+    @else
+      {{ $log->score ?? '-' }}
+    @endif
+  </td>
+
+  <td class="px-4 py-2">{{ $log->minutes ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->fg ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->fg_pct ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->three_pt ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->three_pt_pct ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->ft ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->ft_pct ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->rebounds ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->assists ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->steals ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->blocks ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->turnovers ?? '-' }}</td>
+  <td class="px-4 py-2">{{ $log->fouls ?? '-' }}</td>
+  <td class="px-4 py-2 font-bold text-[#84CC16]">{{ $log->points ?? '-' }}</td>
+</tr>
                         @empty
                             <tr><td colspan="18" class="text-center py-4 text-gray-400">No gamelogs available.</td></tr>
                         @endforelse
