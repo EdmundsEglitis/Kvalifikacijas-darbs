@@ -10,6 +10,10 @@
   @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
   .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 37%, rgba(255,255,255,0.06) 63%);
              background-size: 400% 100%; animation: shimmer 1.6s infinite; }
+
+  /* make headers obviously clickable */
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable .arrow { display:inline-block; width:1ch; margin-left:.35rem; opacity:.65; }
 </style>
 @endpush
 
@@ -161,9 +165,12 @@
 @push('scripts')
 <script>
   const q = document.getElementById('q');
-  const tbody = document.querySelector('#gamesTable tbody');
+  const table = document.getElementById('gamesTable');
+  const tbody = table?.querySelector('tbody');
 
   const rows = () => Array.from(tbody.querySelectorAll('tr'));
+
+  // -------- quick search (your original code) --------
   const clearMarks = (el) => {
     el.querySelectorAll('mark[data-hi]').forEach(m => {
       const t = document.createTextNode(m.textContent);
@@ -212,6 +219,137 @@
       });
     }, 160);
   });
+  // -------- end quick search --------
+
+  // -------- sorting helpers --------
+  /** best-effort date parser supporting common formats */
+  function parseDateLike(text) {
+    const s = text.trim()
+      .replace(/\u2013|\u2014/g, '-')   // normalize en/em dash just in case
+      .replace(/(\d{1,2})\.(\d{1,2})\.(\d{4})(.*)?/, '$3-$2-$1$4'); // dd.mm.yyyy -> yyyy-mm-dd
+    const ts = Date.parse(s);
+    return isNaN(ts) ? null : ts;
+  }
+
+  /** extract a comparable sort key from a cell */
+  function sortKey(td, colIndex) {
+    const text = td?.innerText?.trim() || '';
+
+    // Col 0 = Date/Time
+    if (colIndex === 0) {
+      const ts = parseDateLike(text);
+      return ts !== null ? ts : text.toLowerCase();
+    }
+
+    // Col 1 & 2 = Team cells (text inside)
+    if (colIndex === 1 || colIndex === 2) {
+      return text.toLowerCase();
+    }
+
+    // Col 3 = Score like "110–100" or "110-100"
+    if (colIndex === 3) {
+      const m = text.replace(/\s/g,'').match(/(\d+)[^\d]+(\d+)/);
+      if (m) {
+        const a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+        // return an array-like key; we’ll compare totals then diff
+        return [a + b, a - b];
+      }
+      return [0, 0];
+    }
+
+    // Col 4 = Winner (badge text) — sort by text
+    if (colIndex === 4) return text.toLowerCase();
+
+    // Col 5 = Box (button) — sort by href text so it’s stable
+    if (colIndex === 5) {
+      const a = td.querySelector('a');
+      return a ? (a.getAttribute('href') || '').toLowerCase() : text.toLowerCase();
+    }
+
+    // Fallback: numeric if possible, else lowercase text
+    const num = Number(text.replace(/[^0-9.+-]/g, ''));
+    return Number.isFinite(num) ? num : text.toLowerCase();
+  }
+
+  function compareKeys(a, b) {
+    // support tuple-like keys for score
+    const arrA = Array.isArray(a) ? a : [a];
+    const arrB = Array.isArray(b) ? b : [b];
+    for (let i = 0; i < Math.max(arrA.length, arrB.length); i++) {
+      const x = arrA[i], y = arrB[i];
+      if (x === y) continue;
+      // Handle string vs number seamlessly
+      if (typeof x === 'number' && typeof y === 'number') return x - y;
+      return ('' + x).localeCompare('' + y, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    return 0;
+  }
+
+  function clearOtherArrows(activeTh) {
+    Array.from(table.tHead.rows[0].cells).forEach(th => {
+      if (th !== activeTh) {
+        th.setAttribute('aria-sort', 'none');
+        const span = th.querySelector('.arrow');
+        if (span) span.textContent = '↕';
+      }
+    });
+  }
+
+  function bindSorting() {
+    if (!table) return;
+    const headCells = Array.from(table.tHead.rows[0].cells);
+
+    headCells.forEach((th, i) => {
+      // Skip sorting for the "Box" column (rightmost)
+      if (i === headCells.length - 1) return;
+
+      th.classList.add('sortable');
+      th.setAttribute('tabindex', '0');
+      th.setAttribute('aria-sort', 'none');
+
+      // add a little arrow container (↕ / ▲ / ▼)
+      const arrow = document.createElement('span');
+      arrow.className = 'arrow';
+      arrow.textContent = '↕';
+      th.appendChild(arrow);
+
+      const applySort = (dir) => {
+        const data = rows().map((tr, idx) => {
+          const td = tr.children[i];
+          return { tr, idx, key: sortKey(td, i) };
+        });
+
+        data.sort((A, B) => {
+          const cmp = compareKeys(A.key, B.key);
+          return dir === 'asc' ? cmp || (A.idx - B.idx) : -cmp || (A.idx - B.idx);
+        });
+
+        // re-append (this preserves nodes for existing event listeners/marks)
+        const frag = document.createDocumentFragment();
+        data.forEach(x => frag.appendChild(x.tr));
+        tbody.appendChild(frag);
+      };
+
+      let current = 'none'; // none | asc | desc
+
+      const toggle = () => {
+        const next = current === 'asc' ? 'desc' : 'asc';
+        clearOtherArrows(th);
+        current = next;
+        th.setAttribute('aria-sort', next);
+        th.querySelector('.arrow').textContent = next === 'asc' ? '▲' : '▼';
+        applySort(next);
+      };
+
+      th.addEventListener('click', toggle);
+      th.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); current = 'desc'; toggle(); }
+        if (e.key === 'ArrowDown') { e.preventDefault(); current = 'asc'; toggle(); }
+      });
+    });
+  }
+
+  bindSorting();
 </script>
 @endpush
-

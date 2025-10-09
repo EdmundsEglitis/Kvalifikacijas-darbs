@@ -24,7 +24,7 @@ class HomeController extends Controller
             ->whereNotNull('g.date')
             ->where('g.date', '>', now())     
             ->orderBy('g.date')
-            ->limit(24)                       
+            ->limit(12)                       
             ->get([
                 'g.id',
                 'g.date as tipoff',
@@ -42,23 +42,38 @@ class HomeController extends Controller
                 $row->away_team_logo = $toUrl($row->away_team_logo);
                 return $row;
             });
+            $slots = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
 
-        $slots = ['secondary-1','secondary-2','slot-1','slot-2','slot-3'];
-        $bySlot = collect($slots)->mapWithKeys(function ($slot) {
-            $item = News::where('position', $slot)->latest('created_at')->first();
-            if (!$item) return [];
-            $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
-            $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
+            $bySlot = collect($slots)->mapWithKeys(function ($slot) {
+                $item = News::where('position', $slot)->latest('created_at')->first();
+                if (!$item) return [];
 
-            libxml_use_internal_errors(true);
-            $doc = new \DOMDocument();
-            $doc->loadHTML('<?xml encoding="utf-8" ?>' . $item->content);
-            libxml_clear_errors();
-            $img = $doc->getElementsByTagName('img')->item(0);
-            $item->preview_image = $img?->getAttribute('src');
+                // Base text (strip everything; you can keep your <figure> removal if you prefer)
+                $rawText       = trim(strip_tags($item->content ?? ''));
+                $item->excerpt = \Illuminate\Support\Str::limit($rawText, 150, '…');
 
-            return [$slot => $item];
-        });
+                // Try to find the first <img src=...>
+                libxml_use_internal_errors(true);
+                $doc = new \DOMDocument();
+                $doc->loadHTML('<?xml encoding="utf-8" ?>' . ($item->content ?? ''));
+                libxml_clear_errors();
+
+                $imgNode = $doc->getElementsByTagName('img')->item(0);
+                $src     = $imgNode?->getAttribute('src');
+
+                // Normalize URL if needed
+                if ($src && !preg_match('~^https?://~i', $src)) {
+                    $src = asset(ltrim($src, '/'));
+                }
+
+                // Flags + fallbacks for the view
+                $item->has_image     = !empty($src);
+                $item->preview_image = $src ?: null;
+                $item->preview_text  = $src ? null : \Illuminate\Support\Str::limit($rawText, 120, '…');
+
+                return [$slot => $item];
+            });
+
 
         return view('lbs.home', compact('parentLeagues', 'heroImage', 'bySlot', 'upcomingGames'));
     }

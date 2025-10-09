@@ -256,7 +256,7 @@ public function allPlayersInfoForCron(): array
     \App\Models\NbaPlayer::chunk(10, function ($players) use (&$allLogs) {
         foreach ($players as $player) {
             $gamelog = $this->playerGameLog($player->external_id);
-            dd($gamelog);
+            
             foreach ($gamelog['seasonTypes'] ?? [] as $season) {
                 $seasonName = $season['displayName'] ?? null;
 

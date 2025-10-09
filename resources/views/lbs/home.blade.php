@@ -263,7 +263,7 @@
 </section>
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" data-stagger>
   @foreach (['slot-1','slot-2','slot-3'] as $slot)
-    @if ($bySlot[$slot] ?? false)
+    @if (!empty($bySlot[$slot]))
       @php($item = $bySlot[$slot])
 
       <a href="{{ route('lbs.news.show', $item->id) }}"
@@ -272,7 +272,7 @@
                 hover:-translate-y-1 hover:border-[#84CC16]/60 focus:outline-none
                 focus-visible:ring-2 focus-visible:ring-[#84CC16]/50">
 
-        <div class="relative w-full h-[200px] bg-[#0b1220]">
+        <div class="relative w-full h-[200px] bg-[#0b1220] grid place-items-center p-4 text-center">
           @if (!empty($item->preview_image))
             <img
               loading="lazy"
@@ -280,7 +280,12 @@
               alt="{{ $item->title }}"
               class="absolute inset-0 m-auto max-h-full max-w-full object-contain
                      transition-transform duration-500 ease-out group-hover:scale-[1.03]">
+          @else
+            <p class="text-sm text-gray-300 leading-snug line-clamp-4">
+              {{ $item->excerpt }}
+            </p>
           @endif
+
           <div class="absolute inset-0 bg-gradient-to-t from-[#0b1220] via-transparent to-transparent
                       transition-opacity duration-300 group-hover:opacity-90 pointer-events-none"></div>
         </div>
@@ -312,6 +317,7 @@
     @endif
   @endforeach
 </div>
+
 
 
 

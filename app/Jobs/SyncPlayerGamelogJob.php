@@ -20,10 +20,10 @@ class SyncPlayerGamelogJob implements ShouldQueue
     public array $playerIds;
 
 
-    public int $timeout = 120;
+    public int $timeout = 1200000;
 
 
-    public int $tries = 3;
+    public int $tries = 100;
 
 
     public function __construct(array $playerIds)
@@ -37,13 +37,8 @@ class SyncPlayerGamelogJob implements ShouldQueue
         set_time_limit(0);
 
         foreach ($this->playerIds as $playerId) {
-            try {
                 $this->processPlayer($nbaService, $playerId);
-            } catch (\Throwable $e) {
-                Log::error("Failed syncing gamelog for player {$playerId}", [
-                    'exception' => $e,
-                ]);
-            }
+      
         }
     }
 

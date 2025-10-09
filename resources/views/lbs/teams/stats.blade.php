@@ -2,27 +2,26 @@
 @section('title', $team->name . ' – Komandas statistika')
 
 @section('subnav')
-<x-teamnav :team="$team" />
+  <x-teamnav :team="$team" />
 @endsection
 
 @section('content')
   <div class="max-w-7xl mx-auto px-4 space-y-16">
 
+    {{-- Header --}}
     <section class="flex flex-col items-center space-y-4 text-center">
       @php
         $hasLogo = $team->logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($team->logo);
       @endphp
       @if($hasLogo)
-        <img
-          src="{{ asset('storage/' . $team->logo) }}"
-          alt="{{ $team->name }}"
-          class="h-28 w-28 object-contain shadow-lg bg-[#111827] rounded-xl ring-2 ring-[#84CC16]/40"
-        >
+        <img src="{{ asset('storage/' . $team->logo) }}" alt="{{ $team->name }}"
+             class="h-28 w-28 object-contain shadow-lg bg-[#111827] rounded-xl ring-2 ring-[#84CC16]/40">
       @endif
       <h1 class="text-4xl font-extrabold text-white drop-shadow">{{ $team->name }}</h1>
       <p class="text-[#F3F4F6]/70 text-sm">Komandas pārskats & statistika</p>
     </section>
 
+    {{-- W/L --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Komandas rezultāti</h2>
       <div class="flex justify-center gap-6">
@@ -37,6 +36,7 @@
       </div>
     </section>
 
+    {{-- Team averages --}}
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Vidējie rādītāji vidējā spēlē</h2>
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6">
@@ -49,54 +49,58 @@
       </div>
     </section>
 
+    {{-- Players table --}}
     <section>
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center justify-between mb-4">
         <h2 class="text-2xl font-bold text-white">Spēlētāju statistika</h2>
         <span class="px-3 py-1 text-xs rounded-full bg-[#84CC16]/20 text-[#84CC16] font-semibold">
           {{ $playersStats->count() }} spēlētāji
         </span>
       </div>
 
-      <div class="overflow-x-auto rounded-xl shadow-lg border border-[#374151] bg-[#1f2937]">
-        <table class="min-w-full divide-y divide-[#374151]">
-          <thead class="bg-[#0f172a] sticky top-0 z-10">
-            <tr>
-              <th class="px-4 py-3 text-left text-xs font-semibold text-[#F3F4F6]/70 uppercase">Spēlētājs</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#F3F4F6]/70 uppercase">PPG</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#F3F4F6]/70 uppercase">G</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#F3F4F6]/70 uppercase">Min</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#F3F4F6]/70 uppercase">RPG</th>
-              <th class="px-4 py-3 text-right text-xs font-semibold text-[#F3F4F6]/70 uppercase">APG</th>
+      <div class="overflow-x-auto rounded-2xl shadow-lg border border-[#374151] bg-[#1f2937]">
+        <table id="playersTable" class="min-w-full">
+          <thead class="bg-[#0f172a] sticky top-0 z-10 select-none">
+            <tr class="text-[#F3F4F6]/70 text-xs">
+              <th class="px-4 py-3 text-left uppercase tracking-wide">Spēlētājs</th>
+              <th class="px-4 py-3 text-right uppercase tracking-wide cursor-pointer" data-sort="number">PPG</th>
+              <th class="px-4 py-3 text-right uppercase tracking-wide cursor-pointer" data-sort="number">G</th>
+              <th class="px-4 py-3 text-right uppercase tracking-wide cursor-pointer" data-sort="time">MIN</th>
+              <th class="px-4 py-3 text-right uppercase tracking-wide cursor-pointer" data-sort="number">RPG</th>
+              <th class="px-4 py-3 text-right uppercase tracking-wide cursor-pointer" data-sort="number">APG</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-[#374151]">
             @foreach($playersStats as $p)
               @php
                 $hasPhoto = !empty($p['photo']) && \Illuminate\Support\Facades\Storage::disk('public')->exists($p['photo']);
-                $mins = (float)($p['minutes'] ?? 0);
-                // If minutes are total minutes, format as mm:ss; if already per-game decimal, show with 1 dec.
-                $minsText = $mins > 120 ? gmdate('i:s', (int) round($mins)) : number_format($mins, 1);
+                $jersey   = $p['jersey_number'] ?? null;
+                $gp       = (int)($p['gamesPlayed'] ?? 0);
+                $sec      = (int)($p['minutes'] ?? 0); // avg seconds per game (already computed)
+                $minsText = $gp === 0 ? '—' : sprintf('%d:%02d', intdiv($sec,60), $sec%60);
               @endphp
-              <tr class="hover:bg-[#2d3748] transition">
+              <tr class="odd:bg-[#1f2937] even:bg-[#16202d] hover:bg-[#2a3647] transition">
                 <td class="px-4 py-3">
-                  <a href="{{ route('lbs.player.show', $p['id']) }}" class="flex items-center gap-3 hover:text-[#84CC16]">
+                  <a href="{{ route('lbs.player.show', $p['id']) }}" class="flex items-center gap-3 group">
                     @if($hasPhoto)
-                      <img
-                        src="{{ asset('storage/' . $p['photo']) }}"
-                        alt="{{ $p['name'] }}"
-                        class="h-9 w-9 object-cover rounded-full border border-[#84CC16]/40"
-                      >
+                      <img src="{{ asset('storage/' . $p['photo']) }}" alt="{{ $p['name'] }}"
+                           class="h-9 w-9 object-cover rounded-full border border-[#84CC16]/40">
                     @else
-                      <div class="h-9 w-9 rounded-full bg-gray-600 flex items-center justify-center text-xs text-gray-300">?</div>
+                      <div class="h-9 w-9 rounded-full bg-[#0b1220] border border-white/10 grid place-items-center text-[11px] text-white/90">
+                        {{ $jersey ?: '—' }}
+                      </div>
                     @endif
-                    <span class="font-medium text-white">{{ $p['name'] }}</span>
+                    <span class="font-medium text-white group-hover:text-[#84CC16] transition-colors">{{ $p['name'] }}</span>
                   </a>
                 </td>
-                <td class="px-4 py-3 text-right text-[#84CC16] font-semibold">{{ number_format((float)($p['ppg'] ?? 0), 1) }}</td>
-                <td class="px-4 py-3 text-right">{{ (int)($p['gamesPlayed'] ?? 0) }}</td>
-                <td class="px-4 py-3 text-right">{{ $minsText }}</td>
-                <td class="px-4 py-3 text-right">{{ number_format((float)($p['rpg'] ?? 0), 1) }}</td>
-                <td class="px-4 py-3 text-right">{{ number_format((float)($p['apg'] ?? 0), 1) }}</td>
+
+                <td class="px-4 py-3 text-right">
+                  <span class="font-semibold text-[#84CC16] tabular-nums">{{ number_format((float)$p['ppg'], 1) }}</span>
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums">{{ (int)$p['gamesPlayed'] }}</td>
+                <td class="px-4 py-3 text-right tabular-nums" data-time="{{ $gp === 0 ? 0 : $sec }}">{{ $minsText }}</td>
+                <td class="px-4 py-3 text-right tabular-nums">{{ number_format((float)$p['rpg'], 1) }}</td>
+                <td class="px-4 py-3 text-right tabular-nums">{{ number_format((float)$p['apg'], 1) }}</td>
               </tr>
             @endforeach
           </tbody>
@@ -106,3 +110,55 @@
 
   </div>
 @endsection
+
+@push('scripts')
+<script>
+(function(){
+  const table = document.getElementById('playersTable');
+  if (!table) return;
+
+  function val(td, type){
+    if (type === 'time') {
+      const secs = td.getAttribute('data-time');
+      if (secs !== null) return parseInt(secs, 10) || 0;
+      const txt = (td.textContent || '').trim();
+      const m = txt.match(/^(\d+):(\d{2})$/); // mm:ss fallback
+      return m ? (parseInt(m[1],10)*60 + parseInt(m[2],10)) : 0;
+    }
+    const raw = (td.textContent || '').replace(/[^\d.\-]/g,'').trim();
+    const n = parseFloat(raw);
+    return isNaN(n) ? -Infinity : n;
+  }
+
+  function setIndicator(th, dir){
+    table.querySelectorAll('thead th').forEach(h => h.removeAttribute('aria-sort'));
+    th.setAttribute('aria-sort', dir === 1 ? 'ascending' : 'descending');
+  }
+
+  table.querySelectorAll('thead th[data-sort]').forEach(th => {
+    let dir = 1; // 1 asc, -1 desc; toggles each click
+    th.addEventListener('click', () => {
+      const headers = Array.from(th.parentNode.children);
+      const col = headers.indexOf(th);
+      const type = th.getAttribute('data-sort');
+
+      const rows = Array.from(table.tBodies[0].rows);
+      rows.sort((a,b) => {
+        const va = val(a.cells[col], type);
+        const vb = val(b.cells[col], type);
+        if (va < vb) return -1 * dir;
+        if (va > vb) return  1 * dir;
+        return 0;
+      });
+
+      dir *= -1;               // toggle next time
+      setIndicator(th, -dir);  // show the “next” arrow state
+
+      const frag = document.createDocumentFragment();
+      rows.forEach(r => frag.appendChild(r));
+      table.tBodies[0].appendChild(frag);
+    });
+  });
+})();
+</script>
+@endpush

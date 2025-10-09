@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Game;
 use App\Models\League;
 use App\Models\Team;
-
+use Illuminate\Support\Facades\DB;
 class TeamController extends Controller
 {
     public function show($id)
@@ -133,62 +133,119 @@ class TeamController extends Controller
         return view('lbs.teams.players', compact('team'));
     }
 
-    public function stats($id)
-    {
-        $team = Team::with(['players.games'])->findOrFail($id);
+public function stats($id)
+{
 
-        $games = Game::where('team1_id', $team->id)
-            ->orWhere('team2_id', $team->id)
-            ->get();
+    $team = \App\Models\Team::with('players')->findOrFail($id);
 
-        $wins = $games->where('winner_id', $team->id)->count();
-        $losses = $games->count() - $wins;
+    // Team games for W/L and team per-game avgs
+    $games = \App\Models\Game::where('team1_id', $team->id)
+        ->orWhere('team2_id', $team->id)
+        ->get();
 
-        $totalGames = $games->count() ?: 1;
+    $wins   = $games->where('winner_id', $team->id)->count();
+    $losses = $games->count() - $wins;
+    $totalGames = max($games->count(), 1);
 
-        $statKeys = [
-            'points' => 'Punkti',
-            'oreb'   => 'Atl. bumbas uzbrukumā',
-            'dreb'   => 'Atl. bumbas aizsardzībā',
-            'reb'    => 'Atl. bumbas',
-            'ast'    => 'Piespēles',
-            'pf'     => 'Fouls',
-            'tov'    => 'Kļūdas',
-            'stl'    => 'Pārķertās',
-            'blk'    => 'Bloķētie metieni',
-            'eff'    => 'effektivitāte'
-        ];
+    // Team per-game averages from player_game_stats
+    $statKeys = [
+        'points' => 'Punkti',
+        'oreb'   => 'Atl. bumbas uzbrukumā',
+        'dreb'   => 'Atl. bumbas aizsardzībā',
+        'reb'    => 'Atl. bumbas',
+        'ast'    => 'Piespēles',
+        'pf'     => 'Fouls',
+        'tov'    => 'Kļūdas',
+        'stl'    => 'Pārķertās',
+        'blk'    => 'Bloķētie metieni',
+        'eff'    => 'Efektivitāte',
+    ];
 
-        $averageStats = [];
-        foreach ($statKeys as $key => $label) {
-            $total = $team->players->sum(fn($p) => $p->games->sum("pivot.$key"));
-            $averageStats[$key] = [
-                'label' => $label,
-                'avg'   => $total / $totalGames,
+    $averageStats = [];
+    foreach ($statKeys as $key => $label) {
+        $total = DB::table('player_game_stats')
+            ->where('team_id', $team->id)
+            ->sum($key);
+        $averageStats[$key] = ['label' => $label, 'avg' => $total / $totalGames];
+    }
+
+    // Helper: parse "MM:SS" or "HH:MM:SS" (or numeric seconds) → seconds
+    $toSeconds = function ($val): int {
+        if ($val === null) return 0;
+        $s = trim((string)$val);
+        if ($s === '') return 0;
+        if (ctype_digit($s)) return (int)$s; // already seconds
+
+        if (strpos($s, ':') !== false) {
+            $parts = array_map('intval', explode(':', $s));
+            if (count($parts) === 2) { [$m,$sec] = $parts; return max(0, $m*60 + $sec); }
+            if (count($parts) === 3) { [$h,$m,$sec] = $parts; return max(0, $h*3600 + $m*60 + $sec); }
+        }
+        // last-chance: "32min 20 sec"
+        if (preg_match('/(\d+)\D+(\d+)/', $s, $m)) {
+            return max(0, ((int)$m[1])*60 + (int)$m[2]);
+        }
+        return 0;
+    };
+
+    // Pull raw stats rows for this team’s players
+    $playerIds = $team->players->pluck('id')->all();
+    $rows = DB::table('player_game_stats')
+        ->where('team_id', $team->id)
+        ->whereIn('player_id', $playerIds)
+        ->select('player_id','points','reb','ast','minutes','status')
+        ->get();
+
+    // Aggregate per player (exclude DNP entirely)
+    $agg = [];
+    foreach ($rows as $r) {
+        $pid = (int)$r->player_id;
+        $status = strtolower((string)($r->status ?? 'played'));
+
+        if (!isset($agg[$pid])) {
+            $agg[$pid] = [
+                'gp'    => 0,
+                'pts'   => 0,
+                'reb'   => 0,
+                'ast'   => 0,
+                'min_s' => 0,
             ];
         }
 
-        $playersStats = $team->players->map(function ($player) {
-            $gamesPlayed = $player->games->count() ?: 1;
-            return [
-                'id' => $player->id,
-                'name' => $player->name,
-                'photo' => $player->photo,
-                'gamesPlayed' => $gamesPlayed,
-                'ppg' => $player->games->sum('pivot.points') / $gamesPlayed,
-                'rpg' => $player->games->sum('pivot.reb') / $gamesPlayed,
-                'apg' => $player->games->sum('pivot.ast') / $gamesPlayed,
-                'minutes' => $player->games->sum(fn($g) => strtotime($g->pivot->minutes) - strtotime('00:00')) / $gamesPlayed,
-            ];
-        });
+        if ($status === 'dnp') {
+            continue; // did not play → do not count in average or minutes
+        }
 
-        return view('lbs.teams.stats', compact(
-            'team',
-            'games',
-            'wins',
-            'losses',
-            'averageStats',
-            'playersStats'
-        ));
+        $agg[$pid]['gp']    += 1;
+        $agg[$pid]['pts']   += (int)$r->points;
+        $agg[$pid]['reb']   += (int)$r->reb;
+        $agg[$pid]['ast']   += (int)$r->ast;
+        $agg[$pid]['min_s'] += $toSeconds($r->minutes);
     }
+
+    // Build players table rows, preserving photo/jersey
+    $playersStats = $team->players->map(function ($p) use ($agg) {
+        $pid = (int)$p->id;
+        $gp  = $agg[$pid]['gp'] ?? 0;
+        $safe = fn($n,$d) => $d ? ($n / $d) : 0;
+
+        return [
+            'id'            => $pid,
+            'name'          => $p->name,
+            'photo'         => $p->photo,
+            'jersey_number' => $p->jersey_number,
+            'gamesPlayed'   => $gp,
+            'ppg'           => $safe($agg[$pid]['pts']   ?? 0, $gp),
+            'rpg'           => $safe($agg[$pid]['reb']   ?? 0, $gp),
+            'apg'           => $safe($agg[$pid]['ast']   ?? 0, $gp),
+            // average seconds per played game (this is what the view formats & sorts by)
+            'minutes'       => (int) round($safe($agg[$pid]['min_s'] ?? 0, $gp)),
+        ];
+    });
+
+    return view('lbs.teams.stats', compact(
+        'team', 'games', 'wins', 'losses', 'averageStats', 'playersStats'
+    ));
+}
+
 }

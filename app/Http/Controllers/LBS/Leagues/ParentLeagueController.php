@@ -27,17 +27,30 @@ class ParentLeagueController extends Controller
                 $clean = preg_replace('/<figure.*?<\/figure>/is', '', $item->content);
                 $item->excerpt = Str::limit(strip_tags($clean), 150, '…');
 
-                $item->preview_image = null;
-                if (!empty(trim($item->content))) {
-                    libxml_use_internal_errors(true);
-                    $doc = new \DOMDocument();
-                    $doc->loadHTML('<?xml encoding="utf-8" ?>' . $item->content);
-                    libxml_clear_errors();
-                    $imgNode = $doc->getElementsByTagName('img')->item(0);
-                    if ($imgNode) {
-                        $item->preview_image = $imgNode->getAttribute('src');
-                    }
-                }
+               $item->preview_image = null;
+
+$content = trim((string) ($item->content ?? ''));
+if ($content !== '') {
+    libxml_use_internal_errors(true);
+    $doc = new \DOMDocument();
+    $doc->loadHTML('<?xml encoding="utf-8" ?>' . $content);
+    libxml_clear_errors();
+
+    $imgNode = $doc->getElementsByTagName('img')->item(0);
+
+    if ($imgNode) {
+        $src = trim((string) $imgNode->getAttribute('src'));
+
+        // If it's a relative path, convert to absolute (assuming it’s served locally)
+        if ($src !== '' && !preg_match('~^https?://~i', $src)) {
+            // handle leading slashes or storage paths gracefully
+            $src = asset(ltrim($src, '/'));
+        }
+
+        $item->preview_image = $src ?: null;
+    }
+}
+
 
                 return $item;
             });

@@ -55,47 +55,52 @@
   </section>
 
   @if($news->isNotEmpty())
-    <section id="news" class="py-12 max-w-7xl mx-auto px-4">
-      <h2 class="text-3xl font-bold text-white mb-6">Jaunumi no {{ $parent->name }}</h2>
+  <section id="news" class="py-12 max-w-7xl mx-auto px-4">
+    <h2 class="text-3xl font-bold text-white mb-6">Jaunumi no {{ $parent->name }}</h2>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach($news as $item)
-          <article
-            class="group bg-[#0f172a] rounded-2xl overflow-hidden shadow-lg border border-[#1f2937]/60
-                   flex flex-col hover:shadow-2xl fade-in-section opacity-0 translate-y-6 transition"
-          >
-            <div class="relative w-full h-[220px] bg-[#0b1220]">
-              @if($item->preview_image)
-                <img
-                  loading="lazy"
-                  src="{{ $item->preview_image }}"
-                  alt="{{ $item->title }}"
-                  class="absolute inset-0 m-auto max-h-full max-w-full object-contain"
-                />
-              @endif
-              <div class="absolute inset-0 bg-gradient-to-t from-[#0b1220] via-transparent to-transparent"></div>
-            </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      @foreach($news as $item)
+        <article
+          class="group bg-[#0f172a] rounded-2xl overflow-hidden shadow-lg border border-[#1f2937]/60
+                 flex flex-col hover:shadow-2xl fade-in-section opacity-0 translate-y-6 transition"
+        >
+          <div class="relative w-full h-[220px] bg-[#0b1220] grid place-items-center p-4 text-center">
+            @if(!empty($item->preview_image))
+              <img
+                loading="lazy"
+                src="{{ $item->preview_image }}"
+                alt="{{ $item->title }}"
+                class="absolute inset-0 m-auto max-h-full max-w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+              />
+            @else
+              <p class="text-sm text-gray-300 leading-snug line-clamp-4">
+                {{ $item->excerpt }}
+              </p>
+            @endif
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0b1220] via-transparent to-transparent"></div>
+          </div>
 
-            <div class="p-5 flex flex-col flex-1">
-              <h3 class="text-lg font-semibold text-white mb-1">
-                {{ $item->title }}
-              </h3>
-              <p class="flex-1 text-[#F3F4F6]/90 line-clamp-3">{{ $item->excerpt }}</p>
-              <div class="mt-3 flex items-center justify-between">
-                <time class="text-xs text-[#F3F4F6]/60">
-                  {{ $item->created_at->format('Y-m-d') }}
-                </time>
-                <a href="{{ route('lbs.news.show', $item->id) }}"
-                   class="text-[#84CC16] font-medium hover:underline text-sm inline-flex items-center gap-1">
-                  Lasīt <span>→</span>
-                </a>
-              </div>
+          <div class="p-5 flex flex-col flex-1">
+            <h3 class="text-lg font-semibold text-white mb-1">
+              {{ $item->title }}
+            </h3>
+            <p class="flex-1 text-[#F3F4F6]/90 line-clamp-3">{{ $item->excerpt }}</p>
+            <div class="mt-3 flex items-center justify-between">
+              <time class="text-xs text-[#F3F4F6]/60">
+                {{ $item->created_at->format('Y-m-d') }}
+              </time>
+              <a href="{{ route('lbs.news.show', $item->id) }}"
+                 class="text-[#84CC16] font-medium hover:underline text-sm inline-flex items-center gap-1">
+                Lasīt <span>→</span>
+              </a>
             </div>
-          </article>
-        @endforeach
-      </div>
-    </section>
-  @endif
+          </div>
+        </article>
+      @endforeach
+    </div>
+  </section>
+@endif
+
 
   <footer class="py-8 bg-[#111827] text-[#F3F4F6]/70 text-center text-sm fade-in-section opacity-0 translate-y-6">
     &copy; {{ date('Y') }} LBS. Visas tiesības aizsargātas.
