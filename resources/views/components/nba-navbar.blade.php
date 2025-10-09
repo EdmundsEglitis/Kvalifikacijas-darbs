@@ -2,9 +2,12 @@
 
 @php
   $menuId = 'nba-mobile-' . uniqid();
-  $link = function ($name, $label, $active = null) {
+
+  $link = function (string $name, string $label, ?string $active = null) {
+      // exact route match only
       $isActive = request()->routeIs($active ?? $name);
       $textCls  = $isActive ? 'text-[#84CC16]' : 'text-[#F3F4F6]/90 hover:text-[#84CC16]';
+
       return ''
         . '<a href="'.e(route($name)).'" class="relative font-medium transition group '.$textCls.'">'
         .   e($label)
@@ -27,8 +30,11 @@
 
       <div class="hidden md:flex items-center gap-8 text-sm font-medium">
         {!! $link('nba.players', 'Players') !!}
-        {!! $link('nba.games.upcoming', 'Upcoming Games', 'nba.games.*') !!}
-        @if(Route::has('nba.games.all')) {!! $link('nba.games.all', 'All Games') !!} @endif
+        {{-- exact matches here (no wildcard) --}}
+        {!! $link('nba.games.upcoming', 'Upcoming Games', 'nba.games.upcoming') !!}
+        @if (Route::has('nba.games.all'))
+          {!! $link('nba.games.all', 'All Games', 'nba.games.all') !!}
+        @endif
         {!! $link('nba.teams', 'Teams') !!}
         {!! $link('nba.standings.explorer', 'Compare teams') !!}
         {!! $link('nba.compare', 'Compare players') !!}
@@ -62,6 +68,7 @@
 </nav>
 
 <script>
+  // correct mobile toggle
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('[data-mobile-btn]');
     if (!btn) return;
@@ -71,7 +78,7 @@
     if (!menu) return;
 
     const willOpen = menu.classList.contains('hidden');
-    menu.classList.toggle(!willOpen);
+    menu.classList.toggle('hidden'); // <-- toggle the 'hidden' class
     btn.setAttribute('aria-expanded', String(willOpen));
 
     if (willOpen) {

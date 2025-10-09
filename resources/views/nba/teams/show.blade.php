@@ -31,7 +31,37 @@
       @endif
     </section>
 
-    <section>
+    {{-- Sticky section nav --}}
+<nav id="sectionNav"
+     class="sticky top-16 z-20 bg-transparent backdrop-blur border-t border-white/10">
+  <div class="max-w-7xl mx-auto px-4">
+    <ul class="flex flex-wrap gap-2 py-2">
+      @php
+        $tabs = [
+          ['#roster','Roster'],
+          ['#upcoming','Upcoming'],
+          ['#seasons','Seasons'],
+          ['#legend','Legend'],
+          ['#past-games','Past'],
+        ];
+      @endphp
+      @foreach($tabs as [$href,$label])
+        <li>
+          <a href="{{ $href }}"
+             class="section-link inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full
+                    text-sm font-medium text-gray-200 hover:text-white
+                    bg-white/5 hover:bg-white/10 border border-white/10
+                    transition">
+            {{ $label }}
+          </a>
+        </li>
+      @endforeach
+    </ul>
+  </div>
+</nav>
+
+
+    <section id="roster" class="scroll-mt-28">
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Roster</h2>
 
       <div class="grid gap-4 sm:gap-5 [grid-template-columns:repeat(auto-fit,minmax(150px,1fr))]">
@@ -54,56 +84,56 @@
       </div>
     </section>
 
-    <section>
-      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Upcoming Games</h2>
-      <div class="overflow-x-auto bg-[#1f2937] rounded-xl border border-[#374151]">
-        <table class="min-w-full text-left text-sm">
-          <thead class="bg-[#0f172a] text-gray-400">
-            <tr>
-              <th class="px-4 py-2">Date</th>
-              <th class="px-4 py-2">Home</th>
-              <th class="px-4 py-2">Away</th>
-              <th class="px-4 py-2">Venue</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[#374151] text-[#F3F4F6]">
-            @forelse($games as $game)
-              <tr class="odd:bg-[#1f2937] even:bg-[#111827] hover:bg-[#374151] transition">
-                <td class="px-4 py-2 whitespace-nowrap">
-                  {{ $game->tipoff ? \Carbon\Carbon::parse($game->tipoff)->format('M d, H:i') : '—' }}
-                </td>
-                <td class="px-4 py-2">
-                  <a href="{{ route('nba.team.show', $game->home_team_id) }}"
-                     class="flex items-center gap-2 hover:text-[#84CC16]">
-                    @if($game->home_team_logo)
-                      <img src="{{ $game->home_team_logo }}" class="h-6 w-6" loading="lazy">
-                    @endif
-                    <span class="truncate">{{ $game->home_team_name }}</span>
-                  </a>
-                </td>
-                <td class="px-4 py-2">
-                  <a href="{{ route('nba.team.show', $game->away_team_id) }}"
-                     class="flex items-center gap-2 hover:text-[#84CC16]">
-                    @if($game->away_team_logo)
-                      <img src="{{ $game->away_team_logo }}" class="h-6 w-6" loading="lazy">
-                    @endif
-                    <span class="truncate">{{ $game->away_team_name }}</span>
-                  </a>
-                </td>
-                <td class="px-4 py-2">
-                  <span class="block truncate">{{ $game->venue }} @if($game->city) — {{ $game->city }} @endif</span>
-                </td>
-              </tr>
-            @empty
-              <tr><td colspan="4" class="px-4 py-3 text-gray-400">No upcoming games</td></tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
-      <p class="mt-2 text-xs text-gray-400 sm:hidden">Tip: you can scroll this table sideways on mobile.</p>
+    
+<section id="upcoming" class="scroll-mt-28">
+    <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Upcoming Games</h2>
+<div class="overflow-x-auto bg-[#1f2937] rounded-xl border border-[#374151]">
+  <table class="min-w-full text-left text-sm">
+    <thead class="bg-[#0f172a] text-gray-400">
+      <tr>
+        <th class="px-4 py-2">Date</th>
+        <th class="px-4 py-2">Home</th>
+        <th class="px-4 py-2">Away</th>
+        <th class="px-4 py-2">Venue</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-[#374151] text-[#F3F4F6]">
+      @forelse($upcomingGames as $game)
+        <tr class="odd:bg-[#1f2937] even:bg-[#111827] hover:bg-[#374151] transition">
+          <td class="px-4 py-2 whitespace-nowrap">
+            {{ $game->tipoff ? \Carbon\Carbon::parse($game->tipoff)->format('M d, H:i') : '—' }}
+          </td>
+          <td class="px-4 py-2">
+            <a href="{{ route('nba.team.show', $game->home_team_id) }}" class="flex items-center gap-2 hover:text-[#84CC16]">
+              @if($game->home_team_logo)
+                <img src="{{ $game->home_team_logo }}" class="h-6 w-6" loading="lazy">
+              @endif
+              <span class="truncate">{{ $game->home_team_name }}</span>
+            </a>
+          </td>
+          <td class="px-4 py-2">
+            <a href="{{ route('nba.team.show', $game->away_team_id) }}" class="flex items-center gap-2 hover:text-[#84CC16]">
+              @if($game->away_team_logo)
+                <img src="{{ $game->away_team_logo }}" class="h-6 w-6" loading="lazy">
+              @endif
+              <span class="truncate">{{ $game->away_team_name }}</span>
+            </a>
+          </td>
+          <td class="px-4 py-2">
+            <span class="block truncate">{{ $game->venue }} @if($game->city) — {{ $game->city }} @endif</span>
+          </td>
+        </tr>
+      @empty
+        <tr><td colspan="4" class="px-4 py-3 text-gray-400">No upcoming games</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+</div>
+<p class="mt-2 text-xs text-gray-400 sm:hidden">Tip: you can scroll this table sideways on mobile.</p>
+
     </section>
 
-    <section>
+    <section id="seasons" class="scroll-mt-28">
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Seasons (2021 →)</h2>
 
       @if($standingsHistory->isEmpty())
@@ -197,7 +227,7 @@
       @endif
     </section>
 
-    <section class="pb-10">
+    <section id="legend" class="scroll-mt-28 pb-10">
       <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Stat explanations</h2>
 
       <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
@@ -244,7 +274,112 @@
       </div>
     </section>
 
+    {{-- Past games (from logs) --}}
+    <section id="past-games" class="scroll-mt-28">
+  <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-white">Past Games</h2>
+
+  @if(($pastGames ?? collect())->isEmpty())
+    <div class="bg-[#1f2937] rounded-xl p-6 text-gray-400">
+      No past games found.
+    </div>
+  @else
+    <div class="overflow-x-auto bg-[#1f2937] rounded-xl border border-[#374151]">
+      <table class="min-w-full text-left text-sm">
+        <thead class="bg-[#0f172a] text-gray-400">
+          <tr>
+            <th class="px-4 py-2">Date</th>
+            <th class="px-4 py-2">Opponent</th>
+            <th class="px-4 py-2">Result</th>
+            <th class="px-4 py-2">Score</th>
+            <th class="px-4 py-2 text-right">Box</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#374151] text-[#F3F4F6]">
+          @foreach($pastGames as $g)
+            <tr class="odd:bg-[#1f2937] even:bg-[#111827] hover:bg-[#374151] transition">
+              <td class="px-4 py-2 whitespace-nowrap">
+                {{ \Carbon\Carbon::parse($g->game_date)->format('M d, Y') }}
+              </td>
+              <td class="px-4 py-2">
+                <div class="flex items-center gap-2">
+                  @if(!empty($g->opponent_logo))
+                    <img src="{{ $g->opponent_logo }}" class="h-6 w-6 object-contain rounded bg-white p-[2px]" loading="lazy">
+                  @endif
+                  <span class="truncate">{{ $g->opponent_name ?? '—' }}</span>
+                </div>
+              </td>
+              <td class="px-4 py-2">
+                @php $r = strtoupper((string)($g->result ?? '')); @endphp
+                <span class="{{ $r==='W' ? 'text-[#84CC16]' : ($r==='L' ? 'text-[#F97316]' : 'text-gray-300') }}">
+                  {{ $r ?: '—' }}
+                </span>
+              </td>
+              <td class="px-4 py-2">{{ $g->score ?? '—' }}</td>
+              <td class="px-4 py-2 text-right">
+                <a href="{{ route('nba.games.show', ['eventId' => $g->event_id]) }}"
+                   class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20">
+                  View box score
+                </a>
+              </td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 text-xs text-gray-400 sm:hidden">Tip: you can scroll this table sideways on mobile.</p>
+  @endif
+</section>
+
+
   </main>
 </body>
 </html>
+
+<script>
+  // Smooth-scroll with slight offset (handled by scroll-mt*)
+  document.querySelectorAll('a.section-link[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const id = a.getAttribute('href');
+      const target = document.querySelector(id);
+      if (!target) return;
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', id); // update hash without jump
+    });
+  });
+
+  // Active state on scroll
+  (function() {
+    const links = Array.from(document.querySelectorAll('a.section-link[href^="#"]'));
+    const map   = new Map(links.map(l => [l.getAttribute('href'), l]));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const id = '#'+entry.target.id;
+        const link = map.get(id);
+        if (!link) return;
+        if (entry.isIntersecting) {
+          links.forEach(x => x.classList.remove('ring-2','ring-[#84CC16]','text-white','bg-white/10'));
+          link.classList.add('ring-2','ring-[#84CC16]','text-white','bg-white/10');
+        }
+      });
+    }, { rootMargin: '-45% 0px -45% 0px', threshold: 0.01 });
+
+    ['roster','upcoming','past-games','seasons','legend']
+      .forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
+  })();
+
+  // Optional: tiny shadow when the nav sticks
+  (function() {
+    const nav = document.getElementById('sectionNav');
+    if (!nav) return;
+    const onScroll = () => {
+      const stuck = nav.getBoundingClientRect().top <= 16; // 16px (top-16)
+      nav.classList.toggle('shadow-lg', stuck);
+      nav.classList.toggle('shadow-black/30', stuck);
+    };
+    onScroll();
+    document.addEventListener('scroll', onScroll, { passive: true });
+  })();
+</script>
+
 @endsection

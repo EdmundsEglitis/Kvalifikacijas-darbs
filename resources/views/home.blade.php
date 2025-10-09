@@ -147,22 +147,33 @@
     </section>
 
     <div class="reveal" data-aos data-aos-delay="80">
-  <div class="flex flex-wrap gap-3">
+  <div class="flex flex-col sm:flex-row gap-4">
     <a href="{{ route('compare.nba-lbs') }}"
-       class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a6e23a] transition">
-      🔁 Salīdzināt NBA vs LBS spēlētājus
+       class="group inline-flex items-center gap-2 px-5 py-3 rounded-full 
+              bg-gradient-to-b from-[#9AE735] to-[#84CC16] text-[#0B1220] font-semibold
+              shadow-[0_8px_20px_rgba(132,204,22,0.25)] ring-1 ring-black/10
+              hover:from-[#aef255] hover:to-[#93e234]
+              hover:shadow-[0_10px_28px_rgba(132,204,22,0.35)]
+              active:translate-y-[1px] transition">
+      <span class="text-lg"></span>
+      <span>Salīdzināt NBA vs LBS spēlētājus</span>
+      <span class="ml-1 opacity-80 group-hover:opacity-100 transition"></span>
+    </a>
+
+    <a href="{{ route('compare.nba-lbs-teams') }}"
+       class="group inline-flex items-center gap-2 px-5 py-3 rounded-full 
+              bg-gradient-to-b from-[#9AE735] to-[#84CC16] text-[#0B1220] font-semibold
+              shadow-[0_8px_20px_rgba(132,204,22,0.25)] ring-1 ring-black/10
+              hover:from-[#aef255] hover:to-[#93e234]
+              hover:shadow-[0_10px_28px_rgba(132,204,22,0.35)]
+              active:translate-y-[1px] transition">
+      <span class="text-lg"></span>
+      <span>Salīdzināt NBA vs LBS komandas</span>
+      <span class="ml-1 opacity-80 group-hover:opacity-100 transition"></span>
     </a>
   </div>
 </div>
 
-<div class="reveal" data-aos data-aos-delay="80">
-  <div class="flex flex-wrap gap-3">
-    <a href="{{ route('compare.nba-lbs-teams') }}"
-       class="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a6e23a] transition">
-      🔁 Salīdzināt NBA vs LBS komandas
-    </a>
-  </div>
-</div>
 
     <section id="news" class="py-16 bg-[#111827]">
       <div class="max-w-7xl mx-auto px-4 space-y-12">

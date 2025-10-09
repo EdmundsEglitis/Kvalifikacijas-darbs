@@ -1,0 +1,217 @@
+@extends('layouts.nba')
+@section('title','All Games')
+
+@push('head')
+<style>
+  @keyframes fadeUp { from { opacity:.0; transform: translateY(6px) } to { opacity:1; transform:none } }
+  .fade-up { animation: fadeUp .35s ease-out both; }
+  .img-fade { opacity:.0; transition: opacity .3s ease; }
+  .img-fade.loaded { opacity:1; }
+  @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+  .shimmer { background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.12) 37%, rgba(255,255,255,0.06) 63%);
+             background-size: 400% 100%; animation: shimmer 1.6s infinite; }
+</style>
+@endpush
+
+@section('content')
+<main class="max-w-7xl mx-auto px-4 pb-16 pt-10 space-y-8">
+
+  {{-- Filters --}}
+  <section class="bg-[#1f2937] border border-[#374151] rounded-2xl p-4 sm:p-5 fade-up">
+    <form method="GET" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-7 items-end">
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">From season</label>
+        <select name="from" class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40">
+          @foreach($seasons as $s)
+            <option value="{{ $s }}" @selected((int)$from === (int)$s)>{{ $s }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">To season</label>
+        <select name="to" class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40">
+          @foreach($seasons as $s)
+            <option value="{{ $s }}" @selected((int)$to === (int)$s)>{{ $s }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="lg:col-span-2">
+        <label class="block text-xs text-gray-400 mb-1">Team / Opponent / Player</label>
+        <input name="team" value="{{ $teamQuery }}" placeholder="e.g. Celtics or Tatum"
+               class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40" />
+      </div>
+
+      <div class="lg:col-span-2">
+        <label class="block text-xs text-gray-400 mb-1">Winner contains</label>
+        <input name="winner" value="{{ $winnerQ ?? '' }}" placeholder="e.g. Celtics"
+               class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40" />
+      </div>
+
+      <div>
+        <label class="block text-xs text-gray-400 mb-1">Per page</label>
+        <select name="per_page" class="w-full bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40">
+          @foreach([10,25,50,100] as $pp)
+            <option value="{{ $pp }}" @selected((int)$per === $pp)>{{ $pp }}</option>
+          @endforeach
+        </select>
+      </div>
+
+      <div class="flex gap-3 lg:col-span-7">
+        <button class="px-4 py-2 rounded-lg bg-[#84CC16] text-[#111827] font-semibold hover:bg-[#a3e635] transition">Apply</button>
+        <a href="{{ route('nba.games.all') }}"
+           class="px-4 py-2 rounded-lg bg-white/10 text-white hover:bg-white/20 transition">Reset</a>
+        <input id="q" type="text" placeholder="Quick search in this page…"
+               class="flex-1 min-w-[200px] bg-[#0f172a] border border-[#374151] rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#84CC16]/40" />
+      </div>
+    </form>
+  </section>
+
+  {{-- Table --}}
+  <section class="bg-[#1f2937] border border-[#374151] rounded-2xl overflow-hidden fade-up">
+    <div class="overflow-x-auto">
+      <table id="gamesTable" class="min-w-[1000px] w-full text-sm">
+        <thead class="bg-[#0f172a] text-gray-300 sticky top-0 z-10">
+          <tr>
+            <th class="px-4 py-2 text-left">Date / Time</th>
+            <th class="px-4 py-2 text-left">Home (derived)</th>
+            <th class="px-4 py-2 text-left">Away (derived)</th>
+            <th class="px-4 py-2 text-left">Score</th>
+            <th class="px-4 py-2 text-left">Winner</th>
+            <th class="px-4 py-2 text-right">Box</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[#374151] text-[#F3F4F6]">
+          @forelse($rows as $r)
+            <tr class="odd:bg-[#1f2937] even:bg-[#111827] hover:bg-[#374151]/60 transition">
+              <td class="px-4 py-2 whitespace-nowrap">{{ $r['date_disp'] }}</td>
+
+              <td class="px-4 py-2">
+                <div class="flex items-center gap-2">
+                  @if(!empty($r['home_logo']))
+                    <img src="{{ $r['home_logo'] }}" class="h-6 w-6 object-contain rounded bg-white p-[2px]" alt="">
+                  @endif
+                  @if(!empty($r['home_id']))
+                    <a class="hover:text-[#84CC16]" href="{{ route('nba.team.show', $r['home_id']) }}">{{ $r['home_name'] }}</a>
+                  @else
+                    <span>{{ $r['home_name'] }}</span>
+                  @endif
+                </div>
+              </td>
+
+              <td class="px-4 py-2">
+                <div class="flex items-center gap-2">
+                  @if(!empty($r['away_logo']))
+                    <img src="{{ $r['away_logo'] }}" class="h-6 w-6 object-contain rounded bg-white p-[2px]" alt="">
+                  @endif
+                  @if(!empty($r['away_id']))
+                    <a class="hover:text-[#84CC16]" href="{{ route('nba.team.show', $r['away_id']) }}">{{ $r['away_name'] }}</a>
+                  @else
+                    <span>{{ $r['away_name'] }}</span>
+                  @endif
+                </div>
+              </td>
+
+              <td class="px-4 py-2">{{ $r['score'] }}</td>
+
+              <td class="px-4 py-2">
+                @php $w = $r['winner']; @endphp
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs
+                             {{ $w==='—' ? 'bg-white/10 text-gray-300' : 'bg-[#84CC16]/20 text-[#84CC16]' }}">
+                  {{ $w }}
+                </span>
+              </td>
+
+              <td class="px-4 py-2 text-right">
+                <a href="{{ route('nba.games.show', $r['event_id']) }}"
+                   class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20">
+                  Open →
+                </a>
+              </td>
+            </tr>
+          @empty
+            <tr><td colspan="6" class="px-4 py-4 text-center text-gray-400">No games found.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if($rows instanceof \Illuminate\Contracts\Pagination\Paginator)
+    <div class="flex justify-end">
+      {{ $rows->appends(request()->query())->onEachSide(1)->links('vendor.pagination.custom-dark') }}
+    </div>
+  @endif
+
+  <section class="pb-8 fade-up">
+    <h2 class="text-xl sm:text-2xl font-semibold mb-3">Stat explanations</h2>
+    <div class="grid gap-3 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
+      @foreach($legend as $item)
+        <div class="bg-[#1f2937] border border-[#374151] rounded-xl p-3 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/20 transition">
+          <div class="text-sm font-semibold text-white mb-1">{{ $item[0] }}</div>
+          <p class="text-xs text-gray-300">{{ $item[1] }}</p>
+        </div>
+      @endforeach
+    </div>
+  </section>
+</main>
+@endsection
+
+@push('scripts')
+<script>
+  const q = document.getElementById('q');
+  const tbody = document.querySelector('#gamesTable tbody');
+
+  const rows = () => Array.from(tbody.querySelectorAll('tr'));
+  const clearMarks = (el) => {
+    el.querySelectorAll('mark[data-hi]').forEach(m => {
+      const t = document.createTextNode(m.textContent);
+      m.replaceWith(t);
+    });
+  };
+  const hi = (el, terms) => {
+    if (!terms.length) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    const rgx = new RegExp('(' + terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'gi');
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+      const frag = document.createDocumentFragment();
+      let last = 0, m;
+      const s = n.nodeValue;
+      while ((m = rgx.exec(s)) !== null) {
+        if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+        const mark = document.createElement('mark');
+        mark.setAttribute('data-hi', '1');
+        mark.className = 'bg-[#84CC16]/30 text-white rounded px-0.5';
+        mark.textContent = m[0];
+        frag.appendChild(mark);
+        last = m.index + m[0].length;
+      }
+      if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      if (frag.childNodes.length) n.parentNode.replaceChild(frag, n);
+    });
+  };
+
+  let t;
+  q?.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const raw = (q.value || '').trim().toLowerCase();
+      const terms = raw.split(/\s+/).filter(Boolean);
+      rows().forEach(r => {
+        clearMarks(r);
+        if (!terms.length) { r.style.display = ''; return; }
+        const hay = r.innerText.toLowerCase();
+        const match = terms.every(term => hay.includes(term));
+        r.style.display = match ? '' : 'none';
+        if (match) hi(r, terms);
+      });
+    }, 160);
+  });
+</script>
+@endpush
+
