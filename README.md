@@ -41,3 +41,38 @@ Data:
 nba_players, nba_player_game_logs (NBA) etc.
 
 players, teams, leagues, player_game_stats, games (LBS) etc.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+KOMANDAS LAI PALAISTU PROJEKTU
+
+composer install
+
+cp .env.example .env
+//samainat ko jums vajag samainit (DB vārdu)
+
+php artisan key:generate
+
+php artisan db:seed
+
+php artisan db:seed --class=AdminUserSeeder
+//admin lietotāja izveide 
+// PAROLE: password
+// EPASTS: admin@example.com
+
+php artisan storage:link
+
+//šo laikam pagaidām nevajag bet neko sliktu nedara
+npm install
+
+php artisan serve
+
+Runājot par nba datu iegūšanu ir tā
+vajadzīgs api keys un URL
+
+kā arī CMD palaistas komandas
+php artisan queue:work
+un šo nba datubāzes pildīšanu var palaist admin paneļa galvenajā skatā ar pogu "atjaunināt"
+
+pašlaik cik testēts iespējams ar pirmo reizi uzmetīs timeout erroru tajā gadījumā ir jāspeiž poga velreiz.
+ŠIS ERROR IR TIKAI SAGLABĀJOT DATUS PIRMO REIZI.
+
