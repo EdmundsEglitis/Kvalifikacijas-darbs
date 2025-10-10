@@ -62,6 +62,7 @@ php artisan db:seed --class=AdminUserSeeder
 php artisan storage:link
 
 //šo laikam pagaidām nevajag bet neko sliktu nedara
+
 npm install
 
 php artisan serve
