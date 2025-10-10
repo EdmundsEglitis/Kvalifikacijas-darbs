@@ -2,12 +2,10 @@
 @section('title', "{$game->team1->name} vs {$game->team2->name}")
 
 @php
-  // pick a sub-league to show tabs if available
   $subLeague = $subLeague
     ?? ($game->team1->league ?? null)
     ?? ($game->team2->league ?? null);
 
-  // scores + fallbacks
   $s1 = $team1Score ?? $game->score1 ?? null;
   $s2 = $team2Score ?? $game->score2 ?? null;
 
@@ -26,7 +24,6 @@
   <div class="max-w-6xl mx-auto px-4 space-y-12">
     <br>
 
-    {{-- Back button --}}
     <div>
       <button
         type="button"
@@ -37,7 +34,7 @@
       </button>
     </div>
 
-    {{-- Header / score --}}
+
     <section class="bg-[#1f2937] rounded-xl shadow p-6 border border-[#374151]">
       <div class="flex items-center justify-center gap-10">
         {{-- Team 1 --}}
@@ -79,12 +76,11 @@
       </div>
     </section>
 
-    {{-- Player stats --}}
+
     <section>
       <h2 class="text-2xl font-bold text-white mb-6">Spēlētāju statistika</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {{-- Team 1 table --}}
         <div>
           <h3 class="text-xl font-semibold mb-3">{{ $game->team1->name }}</h3>
           <div class="overflow-x-auto rounded-xl shadow border border-[#374151] bg-[#1f2937]">
@@ -125,7 +121,6 @@
           </div>
         </div>
 
-        {{-- Team 2 table --}}
         <div>
           <h3 class="text-xl font-semibold mb-3">{{ $game->team2->name }}</h3>
           <div class="overflow-x-auto rounded-xl shadow border border-[#374151] bg-[#1f2937]">
@@ -169,7 +164,6 @@
     </section>
   </div>
 
-  {{-- Sorter (independent, toggle every click, per-table) --}}
   <script>
   (function () {
     const parse = {

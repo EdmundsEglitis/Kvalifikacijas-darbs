@@ -19,7 +19,6 @@
 
   <div class="max-w-6xl mx-auto px-4 space-y-12 sm:space-y-16">
 
-    {{-- Header --}}
     <section class="grid grid-cols-1 md:grid-cols-[auto,1fr] items-start gap-6 md:gap-8">
       <div class="flex md:block justify-center">
         @if(!empty($player->photo))
@@ -66,7 +65,6 @@
       </div>
     </section>
 
-    {{-- Season summary --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Sezonas kopsavilkums</h2>
 
@@ -93,11 +91,9 @@
       @endif
     </section>
 
-    {{-- Game-by-game stats --}}
     <section>
       <h2 class="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Spēļu statistika</h2>
 
-      {{-- Mobile cards --}}
       <div class="space-y-3 sm:space-y-4 md:hidden">
         @foreach($player->playerGameStats as $stat)
           @php
@@ -145,7 +141,6 @@
               </div>
             </dl>
 
-            {{-- Link to game details --}}
             @if($g?->id)
               <a href="{{ route('lbs.game.detail', $g->id) }}"
                  class="mt-3 inline-flex items-center gap-2 text-[#84CC16] hover:underline">
@@ -156,7 +151,6 @@
         @endforeach
       </div>
 
-      {{-- Desktop table --}}
       <div class="hidden md:block overflow-x-auto rounded-xl shadow-lg border border-[#374151]">
         <table id="playerStatsTable" class="min-w-full divide-y divide-[#374151]">
           <thead class="bg-[#0f172a] sticky top-0 z-10 select-none">
@@ -252,7 +246,6 @@
 
   </div>
 
-  {{-- Sorter --}}
 <script>
   (function () {
     const table  = document.getElementById('playerStatsTable');
@@ -262,7 +255,6 @@
     const tbody  = table.tBodies[0];
     if (!thead || !tbody) return;
 
-    // Keep a copy of original row order (used when switching columns)
     const originalRows = Array.from(tbody.rows);
 
     const parse = {
@@ -271,17 +263,17 @@
         return isNaN(n) ? -Infinity : n;
       },
       text: (s) => String(s).toLowerCase(),
-      date: (s) => { // expects dd.mm.yyyy
+      date: (s) => { /
         const m = String(s).trim().match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
         if (!m) return -Infinity;
         return new Date(`${m[3]}-${m[2]}-${m[1]}`).getTime();
       },
-      time: (s) => { // mm:ss
+      time: (s) => { 
         const m = String(s).trim().match(/^(\d+):(\d{2})$/);
         if (!m) return -Infinity;
         return parseInt(m[1],10) * 60 + parseInt(m[2],10);
       },
-      ratio: (s) => { // x/y -> % made (fallback to made when y=0)
+      ratio: (s) => {
         const m = String(s).trim().match(/^(\d+)\s*\/\s*(\d+)$/);
         if (!m) return -Infinity;
         const made = parseInt(m[1],10), att = parseInt(m[2],10);
@@ -310,7 +302,6 @@
       caret.textContent = dir === 'asc' ? '↑' : '↓';
     }
 
-    // Remember which column is currently sorted
     let activeCol = -1;
 
     thead.addEventListener('click', (e) => {
@@ -320,14 +311,12 @@
       const colIndex = Array.from(th.parentNode.children).indexOf(th);
       const type = th.getAttribute('data-sort-type') || 'text';
 
-      // If switching to a new column, start from original order and default to ASC
       if (colIndex !== activeCol) {
         tbody.replaceChildren(...originalRows);
         activeCol = colIndex;
-        th.setAttribute('aria-sort', 'desc'); // will flip to 'asc' immediately below
+        th.setAttribute('aria-sort', 'desc'); 
       }
 
-      // Toggle only between ASC and DESC (no neutral)
       const curr = th.getAttribute('aria-sort');
       const next = curr === 'asc' ? 'desc' : 'asc';
 

@@ -38,7 +38,6 @@
 
     <section id="news" class="py-12 max-w-7xl mx-auto px-4 space-y-10">
 
-      {{-- Secondary (2 cols) with fixed image area + object-contain --}}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         @if($item = $bySlot['secondary-1'] ?? null)
           <article class="group bg-[#0f172a] rounded-2xl overflow-hidden shadow-lg border border-[#1f2937]/60 fade-in-section opacity-0 translate-y-6 transition">

@@ -10,7 +10,7 @@
 @section('content')
 <main class="max-w-7xl mx-auto px-4 pb-16 pt-24 space-y-8">
 
-  {{-- Filters --}}
+
   <section class="bg-[#1f2937] border border-[#374151] rounded-2xl p-4 sm:p-5">
     <form method="GET" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-8 items-end">
       <div class="lg:col-span-2">

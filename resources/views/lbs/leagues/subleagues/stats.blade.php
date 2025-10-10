@@ -6,7 +6,6 @@
 @endsection
 
 @section('content')
-  {{-- In-page stats navbar (sticky below subnav) --}}
   <nav class="sticky top-28 z-30 bg-transparent backdrop-blur-md border-t border-[#374151]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex space-x-6 py-3 text-sm sm:text-base font-medium">
@@ -64,6 +63,7 @@
       </div>
     </section>
 
+    {{-- ALL PLAYERS (sortable + searchable) --}}
     <section id="all-players">
       <h2 class="text-2xl font-bold text-white mb-6">Visi spēlētāji</h2>
 
@@ -74,15 +74,31 @@
         class="mb-6 w-full rounded-lg px-4 py-2 bg-[#1f2937] text-white placeholder-gray-400 border border-[#374151] focus:outline-none focus:ring-2 focus:ring-[#84CC16] focus:border-[#84CC16]"
       />
 
-      <div class="overflow-x-auto rounded-lg border border-[#374151] shadow">
+      <div class="overflow-x-auto rounded-lg border border-[#374151] shadow bg-[#1f2937]">
         <table id="players-table" class="min-w-[720px] sm:min-w-full">
-          <thead class="bg-[#1f2937] text-[#F3F4F6]/80 text-xs uppercase sticky top-0 z-10">
+          <thead class="bg-[#0f172a] text-[#F3F4F6]/80 text-xs uppercase sticky top-0 z-10 select-none">
             <tr>
-              <th data-sort class="px-4 py-3 text-left font-semibold cursor-pointer">Spēlētājs</th>
-              <th data-sort class="px-4 py-3 text-left font-semibold cursor-pointer">Komanda</th>
-              <th data-sort class="px-4 py-3 text-right font-semibold cursor-pointer">Punkti AVG</th>
-              <th data-sort class="px-4 py-3 text-right font-semibold cursor-pointer">Atlēkušās AVG</th>
-              <th data-sort class="px-4 py-3 text-right font-semibold cursor-pointer">Piespēles AVG</th>
+              {{-- data-sort-type controls parsing, caret shows direction --}}
+              <th class="px-4 py-3 text-left font-semibold cursor-pointer"
+                  data-sort-type="text" aria-sort="none">
+                <span class="inline-flex items-center gap-1">Spēlētājs <span class="sort-caret opacity-60">↕</span></span>
+              </th>
+              <th class="px-4 py-3 text-left font-semibold cursor-pointer"
+                  data-sort-type="text" aria-sort="none">
+                <span class="inline-flex items-center gap-1">Komanda <span class="sort-caret opacity-60">↕</span></span>
+              </th>
+              <th class="px-4 py-3 text-right font-semibold cursor-pointer"
+                  data-sort-type="number" aria-sort="none">
+                <span class="inline-flex items-center gap-1">Punkti AVG <span class="sort-caret opacity-60">↕</span></span>
+              </th>
+              <th class="px-4 py-3 text-right font-semibold cursor-pointer"
+                  data-sort-type="number" aria-sort="none">
+                <span class="inline-flex items-center gap-1">Atlēkušās AVG <span class="sort-caret opacity-60">↕</span></span>
+              </th>
+              <th class="px-4 py-3 text-right font-semibold cursor-pointer"
+                  data-sort-type="number" aria-sort="none">
+                <span class="inline-flex items-center gap-1">Piespēles AVG <span class="sort-caret opacity-60">↕</span></span>
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-[#374151] bg-[#111827]">
@@ -102,9 +118,9 @@
                     <span class="text-[#F3F4F6]/60">—</span>
                   @endif
                 </td>
-                <td class="px-4 py-3 text-right font-medium">{{ $player->avg_points }}</td>
-                <td class="px-4 py-3 text-right font-medium">{{ $player->avg_rebounds }}</td>
-                <td class="px-4 py-3 text-right font-medium">{{ $player->avg_assists }}</td>
+                <td class="px-4 py-3 text-right font-medium tabular-nums">{{ $player->avg_points }}</td>
+                <td class="px-4 py-3 text-right font-medium tabular-nums">{{ $player->avg_rebounds }}</td>
+                <td class="px-4 py-3 text-right font-medium tabular-nums">{{ $player->avg_assists }}</td>
               </tr>
             @endforeach
           </tbody>
@@ -118,39 +134,83 @@
 
 @push('scripts')
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('[data-sort]').forEach(header => {
-      header.addEventListener('click', () => {
-        const table = header.closest('table');
-        const rows  = Array.from(table.querySelector('tbody').rows);
-        const idx   = header.cellIndex;
-        const asc   = header.dataset.asc === 'true' ? false : true;
-        header.dataset.asc = asc;
+(function(){
+  const table = document.getElementById('players-table');
+  if (!table) return;
 
-        rows.sort((a, b) => {
-          let v1 = a.cells[idx].innerText.trim();
-          let v2 = b.cells[idx].innerText.trim();
-          const n1 = parseFloat(v1.replace(',', '.'));
-          const n2 = parseFloat(v2.replace(',', '.'));
-          const bothNums = !isNaN(n1) && !isNaN(n2);
-          if (bothNums) { v1 = n1; v2 = n2; }
-          if (v1 === v2) return 0;
-          return asc ? (v1 > v2 ? 1 : -1) : (v1 < v2 ? 1 : -1);
-        });
+  const thead = table.tHead;
+  const tbody = table.tBodies[0];
+  if (!thead || !tbody) return;
 
-        table.querySelector('tbody').append(...rows);
-      });
+  const dirMap = new Map();
+
+  const parse = {
+    number: (s) => {
+      const n = parseFloat(String(s).replace(/[^\d.\-]/g,'').replace(',', '.'));
+      return isNaN(n) ? -Infinity : n;
+    },
+    text: (s) => String(s).toLowerCase()
+  };
+
+  function getColIndex(th){
+    const cells = Array.from(th.parentElement.children);
+    return cells.indexOf(th);
+  }
+
+  function clearOtherCarets(activeTh){
+    thead.querySelectorAll('th[aria-sort]').forEach(th=>{
+      if (th === activeTh) return;
+      th.setAttribute('aria-sort', 'none');
+      const c = th.querySelector('.sort-caret');
+      if (c) c.textContent = '↕';
+    });
+  }
+
+  function setCaret(th, asc){
+    th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
+    const c = th.querySelector('.sort-caret');
+    if (c) c.textContent = asc ? '↑' : '↓';
+  }
+
+  thead.addEventListener('click', (e)=>{
+    const th = e.target.closest('th[data-sort-type]');
+    if (!th) return;
+
+    const col = getColIndex(th);
+    const type = th.getAttribute('data-sort-type') || 'text';
+
+    const nextAsc = !dirMap.get(col);
+    dirMap.set(col, nextAsc);
+
+    clearOtherCarets(th);
+    setCaret(th, nextAsc);
+
+    const rows = Array.from(tbody.rows);
+    rows.sort((a,b)=>{
+      const ta = a.cells[col]?.textContent ?? '';
+      const tb = b.cells[col]?.textContent ?? '';
+      const va = parse[type](ta);
+      const vb = parse[type](tb);
+      if (va < vb) return nextAsc ? -1 : 1;
+      if (va > vb) return nextAsc ?  1 : -1;
+      return 0;
     });
 
-    const searchInput = document.getElementById('player-search');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        document.querySelectorAll('#players-table tbody tr').forEach(row => {
-          row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
-        });
+    const frag = document.createDocumentFragment();
+    rows.forEach(r => frag.appendChild(r));
+    tbody.appendChild(frag);
+  }, false);
+
+  // Search filter
+  const searchInput = document.getElementById('player-search');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      Array.from(tbody.rows).forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(term) ? '' : 'none';
       });
-    }
-  });
+    });
+  }
+})();
 </script>
 @endpush
