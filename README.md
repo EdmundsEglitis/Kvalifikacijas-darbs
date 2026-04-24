@@ -63,8 +63,6 @@ php artisan db:seed --class=AdminUserSeeder
 
 php artisan storage:link
 
-//šo laikam pagaidām nevajag bet neko sliktu nedara
-
 npm install
 
 php artisan serve
@@ -76,6 +74,4 @@ kā arī CMD palaistas komandas
 php artisan queue:work
 un šo nba datubāzes pildīšanu var palaist admin paneļa galvenajā skatā ar pogu "atjaunināt"
 
-pašlaik cik testēts iespējams ar pirmo reizi uzmetīs timeout erroru tajā gadījumā ir jāspeiž poga velreiz.
-ŠIS ERROR IR TIKAI SAGLABĀJOT DATUS PIRMO REIZI.
 
